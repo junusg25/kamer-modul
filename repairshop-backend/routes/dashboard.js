@@ -120,41 +120,41 @@ router.get('/', authenticateToken, async (req, res, next) => {
 
     // Recent Activity - Enhanced with all activity types
     const recentActivity = await db.query(`
-      SELECT 'work_order_created' as type, id, description, status, created_at, 'Work Order Created' as action_text FROM work_orders WHERE ${recentDateFilter} AND status != 'intake'
+      SELECT 'work_order_created' as type, id, formatted_number, description, status, created_at, 'Work Order Created' as action_text FROM work_orders WHERE ${recentDateFilter} AND status != 'intake'
       UNION ALL
-      SELECT 'work_order_updated' as type, id, description, status, updated_at as created_at, 'Work Order Updated' as action_text FROM work_orders WHERE updated_at >= NOW() - INTERVAL '30 days' AND status != 'intake'
+      SELECT 'work_order_updated' as type, id, formatted_number, description, status, updated_at as created_at, 'Work Order Updated' as action_text FROM work_orders WHERE updated_at >= NOW() - INTERVAL '30 days' AND status != 'intake'
       UNION ALL
-      SELECT 'warranty_work_order_created' as type, id, description, status, created_at, 'Warranty Work Order Created' as action_text FROM warranty_work_orders WHERE ${recentDateFilter}
+      SELECT 'warranty_work_order_created' as type, id, formatted_number, description, status, created_at, 'Warranty Work Order Created' as action_text FROM warranty_work_orders WHERE ${recentDateFilter}
       UNION ALL
-      SELECT 'warranty_work_order_updated' as type, id, description, status, updated_at as created_at, 'Warranty Work Order Updated' as action_text FROM warranty_work_orders WHERE updated_at >= NOW() - INTERVAL '30 days'
+      SELECT 'warranty_work_order_updated' as type, id, formatted_number, description, status, updated_at as created_at, 'Warranty Work Order Updated' as action_text FROM warranty_work_orders WHERE updated_at >= NOW() - INTERVAL '30 days'
       UNION ALL
-      SELECT 'repair_ticket_created' as type, id, COALESCE(problem_description, description) as description, status, created_at, 'Repair Ticket Created' as action_text FROM repair_tickets WHERE ${recentDateFilter}
+      SELECT 'repair_ticket_created' as type, id, formatted_number, COALESCE(problem_description, description) as description, status, created_at, 'Repair Ticket Created' as action_text FROM repair_tickets WHERE ${recentDateFilter}
       UNION ALL
-      SELECT 'repair_ticket_updated' as type, id, COALESCE(problem_description, description) as description, status, updated_at as created_at, 'Repair Ticket Updated' as action_text FROM repair_tickets WHERE updated_at >= NOW() - INTERVAL '30 days'
+      SELECT 'repair_ticket_updated' as type, id, formatted_number, COALESCE(problem_description, description) as description, status, updated_at as created_at, 'Repair Ticket Updated' as action_text FROM repair_tickets WHERE updated_at >= NOW() - INTERVAL '30 days'
       UNION ALL
-      SELECT 'warranty_repair_ticket_created' as type, id, COALESCE(problem_description, 'Warranty Issue') as description, status, created_at, 'Warranty Repair Ticket Created' as action_text FROM warranty_repair_tickets WHERE ${recentDateFilter}
+      SELECT 'warranty_repair_ticket_created' as type, id, formatted_number, COALESCE(problem_description, 'Warranty Issue') as description, status, created_at, 'Warranty Repair Ticket Created' as action_text FROM warranty_repair_tickets WHERE ${recentDateFilter}
       UNION ALL
-      SELECT 'warranty_repair_ticket_updated' as type, id, COALESCE(problem_description, 'Warranty Issue') as description, status, updated_at as created_at, 'Warranty Repair Ticket Updated' as action_text FROM warranty_repair_tickets WHERE updated_at >= NOW() - INTERVAL '30 days'
+      SELECT 'warranty_repair_ticket_updated' as type, id, formatted_number, COALESCE(problem_description, 'Warranty Issue') as description, status, updated_at as created_at, 'Warranty Repair Ticket Updated' as action_text FROM warranty_repair_tickets WHERE updated_at >= NOW() - INTERVAL '30 days'
       UNION ALL
-      SELECT 'customer_created' as type, id, name as description, 'active' as status, created_at, 'Customer Added' as action_text FROM customers WHERE ${recentDateFilter}
+      SELECT 'customer_created' as type, id, NULL as formatted_number, name as description, 'active' as status, created_at, 'Customer Added' as action_text FROM customers WHERE ${recentDateFilter}
       UNION ALL
-      SELECT 'customer_updated' as type, id, name as description, 'updated' as status, updated_at as created_at, 'Customer Updated' as action_text FROM customers WHERE updated_at >= NOW() - INTERVAL '30 days'
+      SELECT 'customer_updated' as type, id, NULL as formatted_number, name as description, 'updated' as status, updated_at as created_at, 'Customer Updated' as action_text FROM customers WHERE updated_at >= NOW() - INTERVAL '30 days'
              UNION ALL
-               SELECT 'machine_created' as type, am.id, mm.name as description, 'active' as status, am.assigned_at as created_at, 'Machine Added' as action_text 
+               SELECT 'machine_created' as type, am.id, NULL as formatted_number, mm.name as description, 'active' as status, am.assigned_at as created_at, 'Machine Added' as action_text 
          FROM assigned_machines am
          LEFT JOIN machine_serials ms ON am.serial_id = ms.id
          LEFT JOIN machine_models mm ON ms.model_id = mm.id
          WHERE am.assigned_at >= NOW() - INTERVAL '30 days'
          UNION ALL
-         SELECT 'machine_updated' as type, am.id, mm.name as description, 'updated' as status, am.updated_at as created_at, 'Machine Updated' as action_text 
+         SELECT 'machine_updated' as type, am.id, NULL as formatted_number, mm.name as description, 'updated' as status, am.updated_at as created_at, 'Machine Updated' as action_text 
          FROM assigned_machines am
          LEFT JOIN machine_serials ms ON am.serial_id = ms.id
          LEFT JOIN machine_models mm ON ms.model_id = mm.id
          WHERE am.updated_at >= NOW() - INTERVAL '30 days'
       UNION ALL
-      SELECT 'inventory_created' as type, id, name as description, 'created' as status, created_at, 'Inventory Item Added' as action_text FROM inventory WHERE ${recentDateFilter}
+      SELECT 'inventory_created' as type, id, NULL as formatted_number, name as description, 'created' as status, created_at, 'Inventory Item Added' as action_text FROM inventory WHERE ${recentDateFilter}
       UNION ALL
-      SELECT 'inventory_updated' as type, id, name as description, 'updated' as status, updated_at as created_at, 'Inventory Item Updated' as action_text FROM inventory WHERE updated_at >= NOW() - INTERVAL '30 days'
+      SELECT 'inventory_updated' as type, id, NULL as formatted_number, name as description, 'updated' as status, updated_at as created_at, 'Inventory Item Updated' as action_text FROM inventory WHERE updated_at >= NOW() - INTERVAL '30 days'
       ORDER BY created_at DESC
       LIMIT 25
     `);

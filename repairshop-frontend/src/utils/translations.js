@@ -196,6 +196,7 @@ export const translations = {
     machineUpdated: 'Machine updated',
     inventoryItemCreated: 'Inventory item created',
     inventoryItemUpdated: 'Inventory item updated',
+    inventoryItemAdded: 'Inventory Item Added',
     intake: 'intake',
     
     // New Dashboard Features
@@ -754,6 +755,7 @@ export const translations = {
     all: 'All',
     testing: 'Testing',
     partsOrdered: 'Parts Ordered',
+    parts_ordered: 'Parts Ordered',
     waitingApproval: 'Waiting Approval',
     waitingSupplier: 'Waiting Supplier Intervention',
     serviceCancelled: 'Service Cancelled',

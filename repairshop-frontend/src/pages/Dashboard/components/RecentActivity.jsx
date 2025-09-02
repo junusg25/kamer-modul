@@ -85,6 +85,7 @@ const translateActivityAction = (actionText, translate) => {
     'machine updated': translate('dashboard.machineUpdated'),
     'inventory item created': translate('dashboard.inventoryItemCreated'),
     'inventory item updated': translate('dashboard.inventoryItemUpdated'),
+    'inventory item added': translate('dashboard.inventoryItemAdded'),
   };
   
   return actionMap[actionText.toLowerCase()] || actionText;
@@ -181,22 +182,30 @@ export default function RecentActivity({ activities, isLoading }) {
 
   // Function to format activity description with more specific information
   const formatActivityDescription = (activity) => {
+    const getFormattedNumber = (activity) => {
+      if (activity.formatted_number) {
+        return activity.formatted_number;
+      }
+      // Fallback to ID if no formatted number
+      return `#${activity.id}`;
+    };
+
     switch (activity.type) {
       case 'work_order_created':
       case 'work_order_updated':
-        return `${translate('common.workOrder')} #${activity.id} - ${activity.description}`;
+        return `${translate('common.workOrder')} ${getFormattedNumber(activity)} - ${activity.description}`;
         
       case 'warranty_work_order_created':
       case 'warranty_work_order_updated':
-        return `${translate('common.warrantyWorkOrder')} #${activity.id} - ${activity.description}`;
+        return `${translate('common.warrantyWorkOrder')} ${getFormattedNumber(activity)} - ${activity.description}`;
         
       case 'repair_ticket_created':
       case 'repair_ticket_updated':
-        return `${translate('common.repairTicket')} #${activity.id} - ${activity.description}`;
+        return `${translate('common.repairTicket')} ${getFormattedNumber(activity)} - ${activity.description}`;
         
       case 'warranty_repair_ticket_created':
       case 'warranty_repair_ticket_updated':
-        return `${translate('common.warrantyRepairTicket')} #${activity.id} - ${activity.description}`;
+        return `${translate('common.warrantyRepairTicket')} ${getFormattedNumber(activity)} - ${activity.description}`;
         
       case 'customer_created':
       case 'customer_updated':

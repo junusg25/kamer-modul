@@ -172,6 +172,7 @@ export const translationsBs = {
     machineUpdated: 'Mašina ažurirana',
     inventoryItemCreated: 'Inventarski predmet kreiran',
     inventoryItemUpdated: 'Inventarski predmet ažuriran',
+    inventoryItemAdded: 'Dodan novi dio',
     intake: 'prijem',
     
     // Missing translations
@@ -811,6 +812,7 @@ export const translationsBs = {
     all: 'Sve',
     testing: 'Testira se',
     partsOrdered: 'Dijelovi naručeni',
+    parts_ordered: 'Dijelovi naručeni',
     waitingApproval: 'Čeka odobrenje',
     waitingSupplier: 'Čeka intervenciju dobavljača',
     serviceCancelled: 'Odustalo se od servisiranja',
