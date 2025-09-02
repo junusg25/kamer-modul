@@ -1064,6 +1064,11 @@ export default function WorkOrderDetail() {
                 label={translate('forms.inventoryItem')}
                 value={newInventory.inventory_id}
                 onChange={(e) => setNewInventory(f => ({ ...f, inventory_id: e.target.value }))}
+                sx={{
+                  '& .MuiSelect-select': {
+                    paddingRight: '160px !important'
+                  }
+                }}
               >
                 {allInventoryQuery.data?.map((item) => (
                   <MenuItem key={item.id} value={item.id}>

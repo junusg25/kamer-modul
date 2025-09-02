@@ -235,6 +235,15 @@ export default function RepairTicketDetail() {
     return (isAdmin || isManager || user?.role === 'technician') && ticket.data?.status === 'intake'
   }
 
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'intake': return translate('status.intake')
+      case 'converted': return translate('status.converted')
+      case 'cancelled': return translate('status.cancelled')
+      default: return status.replace('_', ' ')
+    }
+  }
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'intake': return 'warning'
@@ -300,7 +309,7 @@ export default function RepairTicketDetail() {
                 {translate('navigation.repairTickets')} {data.formatted_number || `#${data.ticket_number || data.id}`}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {translate('common.repair')} • {data.status.replace('_', ' ')} • {formatDate(data.created_at)}
+                {translate('common.repair')} • {getStatusLabel(data.status)} • {formatDate(data.created_at)}
               </Typography>
             </Box>
           </Box>
@@ -353,7 +362,7 @@ export default function RepairTicketDetail() {
                 {translate('tableHeaders.status')}
               </Typography>
               <Chip
-                label={data.status.replace('_', ' ')}
+                label={getStatusLabel(data.status)}
                 color={getStatusColor(data.status)}
                 size="large"
                 sx={{ fontSize: '1rem', py: 1 }}
@@ -843,7 +852,7 @@ export default function RepairTicketDetail() {
                         {translate('tableHeaders.status')}
                       </Typography>
                       <Chip
-                        label={data.status.replace('_', ' ')}
+                        label={getStatusLabel(data.status)}
                         color={getStatusColor(data.status)}
                         size="small"
                       />

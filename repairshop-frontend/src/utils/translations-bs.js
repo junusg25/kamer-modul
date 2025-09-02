@@ -1682,6 +1682,8 @@ export const translationsBs = {
     machineInformation: 'Informacije o mašini',
     ticketDetails: 'Detalji prijemnice',
     conversionInformation: 'Informacije o konverziji',
+    conversionSummary: 'Pregled konverzije',
+    repair: 'Popravka',
     notSpecified: 'Nije navedeno',
     noNotes: 'Nema napomena',
     none: 'Nema',

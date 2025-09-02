@@ -200,13 +200,6 @@ export default function Inventory() {
         </Typography>
         <Box display="flex" gap={2}>
           <Button
-            variant="outlined"
-            startIcon={<AddIcon />}
-            onClick={() => navigate('/unified-inventory')}
-          >
-            Unified Form
-          </Button>
-          <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => navigate('/create-inventory-item')}

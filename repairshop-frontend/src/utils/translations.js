@@ -1403,6 +1403,8 @@ export const translations = {
     machineInformation: 'Machine Information',
     ticketDetails: 'Ticket Details',
     conversionInformation: 'Conversion Information',
+    conversionSummary: 'Conversion Summary',
+    repair: 'Repair',
     notSpecified: 'Not specified',
     noNotes: 'No notes',
     none: 'None',
