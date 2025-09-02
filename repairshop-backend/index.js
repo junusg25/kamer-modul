@@ -1,0 +1,212 @@
+// index.js
+const express = require('express');
+require('dotenv').config();
+const helmet = require('helmet');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const logger = require('./utils/logger');
+const cacheService = require('./services/cacheService');
+const websocketService = require('./services/websocketService');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Trust proxy for secure cookies in production
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
+// Security middlewares
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+}));
+
+// Configure CORS properly
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:3001', // Frontend dev server
+      'http://localhost:3000', // Backend API server
+      'http://127.0.0.1:3001',
+      'http://127.0.0.1:3000',
+    ];
+    
+    // Add production origins from environment variables
+    if (process.env.FRONTEND_URL) {
+      allowedOrigins.push(process.env.FRONTEND_URL);
+    }
+    
+    if (process.env.NODE_ENV === 'production') {
+      // Add your production domain here
+      allowedOrigins.push('https://yourproductiondomain.com');
+    }
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      logger.warn(`CORS blocked origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Origin',
+    'X-Requested-With',
+    'Content-Type',
+    'Accept',
+    'Authorization',
+    'X-Auth-Token'
+  ],
+  exposedHeaders: ['X-Total-Count'],
+  maxAge: 86400, // 24 hours
+};
+
+app.use(cors(corsOptions));
+
+// Rate limiting: 500 requests per 15 minutes per IP (higher limit for tests)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: process.env.NODE_ENV === 'test' ? 1000 : 500,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
+
+// Middleware
+app.use(express.json());
+
+// Log all requests
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.url}`);
+  next();
+});
+
+// Routes
+app.use('/api/users', require('./routes/users'));
+app.use('/api/customers', require('./routes/customers'));
+app.use('/api/machines', require('./routes/machines'));
+app.use('/api/machine-models', require('./routes/machineModels'));
+app.use('/api/machine-serials', require('./routes/machineSerials'));
+app.use('/api/assigned-machines', require('./routes/assignedMachines'));
+app.use('/api/workOrders', require('./routes/workOrders'));
+app.use('/api/warrantyWorkOrders', require('./routes/warrantyWorkOrders'));
+app.use('/api/repairTickets', require('./routes/repairTickets'));
+app.use('/api/warrantyRepairTickets', require('./routes/warrantyRepairTickets'));
+app.use('/api/inventory', require('./routes/inventory'));
+app.use('/api/workOrderInventory', require('./routes/workOrderInventory'));
+app.use('/api/workOrderNotes', require('./routes/workOrderNotes'));
+app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/export', require('./routes/export'));
+app.use('/api/print', require('./routes/print'));
+app.use('/api/attachments', require('./routes/attachments'));
+app.use('/api/time-tracking', require('./routes/timeTracking'));
+app.use('/api/work-order-templates', require('./routes/workOrderTemplates'));
+app.use('/api/customer-communications', require('./routes/customerCommunications'));
+app.use('/api/customer-preferences', require('./routes/customerPreferences'));
+app.use('/api/customer-portal', require('./routes/customerPortal'));
+app.use('/api/advanced-inventory', require('./routes/advancedInventory'));
+app.use('/api/suppliers', require('./routes/suppliers'));
+app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/machine-categories', require('./routes/machineCategories'));
+app.use('/api/websocket', require('./routes/websocket'));
+app.use('/history/customers', require('./routes/history/customerHistory'));
+app.use('/history/machines', require('./routes/history/machineHistory'));
+app.use('/history/users', require('./routes/history/userHistory'));
+
+// Home route
+app.get('/', (req, res) => {
+  res.send('Repair Shop API is running');
+});
+
+// Health check route
+app.get('/health', (req, res) => {
+  const cacheStats = cacheService.getStats();
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    cache: cacheStats
+  });
+});
+
+// Cache statistics endpoint
+app.get('/api/cache/stats', (req, res) => {
+  const stats = cacheService.getStats();
+  res.json({
+    status: 'success',
+    data: stats
+  });
+});
+
+// Error Handling Middleware (MUST be after all routes)
+app.use(require('./middleware/errorHandler'));
+
+// 404 Handler (for undefined routes)
+app.use((req, res) => {
+  res.status(404).json({
+    status: 'fail',
+    message: `Can't find ${req.originalUrl} on this server`
+  });
+});
+
+// Start server
+let server;
+if (process.env.NODE_ENV !== 'test') {
+  server = app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    logger.info(`Server started on port ${PORT}`);
+    
+    // Initialize WebSocket service
+    websocketService.initialize(server);
+    
+    // Log cache status after server starts
+    setTimeout(() => {
+      const cacheStats = cacheService.getStats();
+      if (cacheStats.redis.enabled && cacheStats.redis.connected) {
+        logger.info('Redis cache is active and connected');
+      } else {
+        logger.info('Using memory cache (Redis not available)');
+      }
+    }, 1000);
+  });
+}
+
+// Graceful shutdown
+const gracefulShutdown = async (signal) => {
+  logger.info(`${signal} received, shutting down gracefully`);
+  
+  // Close cache connections
+  await cacheService.disconnect();
+  
+  if (server) {
+    server.close(() => {
+      logger.info('Server closed');
+      process.exit(0);
+    });
+  } else {
+    process.exit(0);
+  }
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Export the app for testing
+module.exports = app;
