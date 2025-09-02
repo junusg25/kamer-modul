@@ -622,6 +622,9 @@ export const translations = {
     location: 'Location',
     skuPlaceholder: 'Stock Keeping Unit',
     locationPlaceholder: 'Storage Location',
+    basicInformation: 'Basic Information',
+    pricingInformation: 'Pricing Information',
+    stockInformation: 'Stock Information',
     
     // User Forms
     userRole: 'User Role',
@@ -837,6 +840,7 @@ export const translations = {
     newMachine: 'New Machine',
     newCustomer: 'New Customer',
     newInventoryItem: 'New Inventory Item',
+    createInventoryItem: 'Create Inventory Item',
     newUser: 'New User',
     backToRepairTickets: 'Back to Prijemnice',
     backToMachines: 'Back to Machines',

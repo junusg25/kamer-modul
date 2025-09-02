@@ -666,6 +666,11 @@ export const translationsBs = {
     supplier: 'Dobavljač',
     sku: 'Kataloški broj',
     location: 'Lokacija',
+    skuPlaceholder: 'Jedinica za čuvanje zaliha',
+    locationPlaceholder: 'Mjesto skladištenja',
+    basicInformation: 'Osnovne informacije',
+    pricingInformation: 'Informacije o cijeni',
+    stockInformation: 'Informacije o zalihama',
     
     // User Forms
     userRole: 'Uloga korisnika',
@@ -890,6 +895,7 @@ export const translationsBs = {
     newMachineModel: 'Novi model mašine',
     newCustomer: 'Novi kupac',
     newInventoryItem: 'Novi artikal inventara',
+    createInventoryItem: 'Kreiraj artikal inventara',
     newUser: 'Novi korisnik',
     backToRepairTickets: 'Nazad na prijemnice',
     backToMachines: 'Nazad na mašine',
