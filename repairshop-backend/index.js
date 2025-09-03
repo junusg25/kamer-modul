@@ -125,6 +125,8 @@ app.use('/api/advanced-inventory', require('./routes/advancedInventory'));
 app.use('/api/suppliers', require('./routes/suppliers'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/leads', require('./routes/leads'));
+app.use('/api/quotes', require('./routes/quotes'));
 app.use('/api/machine-categories', require('./routes/machineCategories'));
 app.use('/api/websocket', require('./routes/websocket'));
 app.use('/history/customers', require('./routes/history/customerHistory'));

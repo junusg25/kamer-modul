@@ -39,7 +39,9 @@ import {
   Delete as DeleteIcon,
   Build as ConvertIcon,
   Refresh as RefreshIcon,
-  MoreVert as MoreVertIcon
+  MoreVert as MoreVertIcon,
+  TrendingUp as SalesIcon,
+  Star as OpportunityIcon
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -336,6 +338,7 @@ const RepairTickets = () => {
                 <TableCell>{translate('tableHeaders.customer')}</TableCell>
                 <TableCell>{translate('tableHeaders.machine')}</TableCell>
                 <TableCell>{translate('tableHeaders.problemDescription')}</TableCell>
+                <TableCell>{translate('common.salesOpportunity')}</TableCell>
                 <TableCell>{translate('tableHeaders.status')}</TableCell>
                 <TableCell>{translate('forms.submittedBy')}</TableCell>
                 <TableCell>{translate('tableHeaders.created')}</TableCell>
@@ -345,13 +348,13 @@ const RepairTickets = () => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                  <TableCell colSpan={9} align="center">
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
               ) : ticketsData?.data?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                  <TableCell colSpan={9} align="center">
                     {translate('common.noRepairTicketsFound')}
                   </TableCell>
                 </TableRow>
@@ -391,6 +394,21 @@ const RepairTickets = () => {
                         {ticket.problem_description?.substring(0, 100)}
                         {ticket.problem_description?.length > 100 && '...'}
                       </Typography>
+                    </TableCell>
+                    <TableCell>
+                      {ticket.sales_opportunity ? (
+                        <Tooltip title={`${translate('common.potentialValue')}: €${ticket.potential_value || 0}`}>
+                          <Chip
+                            icon={<OpportunityIcon />}
+                            label={translate('common.opportunity')}
+                            color="warning"
+                            size="small"
+                            variant="outlined"
+                          />
+                        </Tooltip>
+                      ) : (
+                        <Typography variant="body2" color="textSecondary">-</Typography>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Chip

@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { ThemeProvider } from '@mui/material/styles'
 import { CssBaseline } from '@mui/material'
-import AuthProvider from './contexts/AuthContext.jsx'
+import AuthProvider, { useAuth } from './contexts/AuthContext.jsx'
 import { ModalProvider } from './contexts/ModalContext.jsx'
 import LanguageProvider from './contexts/LanguageContext.jsx'
 import { createAppTheme } from './theme/index.js'
@@ -41,6 +41,11 @@ import Machines from './pages/Machines.jsx'
 import MachineDetail from './pages/MachineDetail.jsx'
 import MachineModelDetail from './pages/MachineModelDetail.jsx'
 import AssignMachine from './pages/AssignMachine.jsx'
+import SalesDashboard from './pages/SalesDashboard.jsx'
+import LeadManagement from './pages/LeadManagement.jsx'
+import SalesPipeline from './pages/SalesPipeline.jsx'
+import SalesReports from './pages/SalesReports.jsx'
+import QuoteManagement from './pages/QuoteManagement.jsx'
 import Login from './pages/Login.jsx'
 import TranslationTest from './components/TranslationTest.jsx'
 
@@ -54,6 +59,18 @@ const CreateTicketRouter = () => {
   } else {
     return <CreateRepairTicket />;
   }
+};
+
+// Dashboard router component - redirects based on user role
+const DashboardRouter = () => {
+  const { user } = useAuth();
+  
+  // Sales users go to sales dashboard, all others go to regular dashboard
+  if (user?.role === 'sales') {
+    return <Navigate to="/sales-dashboard" replace />;
+  }
+  
+  return <Navigate to="/dashboard" replace />;
 };
 
 
@@ -118,7 +135,7 @@ export default function App() {
                   <Route path="/login" element={<Login />} />
                   <Route element={<ProtectedRoute />}>
                     <Route element={<Layout onThemeToggle={toggleColorMode} mode={mode} />}>
-                      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                      <Route path="/" element={<DashboardRouter />} />
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/warranty" element={<Warranty />} />
                       <Route path="/non-warranty" element={<NonWarranty />} />
@@ -144,11 +161,16 @@ export default function App() {
                       <Route path="/create-user" element={<CreateUser />} />
                       <Route path="/search" element={<Search />} />
                       <Route path="/notifications" element={<Notifications />} />
+                      <Route path="/sales-dashboard" element={<SalesDashboard />} />
+                      <Route path="/lead-management" element={<LeadManagement />} />
+                      <Route path="/sales-pipeline" element={<SalesPipeline />} />
+                      <Route path="/sales-reports" element={<SalesReports />} />
+                      <Route path="/quote-management" element={<QuoteManagement />} />
                       <Route path="/create-ticket" element={<CreateTicketRouter />} />
                       <Route path="/translation-test" element={<TranslationTest />} />
                     </Route>
                   </Route>
-                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="*" element={<DashboardRouter />} />
                 </Routes>
               </WebSocketProvider>
             </ModalProvider>

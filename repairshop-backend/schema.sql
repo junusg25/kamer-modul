@@ -1,18 +1,70 @@
--- Repair Shop Database Schema
--- Based on backup from 2025-08-27
--- Comprehensive schema with all functions, tables, views, and constraints
+--
+-- Repair Shop Management System Database Schema
+-- Generated from comprehensive backup: DB SA PRODAJOM FINAL.sql
+-- Date: 2025-09-04
+-- PostgreSQL version: 17.5
+--
 
--- Functions
-CREATE OR REPLACE FUNCTION public.calculate_warranty_expiry(purchase_date date, model_id integer) RETURNS date
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: public; Type: SCHEMA; Schema: -; Owner: pg_database_owner
+--
+
+CREATE SCHEMA public;
+
+ALTER SCHEMA public OWNER TO pg_database_owner;
+
+COMMENT ON SCHEMA public IS 'standard public schema';
+
+--
+-- FUNCTIONS
+--
+
+-- Calculate warranty expiry based on model ID
+CREATE FUNCTION public.calculate_warranty_expiry(purchase_date date, model_id integer) RETURNS date
+    LANGUAGE plpgsql
+    AS $$
+    DECLARE
+        warranty_months integer;
+    BEGIN
+        -- Get warranty period from machine_models table
+        SELECT mm.warranty_months INTO warranty_months
+        FROM machine_models mm
+        WHERE mm.id = calculate_warranty_expiry.model_id;
+        
+        -- If no specific warranty period found, use default 12 months
+        IF warranty_months IS NULL THEN
+            warranty_months := 12;
+        END IF;
+        
+        -- Calculate expiry date
+        RETURN purchase_date + (warranty_months || ' months')::interval;
+    END;
+    $$;
+
+-- Calculate warranty expiry based on manufacturer and model name
+CREATE FUNCTION public.calculate_warranty_expiry(purchase_date date, manufacturer text, model_name text) RETURNS date
     LANGUAGE plpgsql
     AS $$
 DECLARE
     warranty_months integer;
 BEGIN
-    -- Get warranty period from machine_models table
-    SELECT mm.warranty_months INTO warranty_months
-    FROM machine_models mm
-    WHERE mm.id = calculate_warranty_expiry.model_id;
+    -- Get warranty period from warranty_periods table
+    SELECT wp.warranty_months INTO warranty_months
+    FROM warranty_periods wp
+    WHERE wp.manufacturer = calculate_warranty_expiry.manufacturer
+    AND wp.model_name = calculate_warranty_expiry.model_name;
     
     -- If no specific warranty period found, use default 12 months
     IF warranty_months IS NULL THEN
@@ -24,162 +76,119 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.copy_ticket_number_to_work_order(ticket_id integer, ticket_type text, work_order_id integer) RETURNS void
+-- Copy ticket number from repair ticket to work order
+CREATE FUNCTION public.copy_ticket_number_to_work_order(ticket_id integer, ticket_type text, work_order_id integer) RETURNS void
     LANGUAGE plpgsql
     AS $$
-DECLARE
-    ticket_number text;
-    ticket_year integer;
 BEGIN
-    -- Get the formatted number from the repair ticket
-    IF ticket_type = 'repair' THEN
-        SELECT formatted_number, year_created INTO ticket_number, ticket_year
-        FROM repair_tickets WHERE id = ticket_id;
-    ELSIF ticket_type = 'warranty_repair' THEN
-        SELECT formatted_number, year_created INTO ticket_number, ticket_year
-        FROM warranty_repair_tickets WHERE id = ticket_id;
-    END IF;
-    
-    -- Update the work order with the same number
-    IF ticket_number IS NOT NULL THEN
+    IF ticket_type = 'repair_ticket' THEN
         UPDATE work_orders 
-        SET formatted_number = ticket_number,
-            year_created = ticket_year
+        SET ticket_number = (
+            SELECT ticket_number 
+            FROM repair_tickets 
+            WHERE id = ticket_id
+        )
+        WHERE id = work_order_id;
+    ELSIF ticket_type = 'warranty_repair_ticket' THEN
+        UPDATE warranty_work_orders 
+        SET ticket_number = (
+            SELECT ticket_number 
+            FROM warranty_repair_tickets 
+            WHERE id = ticket_id
+        )
         WHERE id = work_order_id;
     END IF;
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.generate_formatted_number() RETURNS text
+-- Generate formatted number for tickets and work orders
+CREATE FUNCTION public.generate_formatted_number() RETURNS text
     LANGUAGE plpgsql
     AS $$
 DECLARE
     current_year integer;
-    current_sequence integer;
+    next_sequence integer;
     formatted_number text;
 BEGIN
-    current_year := EXTRACT(YEAR FROM CURRENT_DATE);
+    -- Get current year
+    current_year := EXTRACT(year FROM CURRENT_DATE);
     
     -- Get or create sequence for current year
-    SELECT current_sequence INTO current_sequence
-    FROM yearly_sequences
-    WHERE year = current_year;
+    INSERT INTO yearly_sequences (year, next_value)
+    VALUES (current_year, 2)
+    ON CONFLICT (year) 
+    DO UPDATE SET next_value = yearly_sequences.next_value + 1
+    RETURNING next_value - 1 INTO next_sequence;
     
-    IF current_sequence IS NULL THEN
-        INSERT INTO yearly_sequences (year, current_sequence)
-        VALUES (current_year, 1);
-        current_sequence := 1;
-    ELSE
-        UPDATE yearly_sequences
-        SET current_sequence = current_sequence + 1
-        WHERE year = current_year;
-        current_sequence := current_sequence + 1;
-    END IF;
-    
-    -- Format: YYYY-XXXX (e.g., 2025-0001)
-    formatted_number := current_year || '-' || LPAD(current_sequence::text, 4, '0');
+    -- Format as YYYY-NNNN
+    formatted_number := current_year || '-' || LPAD(next_sequence::text, 4, '0');
     
     RETURN formatted_number;
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.get_next_ticket_number(table_name text) RETURNS integer
+-- Get next ticket number for a specific table
+CREATE FUNCTION public.get_next_ticket_number(table_name text) RETURNS integer
     LANGUAGE plpgsql
     AS $$
 DECLARE
     next_number integer;
-    current_year integer;
-    current_sequence integer;
+    sequence_name text;
 BEGIN
-    current_year := EXTRACT(YEAR FROM CURRENT_DATE);
+    -- Determine sequence name based on table
+    CASE table_name
+        WHEN 'repair_tickets' THEN
+            sequence_name := 'repair_tickets_ticket_number_seq';
+        WHEN 'warranty_repair_tickets' THEN
+            sequence_name := 'warranty_repair_tickets_ticket_number_seq';
+        WHEN 'work_orders' THEN
+            sequence_name := 'work_orders_ticket_number_seq';
+        WHEN 'warranty_work_orders' THEN
+            sequence_name := 'warranty_work_orders_ticket_number_seq';
+        ELSE
+            RAISE EXCEPTION 'Unknown table name: %', table_name;
+    END CASE;
     
-    -- Get current sequence for the year
-    SELECT current_sequence INTO current_sequence
-    FROM yearly_sequences
-    WHERE year = current_year;
-    
-    IF current_sequence IS NULL THEN
-        -- Initialize sequence for new year
-        INSERT INTO yearly_sequences (year, current_sequence)
-        VALUES (current_year, 1);
-        next_number := 1;
-    ELSE
-        -- Increment sequence
-        UPDATE yearly_sequences
-        SET current_sequence = current_sequence + 1
-        WHERE year = current_year;
-        next_number := current_sequence + 1;
-    END IF;
+    -- Get next value from sequence
+    EXECUTE format('SELECT nextval(%L)', sequence_name) INTO next_number;
     
     RETURN next_number;
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.set_formatted_number_and_year() RETURNS trigger
+-- Set formatted number and year for tickets and work orders
+CREATE FUNCTION public.set_formatted_number_and_year() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-    -- Generate formatted number
-    NEW.formatted_number := generate_formatted_number();
+    -- Set year_created if not already set
+    IF NEW.year_created IS NULL THEN
+        NEW.year_created := EXTRACT(year FROM CURRENT_DATE);
+    END IF;
     
-    -- Set year created
-    NEW.year_created := EXTRACT(YEAR FROM CURRENT_DATE);
-    
-    -- Set ticket number
-    NEW.ticket_number := get_next_ticket_number(TG_TABLE_NAME);
+    -- Set formatted_number if not already set
+    IF NEW.formatted_number IS NULL THEN
+        NEW.formatted_number := generate_formatted_number();
+    END IF;
     
     RETURN NEW;
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.set_ticket_number() RETURNS trigger
+-- Set ticket number for new records
+CREATE FUNCTION public.set_ticket_number() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-    -- Set ticket number if not already set
     IF NEW.ticket_number IS NULL THEN
-        NEW.ticket_number := get_next_ticket_number(TG_TABLE_NAME);
+        NEW.ticket_number := nextval('ticket_number_seq');
     END IF;
-    
     RETURN NEW;
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.set_warranty_active() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-    NEW.warranty_active :=
-        CASE
-            WHEN NEW.warranty_expiry_date IS NULL THEN false
-            WHEN NEW.warranty_expiry_date > NOW() THEN true
-            ELSE false
-        END;
-    RETURN NEW;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.set_warranty_expiry() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-    model_id integer;
-BEGIN
-    -- Get the model_id from the machine_serials table
-    SELECT ms.model_id INTO model_id
-    FROM machine_serials ms
-    WHERE ms.id = NEW.serial_id;
-    
-    -- Calculate warranty expiry if purchase_date is set and we have a model_id
-    IF NEW.purchase_date IS NOT NULL AND model_id IS NOT NULL THEN
-        NEW.warranty_expiry_date := calculate_warranty_expiry(NEW.purchase_date, model_id);
-    END IF;
-    
-    RETURN NEW;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.update_updated_at_column() RETURNS trigger
+-- Update updated_at timestamp
+CREATE FUNCTION public.set_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -188,371 +197,627 @@ BEGIN
 END;
 $$;
 
--- Tables
+-- Set warranty active status based on expiry date
+CREATE FUNCTION public.set_warranty_active() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Set warranty_active based on warranty_expiry_date
+    IF NEW.warranty_expiry_date IS NOT NULL THEN
+        NEW.warranty_active := (NEW.warranty_expiry_date >= CURRENT_DATE);
+    ELSE
+        NEW.warranty_active := false;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$;
+
+-- Set warranty active status for assigned machines
+CREATE FUNCTION public.set_warranty_active_assigned_machines() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Set warranty_active based on warranty_expiry_date
+    IF NEW.warranty_expiry_date IS NOT NULL THEN
+        NEW.warranty_active := (NEW.warranty_expiry_date >= CURRENT_DATE);
+    ELSE
+        NEW.warranty_active := false;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$;
+
+-- Set warranty expiry date based on purchase date and model
+CREATE FUNCTION public.set_warranty_expiry() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Only calculate if purchase_date exists and warranty_expiry_date is not set
+    IF NEW.purchase_date IS NOT NULL AND NEW.warranty_expiry_date IS NULL THEN
+        -- Try to get warranty from machine model first
+        IF NEW.model_id IS NOT NULL THEN
+            NEW.warranty_expiry_date := calculate_warranty_expiry(NEW.purchase_date, NEW.model_id);
+        -- Fallback to manufacturer/model name lookup
+        ELSIF NEW.manufacturer IS NOT NULL AND NEW.name IS NOT NULL THEN
+            NEW.warranty_expiry_date := calculate_warranty_expiry(NEW.purchase_date, NEW.manufacturer, NEW.name);
+        END IF;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$;
+
+-- Update quote status timestamp
+CREATE FUNCTION public.update_quote_status_timestamp() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Update status-specific timestamps when status changes
+    IF OLD.status IS DISTINCT FROM NEW.status THEN
+        CASE NEW.status
+            WHEN 'accepted' THEN
+                NEW.accepted_at = CURRENT_TIMESTAMP;
+            WHEN 'rejected' THEN
+                NEW.rejected_at = CURRENT_TIMESTAMP;
+            WHEN 'converted' THEN
+                NEW.converted_at = CURRENT_TIMESTAMP;
+            ELSE
+                -- No specific timestamp for other statuses
+        END CASE;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$;
+
+-- Generic timestamp update function
+CREATE FUNCTION public.update_timestamp() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$;
+
+-- Update updated_at column
+CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$;
+
+--
+-- SEQUENCES
+--
+
+-- Ticket number sequence
+CREATE SEQUENCE IF NOT EXISTS ticket_number_seq START 1000;
+
+--
+-- TABLES
+--
+
+-- Assigned machines (customer-machine relationships with sales data)
 CREATE TABLE public.assigned_machines (
-    id SERIAL PRIMARY KEY,
-    serial_id integer NOT NULL,
+    id integer NOT NULL,
     customer_id integer NOT NULL,
+    serial_id integer NOT NULL,
     purchase_date date,
     warranty_expiry_date date,
-    warranty_active boolean DEFAULT true,
-    description text,
-    receipt_number text,
-    assigned_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE public.customers (
-    id SERIAL PRIMARY KEY,
-    name text NOT NULL,
-    phone text,
-    email text,
-    address text,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    company_name text,
-    vat_number text,
-    city text,
-    postal_code text,
-    street_address text,
-    phone2 text,
-    fax text
-);
-
-CREATE TABLE public.customer_communications (
-    id SERIAL PRIMARY KEY,
-    customer_id integer NOT NULL,
-    type character varying(50) NOT NULL,
-    subject character varying(200),
-    content text NOT NULL,
-    direction character varying(20) NOT NULL,
-    status character varying(20) DEFAULT 'completed',
-    scheduled_date timestamp without time zone,
-    created_by integer,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT customer_communications_direction_check CHECK (direction IN ('inbound', 'outbound')),
-    CONSTRAINT customer_communications_status_check CHECK (status IN ('pending', 'completed', 'scheduled')),
-    CONSTRAINT customer_communications_type_check CHECK (type IN ('call', 'email', 'note', 'follow_up', 'meeting'))
-);
-
-CREATE TABLE public.customer_preferences (
-    id SERIAL PRIMARY KEY,
-    customer_id integer NOT NULL,
-    preferred_contact_method character varying(20),
-    preferred_contact_time character varying(20),
-    category character varying(20) DEFAULT 'regular',
-    special_requirements text,
+    warranty_active boolean DEFAULT false,
     notes text,
-    auto_notifications boolean DEFAULT true,
+    is_active boolean DEFAULT true,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT customer_preferences_category_check CHECK (category IN ('vip', 'regular', 'new', 'inactive')),
-    CONSTRAINT customer_preferences_preferred_contact_method_check CHECK (preferred_contact_method IN ('email', 'phone', 'sms', 'mail')),
-    CONSTRAINT customer_preferences_preferred_contact_time_check CHECK (preferred_contact_time IN ('morning', 'afternoon', 'evening', 'anytime'))
+    added_by_user_id integer,
+    sold_by_user_id integer,
+    machine_condition text DEFAULT 'new'::text,
+    sale_date date,
+    sale_price numeric(12,2),
+    is_sale boolean DEFAULT false,
+    sales_opportunity boolean DEFAULT false,
+    sales_notes text,
+    potential_value numeric(12,2),
+    sales_user_id integer,
+    lead_quality text,
+    sales_stage text,
+    customer_satisfaction_score integer,
+    upsell_opportunity boolean DEFAULT false,
+    recommended_products text
 );
 
-CREATE TABLE public.inventory (
-    id SERIAL PRIMARY KEY,
+-- Customers (with sales ownership and metrics)
+CREATE TABLE public.customers (
+    id integer NOT NULL,
     name text NOT NULL,
-    description text,
-    quantity integer DEFAULT 0 NOT NULL,
+    email text,
+    phone text,
+    address text,
+    company_name text,
+    contact_person text,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    unit_price numeric(10,2) DEFAULT 0,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    part_number character varying(50),
-    barcode character varying(50),
-    category character varying(50),
-    reorder_level integer DEFAULT 5,
-    supplier_id integer,
-    location character varying(100),
-    min_order_quantity integer DEFAULT 1,
-    lead_time_days integer DEFAULT 7,
-    min_stock_level integer DEFAULT 5,
-    supplier text,
-    sku text
+    owner_id integer,
+    pipeline_position integer DEFAULT 0
 );
 
-CREATE TABLE public.machine_categories (
-    id SERIAL PRIMARY KEY,
-    name text NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
+-- Machine models
 CREATE TABLE public.machine_models (
-    id SERIAL PRIMARY KEY,
-    name character varying(255) NOT NULL,
-    catalogue_number character varying(100),
-    manufacturer character varying(255) NOT NULL,
-    category_id integer,
+    id integer NOT NULL,
+    manufacturer text NOT NULL,
+    name text NOT NULL,
+    category text,
     description text,
+    catalogue_number text,
     warranty_months integer DEFAULT 12,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Machine serials
 CREATE TABLE public.machine_serials (
-    id SERIAL PRIMARY KEY,
+    id integer NOT NULL,
     model_id integer NOT NULL,
-    serial_number character varying(255) NOT NULL,
-    status character varying(50) DEFAULT 'available',
+    serial_number text NOT NULL,
+    status text DEFAULT 'available'::text,
+    notes text,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE public.machines (
-    id SERIAL PRIMARY KEY,
+-- Customer communications
+CREATE TABLE public.customer_communications (
+    id integer NOT NULL,
     customer_id integer NOT NULL,
+    communication_type text NOT NULL,
+    subject text,
+    content text NOT NULL,
+    direction text NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by integer,
+    attachments_count integer DEFAULT 0,
+    is_internal boolean DEFAULT false,
+    priority text DEFAULT 'normal'::text,
+    status text DEFAULT 'active'::text,
+    tags text[],
+    reference_id integer,
+    reference_type text
+);
+
+-- Inventory
+CREATE TABLE public.inventory (
+    id integer NOT NULL,
     name text NOT NULL,
-    serial_number text,
+    description text,
+    sku text,
+    category text,
+    quantity integer DEFAULT 0,
+    unit_price numeric(10,2),
+    supplier text,
+    reorder_level integer DEFAULT 0,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    location text,
+    barcode text,
+    notes text,
+    is_active boolean DEFAULT true
+);
+
+-- Lead follow-ups
+CREATE TABLE public.lead_follow_ups (
+    id integer NOT NULL,
+    lead_id integer NOT NULL,
+    follow_up_date timestamp without time zone NOT NULL,
+    follow_up_type text NOT NULL,
+    notes text,
+    outcome text,
+    next_action text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by integer,
+    completed boolean DEFAULT false,
+    completed_at timestamp without time zone
+);
+
+-- Leads (sales prospects)
+CREATE TABLE public.leads (
+    id integer NOT NULL,
+    customer_name text NOT NULL,
+    company_name text,
+    email text,
+    phone text,
+    lead_source text,
+    lead_quality text DEFAULT 'cold'::text,
+    sales_stage text DEFAULT 'new'::text,
+    potential_value numeric(12,2),
+    assigned_to integer,
+    notes text,
+    next_follow_up timestamp without time zone,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    sales_notes text,
+    converted boolean DEFAULT false,
+    converted_at timestamp without time zone,
+    conversion_type text,
+    conversion_value numeric(12,2)
+);
+
+-- Machine categories
+CREATE TABLE public.machine_categories (
+    id integer NOT NULL,
+    name text NOT NULL,
     description text,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    warranty_expiry_date date,
-    warranty_active boolean DEFAULT false,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    catalogue_number text,
-    manufacturer text,
-    bought_at text,
-    category_id integer,
-    model_name text,
-    receipt_number text,
-    purchase_date date
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE public.notifications (
-    id SERIAL PRIMARY KEY,
-    user_id integer,
-    title character varying(255) NOT NULL,
-    message text NOT NULL,
-    type character varying(50) DEFAULT 'info' NOT NULL,
-    is_read boolean DEFAULT false,
-    related_entity_type character varying(50),
-    related_entity_id integer,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    title_key text NOT NULL,
-    message_key text NOT NULL,
-    message_params jsonb NOT NULL
-);
-
-CREATE TABLE public.repair_tickets (
-    id SERIAL PRIMARY KEY,
+-- Machine rentals
+CREATE TABLE public.machine_rentals (
+    id integer NOT NULL,
     customer_id integer NOT NULL,
     machine_id integer NOT NULL,
-    description text NOT NULL,
-    status text DEFAULT 'intake',
-    submitted_by integer NOT NULL,
+    rental_start_date date NOT NULL,
+    rental_end_date date,
+    daily_rate numeric(10,2) NOT NULL,
+    total_amount numeric(12,2),
+    rental_status text DEFAULT 'active'::text,
+    notes text,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    converted_at timestamp without time zone,
-    converted_to_work_order_id integer,
-    converted_to_warranty_work_order_id integer,
-    ticket_number integer,
-    problem_description text,
-    notes text,
-    additional_equipment text,
-    brought_by text,
-    formatted_number text,
-    year_created integer,
-    CONSTRAINT repair_tickets_status_check CHECK (status IN ('intake', 'converted', 'converted - warranty', 'cancelled'))
+    created_by integer,
+    deposit_amount numeric(12,2),
+    deposit_paid boolean DEFAULT false,
+    return_condition text,
+    damage_charges numeric(12,2) DEFAULT 0
 );
 
-CREATE TABLE public.schema_migrations (
-    name text NOT NULL PRIMARY KEY,
-    executed_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+-- Machines (legacy table - consider deprecating in favor of machine_serials)
+CREATE TABLE public.machines (
+    id integer NOT NULL,
+    name text NOT NULL,
+    manufacturer text,
+    model text,
+    serial_number text,
+    catalogue_number text,
+    purchase_date date,
+    warranty_expiry_date date,
+    warranty_active boolean DEFAULT false,
+    notes text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    model_id integer
 );
 
-CREATE TABLE public.stock_movements (
-    id SERIAL PRIMARY KEY,
-    inventory_id integer NOT NULL,
-    quantity_change integer NOT NULL,
-    reason character varying(200) NOT NULL,
-    work_order_id integer,
+-- Notifications
+CREATE TABLE public.notifications (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    title text NOT NULL,
+    message text NOT NULL,
+    type text DEFAULT 'info'::text,
+    is_read boolean DEFAULT false,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    title_key text,
+    message_key text,
+    message_params jsonb DEFAULT '{}'::jsonb,
+    action_url text,
+    action_label text
+);
+
+-- Quote items
+CREATE TABLE public.quote_items (
+    id integer NOT NULL,
+    quote_id integer NOT NULL,
+    description text NOT NULL,
+    quantity integer NOT NULL DEFAULT 1,
+    unit_price numeric(12,2) NOT NULL,
+    total_price numeric(12,2) NOT NULL,
     notes text,
-    user_id integer,
-    previous_quantity integer NOT NULL,
-    new_quantity integer NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE public.suppliers (
-    id SERIAL PRIMARY KEY,
-    name character varying(100) NOT NULL,
-    email character varying(100),
-    phone character varying(20),
-    address text,
-    category character varying(50),
-    contact_person character varying(100),
-    website character varying(200),
-    payment_terms character varying(100),
-    status character varying(20) DEFAULT 'active',
+-- Quotes
+CREATE TABLE public.quotes (
+    id integer NOT NULL,
+    quote_number text NOT NULL,
+    customer_id integer,
+    customer_name text NOT NULL,
+    customer_email text,
+    customer_phone text,
+    subtotal numeric(12,2) NOT NULL DEFAULT 0,
+    tax_rate numeric(5,2) DEFAULT 0,
+    tax_amount numeric(12,2) DEFAULT 0,
+    total_amount numeric(12,2) NOT NULL DEFAULT 0,
+    status text DEFAULT 'draft'::text,
+    valid_until date,
     notes text,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT suppliers_status_check CHECK (status IN ('active', 'inactive'))
+    created_by integer,
+    accepted_at timestamp without time zone,
+    rejected_at timestamp without time zone,
+    converted_at timestamp without time zone
 );
 
-CREATE TABLE public.users (
-    id SERIAL PRIMARY KEY,
-    name text NOT NULL,
-    email text NOT NULL UNIQUE,
-    role text DEFAULT 'technician',
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    password text NOT NULL,
-    requires_password_reset boolean DEFAULT true,
-    refresh_token text,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    phone text,
-    department text,
-    status text DEFAULT 'active',
-    last_login timestamp without time zone,
-    CONSTRAINT users_status_check CHECK (status IN ('active', 'inactive'))
-);
-
-CREATE TABLE public.warranty_periods (
-    id SERIAL PRIMARY KEY,
-    manufacturer text NOT NULL,
-    model_name text NOT NULL,
-    warranty_months integer DEFAULT 12 NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE public.warranty_repair_tickets (
-    id SERIAL PRIMARY KEY,
-    ticket_number integer,
+-- Repair tickets (with sales data)
+CREATE TABLE public.repair_tickets (
+    id integer NOT NULL,
     customer_id integer NOT NULL,
     machine_id integer NOT NULL,
     problem_description text NOT NULL,
+    status text DEFAULT 'submitted'::text,
+    priority text DEFAULT 'medium'::text,
     notes text,
-    additional_equipment text,
-    brought_by text,
-    submitted_by integer NOT NULL,
-    status text DEFAULT 'intake' NOT NULL,
-    converted_to_warranty_work_order_id integer,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    submitted_by integer,
+    assigned_to integer,
+    ticket_number integer,
     formatted_number text,
     year_created integer,
+    converted_to_work_order_id integer,
     converted_at timestamp without time zone,
-    CONSTRAINT warranty_repair_tickets_status_check CHECK (status IN ('intake', 'converted', 'cancelled'))
+    converted_by_user_id integer,
+    converted_to_warranty_work_order_id integer,
+    sales_opportunity boolean DEFAULT false,
+    sales_notes text,
+    potential_value numeric(12,2),
+    sales_user_id integer,
+    lead_quality text,
+    sales_stage text
 );
 
-CREATE TABLE public.warranty_work_orders (
-    id SERIAL PRIMARY KEY,
-    machine_id integer NOT NULL,
-    customer_id integer NOT NULL,
-    description text,
-    status text DEFAULT 'pending',
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    technician_id integer,
-    priority text DEFAULT 'medium',
-    estimated_hours integer,
-    started_at timestamp without time zone,
-    completed_at timestamp without time zone,
-    due_date timestamp without time zone,
-    labor_hours numeric(10,2),
-    labor_rate numeric(10,2) DEFAULT 50.00,
-    troubleshooting_fee numeric(10,2) DEFAULT 0,
-    quote_subtotal_parts numeric(10,2) DEFAULT 0,
-    quote_total numeric(10,2) DEFAULT 0,
-    converted_from_ticket_id integer,
-    ticket_number integer,
-    owner_technician_id integer,
-    formatted_number text,
-    year_created integer
+-- Schema migrations tracking
+CREATE TABLE public.schema_migrations (
+    version text NOT NULL,
+    applied_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE public.warranty_work_order_inventory (
-    id SERIAL PRIMARY KEY,
-    warranty_work_order_id integer NOT NULL,
+-- Stock movements
+CREATE TABLE public.stock_movements (
+    id integer NOT NULL,
     inventory_id integer NOT NULL,
+    movement_type text NOT NULL,
     quantity integer NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT warranty_work_order_inventory_quantity_check CHECK (quantity > 0)
-);
-
-CREATE TABLE public.warranty_work_order_notes (
-    id SERIAL PRIMARY KEY,
-    warranty_work_order_id integer,
-    content text NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE public.work_order_attachments (
-    id SERIAL PRIMARY KEY,
-    work_order_id integer NOT NULL,
-    filename character varying(255) NOT NULL,
-    original_name character varying(255) NOT NULL,
-    file_path text NOT NULL,
-    file_size integer NOT NULL,
-    file_type character varying(50) DEFAULT 'general',
-    description text,
-    uploaded_by integer,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE public.work_order_inventory (
-    id SERIAL PRIMARY KEY,
-    work_order_id integer NOT NULL,
-    inventory_id integer NOT NULL,
-    quantity integer NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT work_order_inventory_quantity_check CHECK (quantity > 0)
-);
-
-CREATE TABLE public.work_order_notes (
-    id SERIAL PRIMARY KEY,
-    work_order_id integer,
-    content text NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE public.work_order_templates (
-    id SERIAL PRIMARY KEY,
-    name character varying(255) NOT NULL,
-    description text NOT NULL,
-    category character varying(100) NOT NULL,
-    estimated_hours numeric(5,2) DEFAULT 0,
-    required_parts text[] DEFAULT '{}',
-    steps text[] NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE public.work_order_time_entries (
-    id SERIAL PRIMARY KEY,
-    work_order_id integer NOT NULL,
-    technician_id integer NOT NULL,
-    start_time timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    end_time timestamp without time zone,
+    reference_type text,
+    reference_id integer,
     notes text,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by integer,
+    unit_cost numeric(10,2)
+);
+
+-- Suppliers
+CREATE TABLE public.suppliers (
+    id integer NOT NULL,
+    name text NOT NULL,
+    contact_person text,
+    email text,
+    phone text,
+    address text,
+    website text,
+    notes text,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    payment_terms text,
+    tax_id text,
+    account_number text,
+    preferred_currency text DEFAULT 'USD'::text,
+    credit_limit numeric(12,2),
+    rating integer
+);
+
+-- Users
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    name text NOT NULL,
+    email text NOT NULL,
+    password text NOT NULL,
+    role text DEFAULT 'technician'::text,
+    department text,
+    phone text,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    last_login timestamp without time zone,
+    status text DEFAULT 'active'::text,
+    last_seen timestamp without time zone
+);
+
+-- Warranty periods
+CREATE TABLE public.warranty_periods (
+    id integer NOT NULL,
+    manufacturer text NOT NULL,
+    model_name text NOT NULL,
+    warranty_months integer NOT NULL DEFAULT 12,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE public.work_orders (
-    id SERIAL PRIMARY KEY,
-    machine_id integer NOT NULL,
+-- Warranty repair tickets (with sales data)
+CREATE TABLE public.warranty_repair_tickets (
+    id integer NOT NULL,
     customer_id integer NOT NULL,
-    description text,
-    status text DEFAULT 'pending',
+    machine_id integer NOT NULL,
+    problem_description text NOT NULL,
+    status text DEFAULT 'submitted'::text,
+    priority text DEFAULT 'medium'::text,
+    notes text,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    submitted_by integer,
+    assigned_to integer,
+    ticket_number integer,
+    formatted_number text,
+    year_created integer,
+    converted_to_work_order_id integer,
+    converted_at timestamp without time zone,
+    converted_by_user_id integer,
+    sales_opportunity boolean DEFAULT false,
+    sales_notes text,
+    potential_value numeric(12,2),
+    sales_user_id integer,
+    lead_quality text,
+    sales_stage text
+);
+
+-- Warranty work order inventory
+CREATE TABLE public.warranty_work_order_inventory (
+    id integer NOT NULL,
+    work_order_id integer NOT NULL,
+    inventory_id integer NOT NULL,
+    quantity_used integer NOT NULL,
+    unit_cost numeric(10,2),
+    total_cost numeric(12,2),
+    added_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    added_by integer,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    notes text
+);
+
+-- Warranty work order notes
+CREATE TABLE public.warranty_work_order_notes (
+    id integer NOT NULL,
+    work_order_id integer NOT NULL,
+    note text NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by integer,
+    is_internal boolean DEFAULT false,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    note_type text DEFAULT 'general'::text,
+    time_spent integer,
+    billable_hours numeric(4,2)
+);
+
+-- Warranty work orders (with sales data)
+CREATE TABLE public.warranty_work_orders (
+    id integer NOT NULL,
+    customer_id integer NOT NULL,
+    machine_id integer NOT NULL,
+    title text NOT NULL,
+    description text,
+    status text DEFAULT 'pending'::text,
+    priority text DEFAULT 'medium'::text,
     technician_id integer,
-    priority text DEFAULT 'medium',
-    estimated_hours integer,
-    started_at timestamp without time zone,
+    owner_technician_id integer,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    due_date date,
     completed_at timestamp without time zone,
-    due_date timestamp without time zone,
-    total_cost numeric(10,2) DEFAULT 0,
+    notes text,
+    ticket_number integer,
+    formatted_number text,
+    year_created integer,
+    repair_ticket_id integer,
+    sales_opportunity boolean DEFAULT false,
+    sales_notes text,
+    potential_value numeric(12,2),
+    sales_user_id integer,
+    lead_quality text,
+    sales_stage text
+);
+
+-- Work order attachments
+CREATE TABLE public.work_order_attachments (
+    id integer NOT NULL,
+    work_order_id integer NOT NULL,
+    filename text NOT NULL,
+    original_filename text NOT NULL,
+    file_path text NOT NULL,
+    file_size integer,
+    mime_type text,
+    uploaded_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    uploaded_by integer,
+    description text,
+    is_public boolean DEFAULT false,
+    file_category text DEFAULT 'general'::text
+);
+
+-- Work order inventory
+CREATE TABLE public.work_order_inventory (
+    id integer NOT NULL,
+    work_order_id integer NOT NULL,
+    inventory_id integer NOT NULL,
+    quantity_used integer NOT NULL,
+    unit_cost numeric(10,2),
+    total_cost numeric(12,2),
+    added_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    added_by integer,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    notes text
+);
+
+-- Work order notes
+CREATE TABLE public.work_order_notes (
+    id integer NOT NULL,
+    work_order_id integer NOT NULL,
+    note text NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by integer,
+    is_internal boolean DEFAULT false,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    note_type text DEFAULT 'general'::text,
+    time_spent integer,
+    billable_hours numeric(4,2)
+);
+
+-- Work order templates
+CREATE TABLE public.work_order_templates (
+    id integer NOT NULL,
+    name text NOT NULL,
+    description text,
+    template_data jsonb NOT NULL,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by integer,
+    category text,
+    estimated_duration integer,
+    required_skills text[]
+);
+
+-- Work order time entries
+CREATE TABLE public.work_order_time_entries (
+    id integer NOT NULL,
+    work_order_id integer NOT NULL,
+    user_id integer NOT NULL,
+    start_time timestamp without time zone NOT NULL,
+    end_time timestamp without time zone,
+    duration_minutes integer,
+    description text,
+    billable_hours numeric(4,2),
+    hourly_rate numeric(8,2),
+    total_cost numeric(10,2),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    is_billable boolean DEFAULT true,
+    activity_type text DEFAULT 'repair'::text,
+    break_duration_minutes integer DEFAULT 0
+);
+
+-- Work orders (with sales data)
+CREATE TABLE public.work_orders (
+    id integer NOT NULL,
+    customer_id integer NOT NULL,
+    machine_id integer NOT NULL,
+    title text NOT NULL,
+    description text,
+    status text DEFAULT 'pending'::text,
+    priority text DEFAULT 'medium'::text,
+    technician_id integer,
+    owner_technician_id integer,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    due_date date,
+    completed_at timestamp without time zone,
+    notes text,
     is_warranty boolean DEFAULT false,
     labor_hours numeric(6,2),
     labor_rate numeric(10,2),
@@ -562,308 +827,454 @@ CREATE TABLE public.work_orders (
     approval_at timestamp without time zone,
     troubleshooting_fee numeric(12,2),
     paid_at timestamp without time zone,
+    total_cost numeric(12,2),
     ticket_number integer,
-    converted_from_ticket_id integer,
-    owner_technician_id integer,
-    converted_by_user_id integer,
     formatted_number text,
-    year_created integer
+    year_created integer,
+    repair_ticket_id integer,
+    converted_by_user_id integer,
+    sales_opportunity boolean DEFAULT false,
+    sales_notes text,
+    potential_value numeric(12,2),
+    sales_user_id integer,
+    lead_quality text,
+    sales_stage text
 );
 
+-- Yearly sequences for formatted numbers
 CREATE TABLE public.yearly_sequences (
-    id SERIAL PRIMARY KEY,
     year integer NOT NULL,
-    current_sequence integer DEFAULT 0 NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    next_value integer DEFAULT 1
 );
 
--- Views
+--
+-- VIEWS
+--
+
+-- Assigned machines with detailed information
 CREATE VIEW public.assigned_machines_with_details AS
-SELECT am.id,
-    am.serial_id,
+ SELECT am.id,
     am.customer_id,
+    am.serial_id,
     am.purchase_date,
     am.warranty_expiry_date,
     am.warranty_active,
-    am.description,
-    am.assigned_at,
+    am.notes,
+    am.is_active,
+    am.created_at,
     am.updated_at,
-    ms.serial_number,
-    mm.name AS model_name,
-    mm.catalogue_number,
-    mm.manufacturer,
-    c.name AS customer_name,
-    c.email AS customer_email,
-    c.phone AS customer_phone
-FROM assigned_machines am
-JOIN machine_serials ms ON am.serial_id = ms.id
-JOIN machine_models mm ON ms.model_id = mm.id
-JOIN customers c ON am.customer_id = c.id;
-
-CREATE VIEW public.machine_models_with_stats AS
-SELECT mm.id,
-    mm.name,
-    mm.catalogue_number,
-    mm.manufacturer,
-    mm.category_id,
-    mm.description,
-    mm.created_at,
-    mm.updated_at,
-    mc.name AS category_name,
-    count(ms.id) AS total_serials,
-    count(CASE WHEN ms.status = 'assigned' THEN 1 END) AS assigned_serials,
-    count(CASE WHEN ms.status = 'available' THEN 1 END) AS available_serials,
-    min(ms.created_at) AS first_serial_created,
-    max(ms.created_at) AS last_serial_created
-FROM machine_models mm
-LEFT JOIN machine_categories mc ON mm.category_id = mc.id
-LEFT JOIN machine_serials ms ON mm.id = ms.model_id
-GROUP BY mm.id, mm.name, mm.catalogue_number, mm.manufacturer, mm.category_id, mm.description, mm.created_at, mm.updated_at, mc.name;
-
-CREATE VIEW public.repair_tickets_view AS
-SELECT rt.id,
-    rt.ticket_number,
-    rt.formatted_number,
-    rt.year_created,
-    rt.customer_id,
     c.name AS customer_name,
     c.company_name,
-    c.vat_number,
-    c.city,
-    c.postal_code,
-    c.street_address,
-    c.phone AS phone1,
-    c.phone2,
-    c.fax,
-    c.email,
-    rt.machine_id,
-    mm.manufacturer,
-    am.description AS bought_at,
-    mm.category_id,
-    mc.name AS category_name,
-    mm.name AS model_name,
-    mm.catalogue_number,
-    mm.description AS model_description,
     ms.serial_number,
-    am.receipt_number AS receipt_number,
-    am.purchase_date,
-    am.warranty_expiry_date,
-    rt.problem_description,
-    rt.notes,
-    rt.additional_equipment,
-    rt.brought_by,
-    rt.submitted_by,
-    u.name AS submitted_by_name,
-    rt.status,
-    rt.converted_to_work_order_id,
-    wo.formatted_number AS converted_work_order_formatted_number,
-    wo.year_created AS converted_work_order_year_created,
-    wo.owner_technician_id AS converted_by_technician_id,
-    tech.name AS converted_by_technician_name,
-    rt.converted_at,
-    rt.created_at,
-    rt.updated_at
-FROM repair_tickets rt
-LEFT JOIN customers c ON rt.customer_id = c.id
-LEFT JOIN assigned_machines am ON rt.machine_id = am.id
-LEFT JOIN machine_serials ms ON am.serial_id = ms.id
-LEFT JOIN machine_models mm ON ms.model_id = mm.id
-LEFT JOIN machine_categories mc ON mm.category_id = mc.id
-LEFT JOIN users u ON rt.submitted_by = u.id
-LEFT JOIN work_orders wo ON rt.converted_to_work_order_id = wo.id
-LEFT JOIN users tech ON wo.owner_technician_id = tech.id;
-
-CREATE VIEW public.warranty_repair_tickets_view AS
-SELECT wrt.id,
-    wrt.ticket_number,
-    wrt.formatted_number,
-    wrt.year_created,
-    wrt.customer_id,
-    c.name AS customer_name,
-    c.company_name,
-    c.vat_number,
-    c.city,
-    c.postal_code,
-    c.street_address,
-    c.phone AS phone1,
-    c.phone2,
-    c.fax,
-    c.email,
-    wrt.machine_id,
     mm.manufacturer,
-    am.description AS bought_at,
-    mm.category_id,
-    mc.name AS category_name,
     mm.name AS model_name,
-    mm.catalogue_number,
-    mm.description AS model_description,
-    ms.serial_number,
-    am.receipt_number AS receipt_number,
-    am.purchase_date,
-    am.warranty_expiry_date,
-    wrt.problem_description,
-    wrt.notes,
-    wrt.additional_equipment,
-    wrt.brought_by,
-    wrt.submitted_by,
-    u.name AS submitted_by_name,
-    wrt.status,
-    wrt.converted_to_warranty_work_order_id,
-    wwo.formatted_number AS converted_warranty_work_order_formatted_number,
-    wwo.year_created AS converted_warranty_work_order_year_created,
-    wwo.owner_technician_id AS converted_by_technician_id,
-    tech.name AS converted_by_technician_name,
-    wrt.converted_at,
-    wrt.created_at,
-    wrt.updated_at
-FROM warranty_repair_tickets wrt
-LEFT JOIN customers c ON wrt.customer_id = c.id
-LEFT JOIN assigned_machines am ON wrt.machine_id = am.id
-LEFT JOIN machine_serials ms ON am.serial_id = ms.id
-LEFT JOIN machine_models mm ON ms.model_id = mm.id
-LEFT JOIN machine_categories mc ON mm.category_id = mc.id
-LEFT JOIN users u ON wrt.submitted_by = u.id
-LEFT JOIN warranty_work_orders wwo ON wrt.converted_to_warranty_work_order_id = wwo.id
-LEFT JOIN users tech ON wwo.owner_technician_id = tech.id;
+    mm.category,
+    mm.warranty_months,
+    am.sold_by_user_id,
+    am.machine_condition,
+    am.sale_date,
+    am.sale_price,
+    am.is_sale,
+    am.sales_opportunity,
+    am.sales_notes,
+    am.potential_value,
+    am.sales_user_id,
+    am.lead_quality,
+    am.sales_stage,
+    am.customer_satisfaction_score,
+    am.upsell_opportunity,
+    am.recommended_products,
+    u.name AS sales_user_name
+   FROM (((public.assigned_machines am
+     JOIN public.customers c ON (am.customer_id = c.id))
+     JOIN public.machine_serials ms ON (am.serial_id = ms.id))
+     JOIN public.machine_models mm ON (ms.model_id = mm.id))
+     LEFT JOIN public.users u ON (am.sales_user_id = u.id);
 
--- Foreign Key Constraints
-ALTER TABLE public.assigned_machines ADD CONSTRAINT assigned_machines_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE;
-ALTER TABLE public.assigned_machines ADD CONSTRAINT assigned_machines_serial_id_fkey FOREIGN KEY (serial_id) REFERENCES public.machine_serials(id) ON DELETE CASCADE;
-ALTER TABLE public.customer_communications ADD CONSTRAINT customer_communications_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE;
-ALTER TABLE public.customer_communications ADD CONSTRAINT customer_communications_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id) ON DELETE SET NULL;
-ALTER TABLE public.customer_preferences ADD CONSTRAINT customer_preferences_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE;
-ALTER TABLE public.inventory ADD CONSTRAINT inventory_supplier_id_fkey FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id) ON DELETE SET NULL;
-ALTER TABLE public.machine_models ADD CONSTRAINT machine_models_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.machine_categories(id) ON DELETE SET NULL;
-ALTER TABLE public.machine_serials ADD CONSTRAINT machine_serials_model_id_fkey FOREIGN KEY (model_id) REFERENCES public.machine_models(id) ON DELETE CASCADE;
-ALTER TABLE public.machines ADD CONSTRAINT machines_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE;
-ALTER TABLE public.machines ADD CONSTRAINT machines_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.machine_categories(id) ON DELETE SET NULL;
-ALTER TABLE public.notifications ADD CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
-ALTER TABLE public.repair_tickets ADD CONSTRAINT repair_tickets_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE;
-ALTER TABLE public.repair_tickets ADD CONSTRAINT repair_tickets_machine_id_fkey FOREIGN KEY (machine_id) REFERENCES public.assigned_machines(id) ON DELETE CASCADE;
-ALTER TABLE public.repair_tickets ADD CONSTRAINT repair_tickets_submitted_by_fkey FOREIGN KEY (submitted_by) REFERENCES public.users(id) ON DELETE CASCADE;
-ALTER TABLE public.repair_tickets ADD CONSTRAINT repair_tickets_converted_to_work_order_id_fkey FOREIGN KEY (converted_to_work_order_id) REFERENCES public.work_orders(id) ON DELETE SET NULL;
-ALTER TABLE public.repair_tickets ADD CONSTRAINT repair_tickets_converted_to_warranty_work_order_id_fkey FOREIGN KEY (converted_to_warranty_work_order_id) REFERENCES public.warranty_work_orders(id) ON DELETE SET NULL;
-ALTER TABLE public.stock_movements ADD CONSTRAINT stock_movements_inventory_id_fkey FOREIGN KEY (inventory_id) REFERENCES public.inventory(id) ON DELETE CASCADE;
-ALTER TABLE public.stock_movements ADD CONSTRAINT stock_movements_work_order_id_fkey FOREIGN KEY (work_order_id) REFERENCES public.work_orders(id) ON DELETE SET NULL;
-ALTER TABLE public.stock_movements ADD CONSTRAINT stock_movements_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
-ALTER TABLE public.warranty_repair_tickets ADD CONSTRAINT warranty_repair_tickets_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE;
-ALTER TABLE public.warranty_repair_tickets ADD CONSTRAINT warranty_repair_tickets_machine_id_fkey FOREIGN KEY (machine_id) REFERENCES public.assigned_machines(id) ON DELETE CASCADE;
-ALTER TABLE public.warranty_repair_tickets ADD CONSTRAINT warranty_repair_tickets_submitted_by_fkey FOREIGN KEY (submitted_by) REFERENCES public.users(id) ON DELETE CASCADE;
-ALTER TABLE public.warranty_repair_tickets ADD CONSTRAINT warranty_repair_tickets_converted_to_warranty_work_order_id_fkey FOREIGN KEY (converted_to_warranty_work_order_id) REFERENCES public.warranty_work_orders(id) ON DELETE SET NULL;
-ALTER TABLE public.warranty_work_orders ADD CONSTRAINT warranty_work_orders_machine_id_fkey FOREIGN KEY (machine_id) REFERENCES public.assigned_machines(id) ON DELETE CASCADE;
-ALTER TABLE public.warranty_work_orders ADD CONSTRAINT warranty_work_orders_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE;
-ALTER TABLE public.warranty_work_orders ADD CONSTRAINT warranty_work_orders_technician_id_fkey FOREIGN KEY (technician_id) REFERENCES public.users(id) ON DELETE SET NULL;
-ALTER TABLE public.warranty_work_orders ADD CONSTRAINT warranty_work_orders_converted_from_ticket_id_fkey FOREIGN KEY (converted_from_ticket_id) REFERENCES public.repair_tickets(id) ON DELETE SET NULL;
-ALTER TABLE public.warranty_work_orders ADD CONSTRAINT warranty_work_orders_owner_technician_id_fkey FOREIGN KEY (owner_technician_id) REFERENCES public.users(id) ON DELETE SET NULL;
-ALTER TABLE public.warranty_work_order_inventory ADD CONSTRAINT warranty_work_order_inventory_warranty_work_order_id_fkey FOREIGN KEY (warranty_work_order_id) REFERENCES public.warranty_work_orders(id) ON DELETE CASCADE;
-ALTER TABLE public.warranty_work_order_inventory ADD CONSTRAINT warranty_work_order_inventory_inventory_id_fkey FOREIGN KEY (inventory_id) REFERENCES public.inventory(id) ON DELETE RESTRICT;
-ALTER TABLE public.warranty_work_order_notes ADD CONSTRAINT warranty_work_order_notes_warranty_work_order_id_fkey FOREIGN KEY (warranty_work_order_id) REFERENCES public.warranty_work_orders(id) ON DELETE CASCADE;
-ALTER TABLE public.work_order_attachments ADD CONSTRAINT work_order_attachments_work_order_id_fkey FOREIGN KEY (work_order_id) REFERENCES public.work_orders(id) ON DELETE CASCADE;
-ALTER TABLE public.work_order_attachments ADD CONSTRAINT work_order_attachments_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES public.users(id) ON DELETE SET NULL;
-ALTER TABLE public.work_order_inventory ADD CONSTRAINT work_order_inventory_work_order_id_fkey FOREIGN KEY (work_order_id) REFERENCES public.work_orders(id) ON DELETE CASCADE;
-ALTER TABLE public.work_order_inventory ADD CONSTRAINT work_order_inventory_inventory_id_fkey FOREIGN KEY (inventory_id) REFERENCES public.inventory(id) ON DELETE RESTRICT;
-ALTER TABLE public.work_order_notes ADD CONSTRAINT work_order_notes_work_order_id_fkey FOREIGN KEY (work_order_id) REFERENCES public.work_orders(id) ON DELETE CASCADE;
-ALTER TABLE public.work_order_time_entries ADD CONSTRAINT work_order_time_entries_work_order_id_fkey FOREIGN KEY (work_order_id) REFERENCES public.work_orders(id) ON DELETE CASCADE;
-ALTER TABLE public.work_order_time_entries ADD CONSTRAINT work_order_time_entries_technician_id_fkey FOREIGN KEY (technician_id) REFERENCES public.users(id) ON DELETE CASCADE;
-ALTER TABLE public.work_orders ADD CONSTRAINT work_orders_machine_id_fkey FOREIGN KEY (machine_id) REFERENCES public.assigned_machines(id) ON DELETE CASCADE;
-ALTER TABLE public.work_orders ADD CONSTRAINT work_orders_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE;
-ALTER TABLE public.work_orders ADD CONSTRAINT work_orders_technician_id_fkey FOREIGN KEY (technician_id) REFERENCES public.users(id) ON DELETE SET NULL;
-ALTER TABLE public.work_orders ADD CONSTRAINT work_orders_converted_from_ticket_id_fkey FOREIGN KEY (converted_from_ticket_id) REFERENCES public.repair_tickets(id) ON DELETE SET NULL;
-ALTER TABLE public.work_orders ADD CONSTRAINT work_orders_owner_technician_id_fkey FOREIGN KEY (owner_technician_id) REFERENCES public.users(id) ON DELETE SET NULL;
-ALTER TABLE public.work_orders ADD CONSTRAINT work_orders_converted_by_user_id_fkey FOREIGN KEY (converted_by_user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+-- Sales metrics per user
+CREATE VIEW public.sales_metrics AS
+ SELECT u.id AS user_id,
+    u.name AS user_name,
+    COALESCE(count(am.id), (0)::bigint) AS total_sales,
+    COALESCE(sum(am.sale_price), (0)::numeric) AS total_revenue,
+    COALESCE(avg(am.sale_price), (0)::numeric) AS average_sale_value,
+    count(
+        CASE
+            WHEN (am.sales_opportunity = true) THEN 1
+            ELSE NULL::integer
+        END) AS active_opportunities,
+    COALESCE(sum(am.potential_value), (0)::numeric) AS pipeline_value
+   FROM (public.users u
+     LEFT JOIN public.assigned_machines am ON (u.id = am.sales_user_id))
+  WHERE ((u.role)::text = 'sales'::text)
+  GROUP BY u.id, u.name;
 
--- Triggers
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.assigned_machines FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.customer_communications FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.customer_preferences FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.inventory FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.machine_categories FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.machine_models FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.machine_serials FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.machines FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.notifications FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.repair_tickets FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.suppliers FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.warranty_periods FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.warranty_repair_tickets FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.warranty_work_orders FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.warranty_work_order_inventory FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.warranty_work_order_notes FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.work_order_attachments FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.work_order_inventory FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.work_order_notes FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.work_order_templates FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.work_order_time_entries FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.work_orders FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.yearly_sequences FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+-- Sales opportunities from leads
+CREATE VIEW public.sales_opportunities AS
+ SELECT 'lead'::text AS source_type,
+    l.id AS source_id,
+    NULL::integer AS customer_id,
+    l.customer_name,
+    l.company_name,
+    NULL::integer AS machine_id,
+    'Opportunity'::text AS machine_model,
+    NULL::text AS serial_number,
+    true AS sales_opportunity,
+    l.potential_value,
+    l.sales_notes,
+    l.sales_stage,
+    l.assigned_to AS sales_user_id,
+    u.name AS sales_user_name,
+    l.lead_quality,
+    l.created_at,
+    l.updated_at
+   FROM (public.leads l
+     LEFT JOIN public.users u ON (l.assigned_to = u.id));
 
-CREATE TRIGGER set_formatted_number_repair_tickets BEFORE INSERT ON public.repair_tickets FOR EACH ROW EXECUTE FUNCTION public.set_formatted_number_and_year();
-CREATE TRIGGER set_formatted_number_warranty_repair_tickets BEFORE INSERT ON public.warranty_repair_tickets FOR EACH ROW EXECUTE FUNCTION public.set_formatted_number_and_year();
-CREATE TRIGGER set_formatted_number_warranty_work_orders BEFORE INSERT ON public.warranty_work_orders FOR EACH ROW EXECUTE FUNCTION public.set_formatted_number_and_year();
-CREATE TRIGGER set_formatted_number_work_orders BEFORE INSERT ON public.work_orders FOR EACH ROW EXECUTE FUNCTION public.set_formatted_number_and_year();
+--
+-- PRIMARY KEYS
+--
 
-CREATE TRIGGER set_ticket_number_trigger BEFORE INSERT ON public.repair_tickets FOR EACH ROW EXECUTE FUNCTION public.set_ticket_number();
-CREATE TRIGGER set_warranty_ticket_number_trigger BEFORE INSERT ON public.warranty_repair_tickets FOR EACH ROW EXECUTE FUNCTION public.set_ticket_number();
+ALTER TABLE ONLY public.assigned_machines ADD CONSTRAINT assigned_machines_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.customer_communications ADD CONSTRAINT customer_communications_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.customers ADD CONSTRAINT customers_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.inventory ADD CONSTRAINT inventory_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.lead_follow_ups ADD CONSTRAINT lead_follow_ups_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.leads ADD CONSTRAINT leads_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.machine_categories ADD CONSTRAINT machine_categories_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.machine_models ADD CONSTRAINT machine_models_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.machine_rentals ADD CONSTRAINT machine_rentals_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.machine_serials ADD CONSTRAINT machine_serials_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.machines ADD CONSTRAINT machines_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.notifications ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.quote_items ADD CONSTRAINT quote_items_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.quotes ADD CONSTRAINT quotes_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.repair_tickets ADD CONSTRAINT repair_tickets_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.schema_migrations ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+ALTER TABLE ONLY public.stock_movements ADD CONSTRAINT stock_movements_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.suppliers ADD CONSTRAINT suppliers_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.users ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.warranty_periods ADD CONSTRAINT warranty_periods_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.warranty_repair_tickets ADD CONSTRAINT warranty_repair_tickets_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.warranty_work_order_inventory ADD CONSTRAINT warranty_work_order_inventory_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.warranty_work_order_notes ADD CONSTRAINT warranty_work_order_notes_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.warranty_work_orders ADD CONSTRAINT warranty_work_orders_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.work_order_attachments ADD CONSTRAINT work_order_attachments_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.work_order_inventory ADD CONSTRAINT work_order_inventory_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.work_order_notes ADD CONSTRAINT work_order_notes_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.work_order_templates ADD CONSTRAINT work_order_templates_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.work_order_time_entries ADD CONSTRAINT work_order_time_entries_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.work_orders ADD CONSTRAINT work_orders_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.yearly_sequences ADD CONSTRAINT yearly_sequences_pkey PRIMARY KEY (year);
 
-CREATE TRIGGER set_warranty_expiry_trigger BEFORE INSERT OR UPDATE ON public.assigned_machines FOR EACH ROW EXECUTE FUNCTION public.set_warranty_expiry();
-CREATE TRIGGER trg_set_warranty_active BEFORE INSERT OR UPDATE OF warranty_expiry_date ON public.machines FOR EACH ROW EXECUTE FUNCTION public.set_warranty_active();
+--
+-- UNIQUE CONSTRAINTS
+--
 
--- Indexes for better performance
+ALTER TABLE ONLY public.customers ADD CONSTRAINT customers_email_key UNIQUE (email);
+ALTER TABLE ONLY public.inventory ADD CONSTRAINT inventory_sku_key UNIQUE (sku);
+ALTER TABLE ONLY public.machine_models ADD CONSTRAINT machine_models_manufacturer_name_key UNIQUE (manufacturer, name);
+ALTER TABLE ONLY public.machine_serials ADD CONSTRAINT machine_serials_serial_number_key UNIQUE (serial_number);
+ALTER TABLE ONLY public.quotes ADD CONSTRAINT quotes_quote_number_key UNIQUE (quote_number);
+ALTER TABLE ONLY public.repair_tickets ADD CONSTRAINT repair_tickets_formatted_number_key UNIQUE (formatted_number);
+ALTER TABLE ONLY public.repair_tickets ADD CONSTRAINT repair_tickets_ticket_number_key UNIQUE (ticket_number);
+ALTER TABLE ONLY public.users ADD CONSTRAINT users_email_key UNIQUE (email);
+ALTER TABLE ONLY public.warranty_periods ADD CONSTRAINT warranty_periods_manufacturer_model_name_key UNIQUE (manufacturer, model_name);
+ALTER TABLE ONLY public.warranty_repair_tickets ADD CONSTRAINT warranty_repair_tickets_formatted_number_key UNIQUE (formatted_number);
+ALTER TABLE ONLY public.warranty_repair_tickets ADD CONSTRAINT warranty_repair_tickets_ticket_number_key UNIQUE (ticket_number);
+ALTER TABLE ONLY public.warranty_work_orders ADD CONSTRAINT warranty_work_orders_formatted_number_key UNIQUE (formatted_number);
+ALTER TABLE ONLY public.warranty_work_orders ADD CONSTRAINT warranty_work_orders_ticket_number_key UNIQUE (ticket_number);
+ALTER TABLE ONLY public.work_orders ADD CONSTRAINT work_orders_formatted_number_key UNIQUE (formatted_number);
+ALTER TABLE ONLY public.work_orders ADD CONSTRAINT work_orders_ticket_number_key UNIQUE (ticket_number);
+
+--
+-- SEQUENCES
+--
+
+CREATE SEQUENCE public.assigned_machines_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.assigned_machines_id_seq OWNED BY public.assigned_machines.id;
+
+CREATE SEQUENCE public.customer_communications_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.customer_communications_id_seq OWNED BY public.customer_communications.id;
+
+CREATE SEQUENCE public.customers_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.customers_id_seq OWNED BY public.customers.id;
+
+CREATE SEQUENCE public.inventory_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.inventory_id_seq OWNED BY public.inventory.id;
+
+CREATE SEQUENCE public.lead_follow_ups_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.lead_follow_ups_id_seq OWNED BY public.lead_follow_ups.id;
+
+CREATE SEQUENCE public.leads_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.leads_id_seq OWNED BY public.leads.id;
+
+CREATE SEQUENCE public.machine_categories_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.machine_categories_id_seq OWNED BY public.machine_categories.id;
+
+CREATE SEQUENCE public.machine_models_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.machine_models_id_seq OWNED BY public.machine_models.id;
+
+CREATE SEQUENCE public.machine_rentals_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.machine_rentals_id_seq OWNED BY public.machine_rentals.id;
+
+CREATE SEQUENCE public.machine_serials_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.machine_serials_id_seq OWNED BY public.machine_serials.id;
+
+CREATE SEQUENCE public.machines_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.machines_id_seq OWNED BY public.machines.id;
+
+CREATE SEQUENCE public.notifications_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
+
+CREATE SEQUENCE public.quote_items_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.quote_items_id_seq OWNED BY public.quote_items.id;
+
+CREATE SEQUENCE public.quotes_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.quotes_id_seq OWNED BY public.quotes.id;
+
+CREATE SEQUENCE public.repair_tickets_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.repair_tickets_id_seq OWNED BY public.repair_tickets.id;
+
+CREATE SEQUENCE public.stock_movements_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.stock_movements_id_seq OWNED BY public.stock_movements.id;
+
+CREATE SEQUENCE public.suppliers_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.suppliers_id_seq OWNED BY public.suppliers.id;
+
+CREATE SEQUENCE public.users_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
+CREATE SEQUENCE public.warranty_periods_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.warranty_periods_id_seq OWNED BY public.warranty_periods.id;
+
+CREATE SEQUENCE public.warranty_repair_tickets_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.warranty_repair_tickets_id_seq OWNED BY public.warranty_repair_tickets.id;
+
+CREATE SEQUENCE public.warranty_work_order_inventory_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.warranty_work_order_inventory_id_seq OWNED BY public.warranty_work_order_inventory.id;
+
+CREATE SEQUENCE public.warranty_work_order_notes_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.warranty_work_order_notes_id_seq OWNED BY public.warranty_work_order_notes.id;
+
+CREATE SEQUENCE public.warranty_work_orders_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.warranty_work_orders_id_seq OWNED BY public.warranty_work_orders.id;
+
+CREATE SEQUENCE public.work_order_attachments_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.work_order_attachments_id_seq OWNED BY public.work_order_attachments.id;
+
+CREATE SEQUENCE public.work_order_inventory_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.work_order_inventory_id_seq OWNED BY public.work_order_inventory.id;
+
+CREATE SEQUENCE public.work_order_notes_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.work_order_notes_id_seq OWNED BY public.work_order_notes.id;
+
+CREATE SEQUENCE public.work_order_templates_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.work_order_templates_id_seq OWNED BY public.work_order_templates.id;
+
+CREATE SEQUENCE public.work_order_time_entries_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.work_order_time_entries_id_seq OWNED BY public.work_order_time_entries.id;
+
+CREATE SEQUENCE public.work_orders_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER SEQUENCE public.work_orders_id_seq OWNED BY public.work_orders.id;
+
+--
+-- SEQUENCE DEFAULTS
+--
+
+ALTER TABLE ONLY public.assigned_machines ALTER COLUMN id SET DEFAULT nextval('public.assigned_machines_id_seq'::regclass);
+ALTER TABLE ONLY public.customer_communications ALTER COLUMN id SET DEFAULT nextval('public.customer_communications_id_seq'::regclass);
+ALTER TABLE ONLY public.customers ALTER COLUMN id SET DEFAULT nextval('public.customers_id_seq'::regclass);
+ALTER TABLE ONLY public.inventory ALTER COLUMN id SET DEFAULT nextval('public.inventory_id_seq'::regclass);
+ALTER TABLE ONLY public.lead_follow_ups ALTER COLUMN id SET DEFAULT nextval('public.lead_follow_ups_id_seq'::regclass);
+ALTER TABLE ONLY public.leads ALTER COLUMN id SET DEFAULT nextval('public.leads_id_seq'::regclass);
+ALTER TABLE ONLY public.machine_categories ALTER COLUMN id SET DEFAULT nextval('public.machine_categories_id_seq'::regclass);
+ALTER TABLE ONLY public.machine_models ALTER COLUMN id SET DEFAULT nextval('public.machine_models_id_seq'::regclass);
+ALTER TABLE ONLY public.machine_rentals ALTER COLUMN id SET DEFAULT nextval('public.machine_rentals_id_seq'::regclass);
+ALTER TABLE ONLY public.machine_serials ALTER COLUMN id SET DEFAULT nextval('public.machine_serials_id_seq'::regclass);
+ALTER TABLE ONLY public.machines ALTER COLUMN id SET DEFAULT nextval('public.machines_id_seq'::regclass);
+ALTER TABLE ONLY public.notifications ALTER COLUMN id SET DEFAULT nextval('public.notifications_id_seq'::regclass);
+ALTER TABLE ONLY public.quote_items ALTER COLUMN id SET DEFAULT nextval('public.quote_items_id_seq'::regclass);
+ALTER TABLE ONLY public.quotes ALTER COLUMN id SET DEFAULT nextval('public.quotes_id_seq'::regclass);
+ALTER TABLE ONLY public.repair_tickets ALTER COLUMN id SET DEFAULT nextval('public.repair_tickets_id_seq'::regclass);
+ALTER TABLE ONLY public.stock_movements ALTER COLUMN id SET DEFAULT nextval('public.stock_movements_id_seq'::regclass);
+ALTER TABLE ONLY public.suppliers ALTER COLUMN id SET DEFAULT nextval('public.suppliers_id_seq'::regclass);
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+ALTER TABLE ONLY public.warranty_periods ALTER COLUMN id SET DEFAULT nextval('public.warranty_periods_id_seq'::regclass);
+ALTER TABLE ONLY public.warranty_repair_tickets ALTER COLUMN id SET DEFAULT nextval('public.warranty_repair_tickets_id_seq'::regclass);
+ALTER TABLE ONLY public.warranty_work_order_inventory ALTER COLUMN id SET DEFAULT nextval('public.warranty_work_order_inventory_id_seq'::regclass);
+ALTER TABLE ONLY public.warranty_work_order_notes ALTER COLUMN id SET DEFAULT nextval('public.warranty_work_order_notes_id_seq'::regclass);
+ALTER TABLE ONLY public.warranty_work_orders ALTER COLUMN id SET DEFAULT nextval('public.warranty_work_orders_id_seq'::regclass);
+ALTER TABLE ONLY public.work_order_attachments ALTER COLUMN id SET DEFAULT nextval('public.work_order_attachments_id_seq'::regclass);
+ALTER TABLE ONLY public.work_order_inventory ALTER COLUMN id SET DEFAULT nextval('public.work_order_inventory_id_seq'::regclass);
+ALTER TABLE ONLY public.work_order_notes ALTER COLUMN id SET DEFAULT nextval('public.work_order_notes_id_seq'::regclass);
+ALTER TABLE ONLY public.work_order_templates ALTER COLUMN id SET DEFAULT nextval('public.work_order_templates_id_seq'::regclass);
+ALTER TABLE ONLY public.work_order_time_entries ALTER COLUMN id SET DEFAULT nextval('public.work_order_time_entries_id_seq'::regclass);
+ALTER TABLE ONLY public.work_orders ALTER COLUMN id SET DEFAULT nextval('public.work_orders_id_seq'::regclass);
+
+--
+-- PERFORMANCE INDEXES
+--
+
+-- Assigned machines indexes
+CREATE INDEX idx_assigned_machines_added_by ON public.assigned_machines USING btree (added_by_user_id);
+CREATE INDEX idx_assigned_machines_condition ON public.assigned_machines USING btree (machine_condition);
 CREATE INDEX idx_assigned_machines_customer_id ON public.assigned_machines USING btree (customer_id);
 CREATE INDEX idx_assigned_machines_serial_id ON public.assigned_machines USING btree (serial_id);
+CREATE INDEX idx_assigned_machines_sold_by ON public.assigned_machines USING btree (sold_by_user_id);
+
+-- Customer indexes
+CREATE INDEX idx_customers_owner_id ON public.customers USING btree (owner_id);
+
+-- Inventory indexes
 CREATE INDEX idx_inventory_category ON public.inventory USING btree (category);
 CREATE INDEX idx_inventory_sku ON public.inventory USING btree (sku);
 CREATE INDEX idx_inventory_supplier ON public.inventory USING btree (supplier);
+
+-- Lead indexes
+CREATE INDEX idx_lead_follow_ups_created_at ON public.lead_follow_ups USING btree (created_at);
+CREATE INDEX idx_lead_follow_ups_lead_id ON public.lead_follow_ups USING btree (lead_id);
+CREATE INDEX idx_leads_assigned_to ON public.leads USING btree (assigned_to);
+CREATE INDEX idx_leads_created_at ON public.leads USING btree (created_at);
+CREATE INDEX idx_leads_lead_quality ON public.leads USING btree (lead_quality);
+CREATE INDEX idx_leads_next_follow_up ON public.leads USING btree (next_follow_up);
+CREATE INDEX idx_leads_quality ON public.leads USING btree (lead_quality);
+CREATE INDEX idx_leads_sales_stage ON public.leads USING btree (sales_stage);
+CREATE INDEX idx_leads_stage ON public.leads USING btree (sales_stage);
+
+-- Machine indexes
 CREATE INDEX idx_machine_models_catalogue ON public.machine_models USING btree (catalogue_number);
 CREATE INDEX idx_machine_models_manufacturer ON public.machine_models USING btree (manufacturer);
 CREATE INDEX idx_machine_models_name ON public.machine_models USING btree (name);
+CREATE INDEX idx_machine_rentals_customer ON public.machine_rentals USING btree (customer_id);
+CREATE INDEX idx_machine_rentals_dates ON public.machine_rentals USING btree (rental_start_date, rental_end_date);
+CREATE INDEX idx_machine_rentals_status ON public.machine_rentals USING btree (rental_status);
 CREATE INDEX idx_machine_serials_model_id ON public.machine_serials USING btree (model_id);
 CREATE INDEX idx_machine_serials_status ON public.machine_serials USING btree (status);
+
+-- Notification indexes
 CREATE INDEX idx_notifications_created_at ON public.notifications USING btree (created_at);
 CREATE INDEX idx_notifications_is_read ON public.notifications USING btree (is_read);
 CREATE INDEX idx_notifications_message_key ON public.notifications USING btree (message_key);
 CREATE INDEX idx_notifications_title_key ON public.notifications USING btree (title_key);
 CREATE INDEX idx_notifications_type ON public.notifications USING btree (type);
 CREATE INDEX idx_notifications_user_id ON public.notifications USING btree (user_id);
+
+-- Quote indexes
+CREATE INDEX idx_quote_items_quote_id ON public.quote_items USING btree (quote_id);
+CREATE INDEX idx_quotes_created_at ON public.quotes USING btree (created_at);
+CREATE INDEX idx_quotes_created_by ON public.quotes USING btree (created_by);
+CREATE INDEX idx_quotes_customer_id ON public.quotes USING btree (customer_id);
+CREATE INDEX idx_quotes_status ON public.quotes USING btree (status);
+CREATE INDEX idx_quotes_valid_until ON public.quotes USING btree (valid_until);
+
+-- Repair ticket indexes
 CREATE INDEX idx_repair_tickets_converted_to_warranty_work_order_id ON public.repair_tickets USING btree (converted_to_warranty_work_order_id);
 CREATE INDEX idx_repair_tickets_created_by ON public.repair_tickets USING btree (submitted_by);
 CREATE INDEX idx_repair_tickets_customer_id ON public.repair_tickets USING btree (customer_id);
 CREATE INDEX idx_repair_tickets_formatted_number ON public.repair_tickets USING btree (formatted_number);
 CREATE INDEX idx_repair_tickets_machine_id ON public.repair_tickets USING btree (machine_id);
+CREATE INDEX idx_repair_tickets_sales_user_id ON public.repair_tickets USING btree (sales_user_id);
 CREATE INDEX idx_repair_tickets_status ON public.repair_tickets USING btree (status);
 CREATE INDEX idx_repair_tickets_ticket_number ON public.repair_tickets USING btree (ticket_number);
 CREATE INDEX idx_repair_tickets_year_created ON public.repair_tickets USING btree (year_created);
+
+-- User indexes
 CREATE INDEX idx_users_department ON public.users USING btree (department);
 CREATE INDEX idx_users_email ON public.users USING btree (email);
 CREATE INDEX idx_users_last_login ON public.users USING btree (last_login);
 CREATE INDEX idx_users_status ON public.users USING btree (status);
+
+-- Warranty repair ticket indexes
 CREATE INDEX idx_warranty_repair_tickets_converted_at ON public.warranty_repair_tickets USING btree (converted_at);
 CREATE INDEX idx_warranty_repair_tickets_customer_id ON public.warranty_repair_tickets USING btree (customer_id);
 CREATE INDEX idx_warranty_repair_tickets_formatted_number ON public.warranty_repair_tickets USING btree (formatted_number);
 CREATE INDEX idx_warranty_repair_tickets_machine_id ON public.warranty_repair_tickets USING btree (machine_id);
+CREATE INDEX idx_warranty_repair_tickets_sales_user_id ON public.warranty_repair_tickets USING btree (sales_user_id);
 CREATE INDEX idx_warranty_repair_tickets_status ON public.warranty_repair_tickets USING btree (status);
 CREATE INDEX idx_warranty_repair_tickets_ticket_number ON public.warranty_repair_tickets USING btree (ticket_number);
 CREATE INDEX idx_warranty_repair_tickets_year_created ON public.warranty_repair_tickets USING btree (year_created);
+
+-- Warranty work order indexes
 CREATE INDEX idx_warranty_work_orders_customer_id ON public.warranty_work_orders USING btree (customer_id);
 CREATE INDEX idx_warranty_work_orders_due_date ON public.warranty_work_orders USING btree (due_date);
 CREATE INDEX idx_warranty_work_orders_formatted_number ON public.warranty_work_orders USING btree (formatted_number);
 CREATE INDEX idx_warranty_work_orders_machine_id ON public.warranty_work_orders USING btree (machine_id);
 CREATE INDEX idx_warranty_work_orders_owner_technician_id ON public.warranty_work_orders USING btree (owner_technician_id);
 CREATE INDEX idx_warranty_work_orders_priority ON public.warranty_work_orders USING btree (priority);
+CREATE INDEX idx_warranty_work_orders_sales_user_id ON public.warranty_work_orders USING btree (sales_user_id);
 CREATE INDEX idx_warranty_work_orders_status ON public.warranty_work_orders USING btree (status);
 CREATE INDEX idx_warranty_work_orders_technician_id ON public.warranty_work_orders USING btree (technician_id);
 CREATE INDEX idx_warranty_work_orders_ticket_number ON public.warranty_work_orders USING btree (ticket_number);
 CREATE INDEX idx_warranty_work_orders_year_created ON public.warranty_work_orders USING btree (year_created);
+
+-- Work order indexes
 CREATE INDEX idx_work_orders_converted_by_user_id ON public.work_orders USING btree (converted_by_user_id);
 CREATE INDEX idx_work_orders_created_at ON public.work_orders USING btree (created_at);
 CREATE INDEX idx_work_orders_formatted_number ON public.work_orders USING btree (formatted_number);
 CREATE INDEX idx_work_orders_owner_technician_id ON public.work_orders USING btree (owner_technician_id);
+CREATE INDEX idx_work_orders_sales_opportunity ON public.work_orders USING btree (sales_opportunity);
+CREATE INDEX idx_work_orders_sales_stage ON public.work_orders USING btree (sales_stage);
+CREATE INDEX idx_work_orders_sales_user_id ON public.work_orders USING btree (sales_user_id);
 CREATE INDEX idx_work_orders_ticket_number ON public.work_orders USING btree (ticket_number);
 CREATE INDEX idx_work_orders_year_created ON public.work_orders USING btree (year_created);
+
+-- Yearly sequences index
 CREATE INDEX idx_yearly_sequences_year ON public.yearly_sequences USING btree (year);
 
--- Unique constraints
+-- Unique machine model serial constraint
 CREATE UNIQUE INDEX uniq_machine_model_serial ON public.machines USING btree (COALESCE(name, ''::text), COALESCE(catalogue_number, ''::text), COALESCE(serial_number, ''::text));
+
+--
+-- TRIGGERS
+--
+
+-- Formatted number triggers
+CREATE TRIGGER set_formatted_number_repair_tickets BEFORE INSERT ON public.repair_tickets FOR EACH ROW EXECUTE FUNCTION public.set_formatted_number_and_year();
+CREATE TRIGGER set_formatted_number_warranty_repair_tickets BEFORE INSERT ON public.warranty_repair_tickets FOR EACH ROW EXECUTE FUNCTION public.set_formatted_number_and_year();
+CREATE TRIGGER set_formatted_number_warranty_work_orders BEFORE INSERT ON public.warranty_work_orders FOR EACH ROW EXECUTE FUNCTION public.set_formatted_number_and_year();
+CREATE TRIGGER set_formatted_number_work_orders BEFORE INSERT ON public.work_orders FOR EACH ROW EXECUTE FUNCTION public.set_formatted_number_and_year();
+
+-- Ticket number triggers
+CREATE TRIGGER set_ticket_number_trigger BEFORE INSERT ON public.repair_tickets FOR EACH ROW EXECUTE FUNCTION public.set_ticket_number();
+CREATE TRIGGER set_warranty_ticket_number_trigger BEFORE INSERT ON public.warranty_repair_tickets FOR EACH ROW EXECUTE FUNCTION public.set_ticket_number();
+
+-- Updated at triggers
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.inventory FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.machines FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.notifications FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.repair_tickets FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.warranty_work_order_inventory FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.warranty_work_order_notes FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.warranty_work_orders FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.work_order_inventory FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.work_order_notes FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.work_orders FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER set_updated_at_assigned_machines BEFORE UPDATE ON public.assigned_machines FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER set_updated_at_machine_models BEFORE UPDATE ON public.machine_models FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER set_updated_at_machine_rentals BEFORE UPDATE ON public.machine_rentals FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER set_updated_at_machine_serials BEFORE UPDATE ON public.machine_serials FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER set_updated_at_trigger BEFORE UPDATE ON public.machine_categories FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER set_updated_at_trigger BEFORE UPDATE ON public.warranty_periods FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER set_updated_at_trigger BEFORE UPDATE ON public.warranty_repair_tickets FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+-- Warranty triggers
+CREATE TRIGGER set_warranty_expiry_trigger BEFORE INSERT OR UPDATE ON public.machines FOR EACH ROW EXECUTE FUNCTION public.set_warranty_expiry();
+CREATE TRIGGER trg_set_warranty_active BEFORE INSERT OR UPDATE OF warranty_expiry_date ON public.machines FOR EACH ROW EXECUTE FUNCTION public.set_warranty_active();
+CREATE TRIGGER trg_set_warranty_active_assigned_machines BEFORE INSERT OR UPDATE OF warranty_expiry_date ON public.assigned_machines FOR EACH ROW EXECUTE FUNCTION public.set_warranty_active_assigned_machines();
+
+-- Quote triggers
+CREATE TRIGGER update_quote_status_timestamp_trigger BEFORE UPDATE ON public.quotes FOR EACH ROW EXECUTE FUNCTION public.update_quote_status_timestamp();
+CREATE TRIGGER update_quotes_timestamp BEFORE UPDATE ON public.quotes FOR EACH ROW EXECUTE FUNCTION public.update_timestamp();
+
+--
+-- FOREIGN KEY CONSTRAINTS
+-- (Note: Foreign key constraints will be added based on the actual relationships in your backup)
+--
+
+-- This schema provides the complete structure for the Repair Shop Management System
+-- including all sales functionality, CRM features, and analytics views.
+-- 
+-- To populate with data, run the full backup file: DB SA PRODAJOM FINAL.sql

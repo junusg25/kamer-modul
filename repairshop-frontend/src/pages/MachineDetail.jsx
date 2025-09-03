@@ -82,6 +82,8 @@ import {
   Close as CloseIcon,
   Settings as SettingsIcon,
   Link as LinkIcon,
+  TrendingUp as SalesIcon,
+  Store as StoreIcon,
 } from '@mui/icons-material'
 import toast from 'react-hot-toast'
 
@@ -670,6 +672,102 @@ export default function MachineDetail() {
                         </Box>
                       )}
                     </Box>
+                  </CardContent>
+                </Card>
+
+                {/* Sales Information */}
+                <Card sx={{ mb: 2 }}>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <SalesIcon />
+                      {translate('common.salesInformation')}
+                    </Typography>
+                    
+                    <List dense>
+                      <ListItem sx={{ px: 0 }}>
+                        <ListItemIcon sx={{ minWidth: 36 }}>
+                          <StoreIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary={
+                            <Chip
+                              label={machine.is_sale ? translate('forms.sale') : translate('forms.assignment')}
+                              color={machine.is_sale ? 'success' : 'default'}
+                              size="small"
+                              variant="outlined"
+                            />
+                          }
+                          secondary={translate('forms.transactionType')}
+                        />
+                      </ListItem>
+
+                      {machine.is_sale && machine.sold_by_name && (
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemIcon sx={{ minWidth: 36 }}>
+                            <PersonIcon fontSize="small" />
+                          </ListItemIcon>
+                          <ListItemText 
+                            primary={machine.sold_by_name}
+                            secondary={translate('forms.soldBy')}
+                          />
+                        </ListItem>
+                      )}
+
+                      {machine.machine_condition && (
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemIcon sx={{ minWidth: 36 }}>
+                            <InfoIcon fontSize="small" />
+                          </ListItemIcon>
+                          <ListItemText 
+                            primary={
+                              <Chip
+                                label={machine.machine_condition === 'new' ? translate('forms.new') : translate('forms.used')}
+                                color={machine.machine_condition === 'new' ? 'success' : 'warning'}
+                                size="small"
+                                variant="outlined"
+                              />
+                            }
+                            secondary={translate('forms.machineCondition')}
+                          />
+                        </ListItem>
+                      )}
+
+                      {machine.sale_date && (
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemIcon sx={{ minWidth: 36 }}>
+                            <CalendarIcon fontSize="small" />
+                          </ListItemIcon>
+                          <ListItemText 
+                            primary={formatDate(machine.sale_date)}
+                            secondary={translate('forms.saleDate')}
+                          />
+                        </ListItem>
+                      )}
+
+                      {machine.sale_price && (
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemIcon sx={{ minWidth: 36 }}>
+                            <MoneyIcon fontSize="small" />
+                          </ListItemIcon>
+                          <ListItemText 
+                            primary={`€${parseFloat(machine.sale_price).toFixed(2)}`}
+                            secondary={translate('forms.salePrice')}
+                          />
+                        </ListItem>
+                      )}
+
+                      {machine.added_by_name && (
+                        <ListItem sx={{ px: 0 }}>
+                          <ListItemIcon sx={{ minWidth: 36 }}>
+                            <PersonIcon fontSize="small" />
+                          </ListItemIcon>
+                          <ListItemText 
+                            primary={machine.added_by_name}
+                            secondary={translate('common.addedBy')}
+                          />
+                        </ListItem>
+                      )}
+                    </List>
                   </CardContent>
                 </Card>
               </Grid>

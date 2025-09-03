@@ -23,7 +23,8 @@ import {
   ArrowBack as ArrowBackIcon,
   Person as PersonIcon,
   Business as BusinessIcon,
-  Assignment as AssignmentIcon
+  Assignment as AssignmentIcon,
+  AttachMoney as AttachMoneyIcon
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -46,6 +47,13 @@ export default function AssignMachine() {
   const [newSerialNumber, setNewSerialNumber] = useState('');
   const [purchaseDate, setPurchaseDate] = useState('');
   const [description, setDescription] = useState('');
+  
+  // Sales-related state
+  const [isSale, setIsSale] = useState(true);
+  const [soldByUserId, setSoldByUserId] = useState('');
+  const [machineCondition, setMachineCondition] = useState('new');
+  const [saleDate, setSaleDate] = useState('');
+  const [salePrice, setSalePrice] = useState('');
 
   // New customer form state
   const [newCustomer, setNewCustomer] = useState({
@@ -72,6 +80,15 @@ export default function AssignMachine() {
     queryKey: ['customers'],
     queryFn: async () => {
       const response = await api.get('/customers');
+      return response.data;
+    },
+  });
+
+  // Fetch sales users
+  const { data: salesUsers, isLoading: salesUsersLoading } = useQuery({
+    queryKey: ['users', 'sales'],
+    queryFn: async () => {
+      const response = await api.get('/users/sales');
       return response.data;
     },
   });
@@ -129,12 +146,25 @@ export default function AssignMachine() {
         toast.error(translate('errors.pleaseEnterSerialNumber'));
         return;
       }
+      setActiveStep(2);
+    } else if (activeStep === 2) {
+      // Validate sales information if it's a sale
+      if (isSale && !soldByUserId) {
+        toast.error(translate('errors.pleaseSelectSalesPerson'));
+        return;
+      }
+      if (isSale && salePrice && isNaN(parseFloat(salePrice))) {
+        toast.error(translate('errors.pleaseEnterValidPrice'));
+        return;
+      }
       handleSubmit();
     }
   };
 
   const handleBack = () => {
-    if (activeStep === 1) {
+    if (activeStep === 2) {
+      setActiveStep(1);
+    } else if (activeStep === 1) {
       setActiveStep(0);
     } else {
       navigate(`/machines/model/${modelId}`);
@@ -147,7 +177,12 @@ export default function AssignMachine() {
       serial_number: newSerialNumber.trim(),
       customer_id: parseInt(selectedCustomerId),
       purchase_date: purchaseDate || null,
-      description: description || null
+      description: description || null,
+      is_sale: isSale,
+      sold_by_user_id: soldByUserId ? parseInt(soldByUserId) : null,
+      machine_condition: machineCondition,
+      sale_date: saleDate || null,
+      sale_price: salePrice ? parseFloat(salePrice) : null
     };
 
     assignMachine.mutate(formData);
@@ -174,7 +209,7 @@ export default function AssignMachine() {
   };
 
   // Loading state
-  if (modelLoading || customersLoading) {
+  if (modelLoading || customersLoading || salesUsersLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
         <CircularProgress />
@@ -195,7 +230,8 @@ export default function AssignMachine() {
 
   const steps = [
     translate('steps.customerSelection'),
-    translate('steps.machineAssignment')
+    translate('steps.machineAssignment'),
+    translate('steps.salesInformation')
   ];
 
   return (
@@ -383,6 +419,94 @@ export default function AssignMachine() {
                 />
               </Grid>
             </Grid>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 3: Sales Information */}
+      {activeStep === 2 && (
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <AttachMoneyIcon />
+              {translate('steps.salesInformation')}
+            </Typography>
+
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>{translate('forms.transactionType')}</InputLabel>
+                  <Select
+                    value={isSale ? 'sale' : 'assignment'}
+                    onChange={(e) => setIsSale(e.target.value === 'sale')}
+                    label={translate('forms.transactionType')}
+                  >
+                    <MenuItem value="sale">{translate('forms.sale')}</MenuItem>
+                    <MenuItem value="assignment">{translate('forms.assignment')}</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {isSale && (
+                <>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth required>
+                      <InputLabel>{translate('forms.soldBy')}</InputLabel>
+                      <Select
+                        value={soldByUserId}
+                        onChange={(e) => setSoldByUserId(e.target.value)}
+                        label={translate('forms.soldBy')}
+                      >
+                        {salesUsers?.data?.map((user) => (
+                          <MenuItem key={user.id} value={user.id}>
+                            {user.name} {user.department && `(${user.department})`}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth>
+                      <InputLabel>{translate('forms.machineCondition')}</InputLabel>
+                      <Select
+                        value={machineCondition}
+                        onChange={(e) => setMachineCondition(e.target.value)}
+                        label={translate('forms.machineCondition')}
+                      >
+                        <MenuItem value="new">{translate('forms.new')}</MenuItem>
+                        <MenuItem value="used">{translate('forms.used')}</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label={translate('forms.saleDate')}
+                      type="date"
+                      value={saleDate}
+                      onChange={(e) => setSaleDate(e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label={translate('forms.salePrice')}
+                      type="number"
+                      value={salePrice}
+                      onChange={(e) => setSalePrice(e.target.value)}
+                      placeholder="0.00"
+                      InputProps={{
+                        startAdornment: <Typography sx={{ mr: 1 }}>€</Typography>
+                      }}
+                    />
+                  </Grid>
+                </>
+              )}
+            </Grid>
 
             {/* Summary */}
             <Divider sx={{ my: 3 }} />
@@ -403,6 +527,30 @@ export default function AssignMachine() {
               <Typography variant="body2">
                 <strong>{translate('common.model')}:</strong> {model?.name} - {model?.catalogue_number}
               </Typography>
+              <Typography variant="body2">
+                <strong>{translate('forms.transactionType')}:</strong> {
+                  isSale ? translate('forms.sale') : translate('forms.assignment')
+                }
+              </Typography>
+              {isSale && (
+                <>
+                  <Typography variant="body2">
+                    <strong>{translate('forms.soldBy')}:</strong> {
+                      salesUsers?.data?.find(u => u.id === parseInt(soldByUserId))?.name || translate('common.notSelected')
+                    }
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>{translate('forms.machineCondition')}:</strong> {
+                      machineCondition === 'new' ? translate('forms.new') : translate('forms.used')
+                    }
+                  </Typography>
+                  {salePrice && (
+                    <Typography variant="body2">
+                      <strong>{translate('forms.salePrice')}:</strong> €{salePrice}
+                    </Typography>
+                  )}
+                </>
+              )}
             </Box>
           </CardContent>
         </Card>
@@ -426,6 +574,8 @@ export default function AssignMachine() {
         >
           {activeStep === 0 
             ? (customerType === 'new' ? translate('actions.createCustomer') : translate('actions.next'))
+            : activeStep === 1
+            ? translate('actions.next')
             : translate('actions.assignMachine')
           }
         </Button>

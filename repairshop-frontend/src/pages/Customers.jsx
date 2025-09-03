@@ -45,6 +45,9 @@ import {
   Visibility as ViewIcon,
   Refresh as RefreshIcon,
   MoreVert as MoreVertIcon,
+  TrendingUp as SalesIcon,
+  AttachMoney as MoneyIcon,
+  Store as StoreIcon,
 } from '@mui/icons-material'
 import toast from 'react-hot-toast'
 import { invalidateCustomerQueries, invalidateDashboardQueries } from '../utils/cacheUtils.js'
@@ -255,6 +258,8 @@ export default function Customers() {
                 <TableCell>{translate('forms.email')}</TableCell>
                 <TableCell>{translate('forms.phone')}</TableCell>
                 <TableCell>{translate('forms.city')}</TableCell>
+                <TableCell>{translate('common.totalMachines')}</TableCell>
+                <TableCell>{translate('common.totalSpent')}</TableCell>
                 <TableCell>{translate('tableHeaders.createdAt')}</TableCell>
                 <TableCell>{translate('tableHeaders.actions')}</TableCell>
               </TableRow>
@@ -262,13 +267,13 @@ export default function Customers() {
             <TableBody>
               {customers.isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                  <TableCell colSpan={10} align="center">
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
               ) : customers.data?.data?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                  <TableCell colSpan={10} align="center">
                     {translate('common.noCustomersFound')}
                   </TableCell>
                 </TableRow>
@@ -314,6 +319,35 @@ export default function Customers() {
                       <Typography variant="body2">
                         {customer.city || '-'}
                       </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <StoreIcon fontSize="small" color="action" />
+                        <Typography variant="body2" fontWeight="medium">
+                          {customer.total_machines || 0}
+                        </Typography>
+                        {customer.machines_purchased > 0 && (
+                          <Chip 
+                            label={`${customer.machines_purchased} sold`}
+                            size="small"
+                            color="success"
+                            variant="outlined"
+                          />
+                        )}
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <MoneyIcon fontSize="small" color="action" />
+                        <Typography variant="body2" fontWeight="medium">
+                          €{parseFloat(customer.total_spent || 0).toFixed(2)}
+                        </Typography>
+                        {customer.avg_purchase_price > 0 && (
+                          <Typography variant="caption" color="textSecondary">
+                            (avg: €{parseFloat(customer.avg_purchase_price).toFixed(0)})
+                          </Typography>
+                        )}
+                      </Box>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">

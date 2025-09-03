@@ -173,6 +173,14 @@ router.get('/technicians', authenticateToken, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET all sales users (any authenticated user)
+router.get('/sales', authenticateToken, async (req, res, next) => {
+  try {
+    const result = await db.query('SELECT id, name, email, phone, department FROM users WHERE role = $1 AND status = $2 ORDER BY name', ['sales', 'active']);
+    res.json({ status: 'success', data: result.rows });
+  } catch (err) { next(err); }
+});
+
 // Get current user profile
 router.get('/me', authenticateToken, async (req, res) => {
   try {

@@ -62,6 +62,10 @@ import {
   Assignment as AssignmentIcon,
   Schedule as ScheduleIcon,
   Security as SecurityIcon,
+  TrendingUp as SalesIcon,
+  AttachMoney as MoneyIcon,
+  Store as StoreIcon,
+  Star as OpportunityIcon,
 } from '@mui/icons-material'
 import toast from 'react-hot-toast'
 
@@ -609,6 +613,8 @@ export default function CustomerDetail() {
                         <TableCell>{translate('common.model')}</TableCell>
                         <TableCell>{translate('common.catalogueNumber')}</TableCell>
                         <TableCell>{translate('common.serialNumber')}</TableCell>
+                        <TableCell>{translate('forms.transactionType')}</TableCell>
+                        <TableCell>{translate('forms.salePrice')}</TableCell>
                         <TableCell>{translate('common.warranty')}</TableCell>
                         <TableCell>{translate('common.created')}</TableCell>
                         <TableCell>{translate('common.actions')}</TableCell>
@@ -639,6 +645,23 @@ export default function CustomerDetail() {
                           </TableCell>
                           <TableCell>{machine.catalogue_number || '-'}</TableCell>
                           <TableCell>{machine.serial_number || '-'}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={machine.is_sale ? translate('forms.sale') : translate('forms.assignment')}
+                              color={machine.is_sale ? 'success' : 'default'}
+                              size="small"
+                              variant="outlined"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            {machine.sale_price ? (
+                              <Typography variant="body2" fontWeight="medium">
+                                €{parseFloat(machine.sale_price).toFixed(2)}
+                              </Typography>
+                            ) : (
+                              <Typography variant="body2" color="textSecondary">-</Typography>
+                            )}
+                          </TableCell>
                           <TableCell>
                             {machine.warranty_active ? (
                               <Chip
@@ -770,6 +793,146 @@ export default function CustomerDetail() {
                       />
                     </Box>
                   </Box>
+                </Paper>
+              </Grid>
+              
+              {/* Sales Metrics */}
+              <Grid item xs={12}>
+                <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <SalesIcon />
+                    {translate('common.salesMetrics')}
+                  </Typography>
+                  
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={3}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {translate('common.totalPurchases')}
+                          </Typography>
+                          <Chip
+                            label={(machinesQuery.data || []).filter(m => m.is_sale).length}
+                            color="success"
+                            size="small"
+                          />
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {translate('common.totalAssignments')}
+                          </Typography>
+                          <Chip
+                            label={(machinesQuery.data || []).filter(m => !m.is_sale).length}
+                            color="default"
+                            size="small"
+                          />
+                        </Box>
+                      </Box>
+                    </Grid>
+                    
+                    <Grid item xs={12} md={3}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {translate('common.totalSpent')}
+                          </Typography>
+                          <Typography variant="body2" fontWeight="medium">
+                            €{(machinesQuery.data || [])
+                              .filter(m => m.is_sale && m.sale_price)
+                              .reduce((sum, m) => sum + parseFloat(m.sale_price), 0)
+                              .toFixed(2)
+                            }
+                          </Typography>
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {translate('common.avgPurchasePrice')}
+                          </Typography>
+                          <Typography variant="body2" fontWeight="medium">
+                            €{(() => {
+                              const purchases = (machinesQuery.data || []).filter(m => m.is_sale && m.sale_price);
+                              return purchases.length > 0 
+                                ? (purchases.reduce((sum, m) => sum + parseFloat(m.sale_price), 0) / purchases.length).toFixed(2)
+                                : '0.00';
+                            })()}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Grid>
+                    
+                    <Grid item xs={12} md={3}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {translate('forms.new')} {translate('common.machines')}
+                          </Typography>
+                          <Chip
+                            label={(machinesQuery.data || []).filter(m => m.machine_condition === 'new').length}
+                            color="success"
+                            size="small"
+                            variant="outlined"
+                          />
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {translate('forms.used')} {translate('common.machines')}
+                          </Typography>
+                          <Chip
+                            label={(machinesQuery.data || []).filter(m => m.machine_condition === 'used').length}
+                            color="warning"
+                            size="small"
+                            variant="outlined"
+                          />
+                        </Box>
+                      </Box>
+                    </Grid>
+                    
+                    <Grid item xs={12} md={3}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {translate('common.lastPurchase')}
+                          </Typography>
+                          <Typography variant="body2">
+                            {(() => {
+                              const lastPurchase = (machinesQuery.data || [])
+                                .filter(m => m.is_sale && m.sale_date)
+                                .sort((a, b) => new Date(b.sale_date) - new Date(a.sale_date))[0];
+                              return lastPurchase ? formatDate(lastPurchase.sale_date) : '-';
+                            })()}
+                          </Typography>
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {translate('common.customerValue')}
+                          </Typography>
+                          <Chip
+                            label={(() => {
+                              const totalSpent = (machinesQuery.data || [])
+                                .filter(m => m.is_sale && m.sale_price)
+                                .reduce((sum, m) => sum + parseFloat(m.sale_price), 0);
+                              if (totalSpent > 5000) return translate('common.highValue');
+                              if (totalSpent > 1000) return translate('common.mediumValue');
+                              return translate('common.lowValue');
+                            })()}
+                            color={(() => {
+                              const totalSpent = (machinesQuery.data || [])
+                                .filter(m => m.is_sale && m.sale_price)
+                                .reduce((sum, m) => sum + parseFloat(m.sale_price), 0);
+                              if (totalSpent > 5000) return 'success';
+                              if (totalSpent > 1000) return 'warning';
+                              return 'default';
+                            })()}
+                            size="small"
+                          />
+                        </Box>
+                      </Box>
+                    </Grid>
+                  </Grid>
                 </Paper>
               </Grid>
             </Grid>

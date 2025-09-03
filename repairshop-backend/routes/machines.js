@@ -253,7 +253,7 @@ router.get('/models/:modelId', async (req, res, next) => {
       }
     }
 
-    // Get model info
+    // Get model info with sales metrics
     const modelQuery = `
       SELECT 
         mm.name,
@@ -266,7 +266,14 @@ router.get('/models/:modelId', async (req, res, next) => {
         COUNT(CASE WHEN am.id IS NOT NULL THEN 1 END) as total_assigned,
         COUNT(CASE WHEN am.id IS NULL THEN 1 END) as unassigned_serials,
         COUNT(CASE WHEN am.warranty_active = true THEN 1 END) as active_warranty,
-        COUNT(CASE WHEN am.warranty_active = false OR am.warranty_expiry_date < CURRENT_DATE THEN 1 END) as expired_warranty
+        COUNT(CASE WHEN am.warranty_active = false OR am.warranty_expiry_date < CURRENT_DATE THEN 1 END) as expired_warranty,
+        -- Sales metrics
+        COUNT(CASE WHEN am.is_sale = true THEN 1 END) as total_sales,
+        COUNT(CASE WHEN am.is_sale = false THEN 1 END) as total_assignments,
+        COUNT(CASE WHEN am.machine_condition = 'new' THEN 1 END) as new_machines_sold,
+        COUNT(CASE WHEN am.machine_condition = 'used' THEN 1 END) as used_machines_sold,
+        COALESCE(SUM(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as total_sales_revenue,
+        COALESCE(AVG(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as avg_sale_price
       FROM machine_models mm
       LEFT JOIN machine_categories mc ON mm.category_id = mc.id
       LEFT JOIN machine_serials ms ON mm.id = ms.model_id
@@ -284,7 +291,7 @@ router.get('/models/:modelId', async (req, res, next) => {
       });
     }
 
-    // Get all serials for this model
+    // Get all serials for this model with sales data
     const serialsQuery = `
       SELECT 
         ms.id,
@@ -301,10 +308,22 @@ router.get('/models/:modelId', async (req, res, next) => {
         c.name as customer_name,
         c.email as customer_email,
         c.phone as customer_phone,
-        c.company_name
+        c.company_name,
+        -- Sales fields
+        am.sold_by_user_id,
+        am.added_by_user_id,
+        am.machine_condition,
+        am.sale_date,
+        am.sale_price,
+        am.is_sale,
+        -- Sales person information
+        sales_user.name as sold_by_name,
+        added_user.name as added_by_name
       FROM machine_serials ms
       LEFT JOIN assigned_machines am ON ms.id = am.serial_id
       LEFT JOIN customers c ON c.id = am.customer_id
+      LEFT JOIN users sales_user ON am.sold_by_user_id = sales_user.id
+      LEFT JOIN users added_user ON am.added_by_user_id = added_user.id
       WHERE ms.model_id = $1 ${warrantyFilter}
       ORDER BY ms.serial_number ASC NULLS LAST
     `;
@@ -560,7 +579,12 @@ router.post('/assign', async (req, res, next) => {
       customer_id, 
       purchase_date, 
       description,
-      receipt_number 
+      receipt_number,
+      sold_by_user_id,
+      machine_condition,
+      sale_date,
+      sale_price,
+      is_sale
     } = req.body;
     
     // Validate required fields
@@ -641,15 +665,31 @@ router.post('/assign', async (req, res, next) => {
       warrantyActive = warrantyExpiryDate >= new Date().toISOString().split('T')[0];
     }
 
-    // Assign serial to customer with calculated warranty expiry
+    // Assign serial to customer with calculated warranty expiry and sales fields
     const assignQuery = `
-      INSERT INTO assigned_machines (serial_id, customer_id, purchase_date, warranty_expiry_date, warranty_active, receipt_number)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO assigned_machines (
+        serial_id, customer_id, purchase_date, warranty_expiry_date, warranty_active, 
+        receipt_number, sold_by_user_id, added_by_user_id, machine_condition, 
+        sale_date, sale_price, is_sale, description
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *
     `;
     
     const assignResult = await db.query(assignQuery, [
-      serialId, customer_id, purchase_date || null, warrantyExpiryDate, warrantyActive, receipt_number || null
+      serialId, 
+      customer_id, 
+      purchase_date || null, 
+      warrantyExpiryDate, 
+      warrantyActive, 
+      receipt_number || null,
+      sold_by_user_id || null,
+      req.user?.id || null, // added_by_user_id
+      machine_condition || 'new',
+      sale_date || purchase_date || null,
+      sale_price || null,
+      is_sale !== undefined ? is_sale : true,
+      description || null
     ]);
     
     const assignedMachine = assignResult.rows[0];
@@ -1023,7 +1063,7 @@ router.delete('/categories/:id', async (req, res, next) => {
   }
 });
 
-// GET machines for a specific customer
+// GET machines for a specific customer with sales data
 router.get('/by-customer/:id', async (req, res, next) => {
   try {
     const result = await db.query(
@@ -1040,11 +1080,23 @@ router.get('/by-customer/:id', async (req, res, next) => {
         mc.name as category_name,
         mm.manufacturer,
         am.purchase_date,
-        am.description
+        am.description,
+        -- Sales fields
+        am.sold_by_user_id,
+        am.added_by_user_id,
+        am.machine_condition,
+        am.sale_date,
+        am.sale_price,
+        am.is_sale,
+        -- Sales person information
+        sales_user.name as sold_by_name,
+        added_user.name as added_by_name
        FROM assigned_machines am
        INNER JOIN machine_serials ms ON am.serial_id = ms.id
        INNER JOIN machine_models mm ON ms.model_id = mm.id
        LEFT JOIN machine_categories mc ON mm.category_id = mc.id
+       LEFT JOIN users sales_user ON am.sold_by_user_id = sales_user.id
+       LEFT JOIN users added_user ON am.added_by_user_id = added_user.id
        WHERE am.customer_id = $1
        ORDER BY mm.name ASC, ms.serial_number ASC NULLS LAST`,
       [req.params.id]
@@ -1072,15 +1124,26 @@ router.get('/:id', async (req, res, next) => {
         mm.manufacturer,
         am.purchase_date,
         mm.category_id,
-        am.purchase_date as receipt_number,
-        am.purchase_date,
+        am.receipt_number,
         c.name as customer_name,
-        mc.name as category_name
+        mc.name as category_name,
+        -- Sales fields
+        am.sold_by_user_id,
+        am.added_by_user_id,
+        am.machine_condition,
+        am.sale_date,
+        am.sale_price,
+        am.is_sale,
+        -- Sales person information
+        sales_user.name as sold_by_name,
+        added_user.name as added_by_name
        FROM assigned_machines am
        INNER JOIN machine_serials ms ON am.serial_id = ms.id
        INNER JOIN machine_models mm ON ms.model_id = mm.id
        LEFT JOIN customers c ON c.id = am.customer_id
        LEFT JOIN machine_categories mc ON mm.category_id = mc.id
+       LEFT JOIN users sales_user ON am.sold_by_user_id = sales_user.id
+       LEFT JOIN users added_user ON am.added_by_user_id = added_user.id
        WHERE am.id = $1`,
       [req.params.id]
     );

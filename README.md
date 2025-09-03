@@ -1,201 +1,319 @@
 # Repair Shop Management System
 
-A comprehensive web-based repair shop management system built with Node.js backend and React frontend.
+A comprehensive, modern web application for managing repair shop operations, customer relationships, sales pipeline, and business analytics. Built with React, Node.js, and PostgreSQL.
 
-## Features
+## 🚀 Features
 
-### Backend (Node.js/Express)
-- **User Management**: Authentication, authorization, and user roles
-- **Customer Management**: Customer profiles, communications, and preferences
-- **Machine Management**: Machine categories, models, serials, and assignments
-- **Work Orders**: Complete work order lifecycle management
-- **Repair Tickets**: Ticket creation, tracking, and resolution
-- **Inventory Management**: Parts tracking, suppliers, and stock management
-- **Warranty System**: Warranty repair tickets and work orders
-- **Analytics & Reporting**: Dashboard analytics and export functionality
-- **Real-time Notifications**: WebSocket-based notifications
-- **Multi-language Support**: Internationalization support
-- **Time Tracking**: Work order time tracking and billing
-- **Print Functionality**: Work order and ticket printing
+### ✅ Core Management System
+- **Authentication & Authorization** - Role-based access control (Admin, Manager, Technician, Sales)
+- **Dashboard** - Real-time overview with key metrics and activity
+- **Customer Management** - Complete customer profiles with communication history
+- **Machine Management** - Equipment tracking, models, serials, and assignments
+- **Work Orders** - Comprehensive repair workflow management
+- **Repair Tickets** - Service request tracking and conversion
+- **Inventory Management** - Parts tracking with low-stock alerts
+- **User Management** - Team member profiles and role assignments
 
-### Frontend (React)
-- **Modern UI**: Clean, responsive design with Tailwind CSS
-- **Real-time Updates**: Live notifications and status updates
-- **Form System**: Unified form handling with validation
-- **Data Tables**: Advanced data display with search and filtering
-- **Modal System**: Consistent modal dialogs throughout the app
-- **Language Switching**: Dynamic language support
-- **Performance Optimized**: Caching and optimization strategies
+### ✅ Sales & CRM System
+- **Sales Dashboard** - Performance metrics and opportunity tracking
+- **Lead Management** - Prospect tracking with follow-up scheduling
+- **Sales Pipeline** - Visual Kanban board for deal progression
+- **Quote Management** - Professional quote creation and tracking
+- **Sales Reports** - Analytics, trends, and team performance
+- **Customer Value Analysis** - Purchase history and lifetime value
 
-## Tech Stack
+### ✅ Advanced Features
+- **Real-Time Notifications** - WebSocket-powered instant updates
+- **Multi-Language Support** - English and Bosnian translations
+- **Responsive Design** - Mobile-friendly interface
+- **Export Functionality** - Data export to CSV/PDF
+- **File Attachments** - Document and image uploads
+- **Time Tracking** - Work hours and productivity monitoring
+- **Analytics & Reporting** - Business intelligence dashboards
 
-### Backend
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Database**: SQLite (with migration support)
-- **Authentication**: JWT tokens
-- **Real-time**: WebSocket (ws)
-- **Caching**: Redis
-- **Validation**: Custom validators
-- **Logging**: Winston
+## 🛠 Tech Stack
 
 ### Frontend
-- **Framework**: React 18
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
-- **State Management**: React Context API
-- **HTTP Client**: Fetch API
-- **Real-time**: WebSocket client
-- **Forms**: Custom unified form system
-- **Icons**: Heroicons
+- **React 18** - Modern React with hooks and concurrent features
+- **Vite** - Fast build tool and development server
+- **Material-UI (MUI)** - Component library for consistent UI
+- **Tailwind CSS** - Utility-first styling framework
+- **TanStack Query** - Server state management and caching
+- **React Router 6** - Client-side routing
+- **React Beautiful DnD** - Drag-and-drop functionality
+- **Socket.IO Client** - Real-time communication
 
-## Project Structure
+### Backend
+- **Node.js** - JavaScript runtime environment
+- **Express.js** - Web application framework
+- **PostgreSQL** - Relational database with advanced features
+- **Socket.IO** - Real-time bidirectional communication
+- **Redis** - Caching and session storage
+- **JWT** - JSON Web Token authentication
+- **Helmet** - Security middleware
+- **Rate Limiting** - API protection
+- **Winston** - Logging framework
 
+### Database
+- **PostgreSQL 17+** - Primary database
+- **Redis** - Cache and session store
+- **Database Views** - Optimized queries for analytics
+- **Indexes** - Performance optimization
+- **Migrations** - Version-controlled schema changes
+
+## 📋 Prerequisites
+
+- **Node.js** 18+ and npm
+- **PostgreSQL** 12+ database server
+- **Redis** server (for caching and sessions)
+- **Git** for version control
+
+## 🚀 Quick Start
+
+### 1. Database Setup
+
+#### Option A: Complete Backup (Recommended)
+```sql
+-- Create database and user in PostgreSQL
+CREATE DATABASE repairshop;
+CREATE USER repairadmin WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE repairshop TO repairadmin;
+
+-- Run the comprehensive backup (includes all data and structure)
+psql -U repairadmin -d repairshop -f "DB SA PRODAJOM FINAL.sql"
 ```
-repairshop-app/
-├── repairshop-backend/          # Backend API server
-│   ├── routes/                  # API route handlers
-│   ├── middleware/              # Express middleware
-│   ├── services/                # Business logic services
-│   ├── utils/                   # Utility functions
-│   ├── db/                      # Database migrations
-│   └── schema.sql              # Database schema
-├── repairshop-frontend/         # React frontend application
-│   ├── src/
-│   │   ├── components/          # React components
-│   │   ├── pages/              # Page components
-│   │   ├── contexts/           # React contexts
-│   │   ├── hooks/              # Custom React hooks
-│   │   ├── services/           # API services
-│   │   └── utils/              # Utility functions
-│   └── public/                 # Static assets
-├── start-dev.bat               # Windows development startup script
-├── start-dev.ps1               # PowerShell development startup script
-└── README.md                   # This file
+
+#### Option B: Schema Only (Clean Installation)
+```sql
+-- Create database and user in PostgreSQL
+CREATE DATABASE repairshop;
+CREATE USER repairadmin WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE repairshop TO repairadmin;
+
+-- Run the schema file (structure only, no data)
+psql -U repairadmin -d repairshop -f "repairshop-backend/schema.sql"
 ```
 
-## Quick Start
-
-### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn
-- Git
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd repairshop-app
-   ```
-
-2. **Install backend dependencies**
-   ```bash
-   cd repairshop-backend
-   npm install
-   ```
-
-3. **Install frontend dependencies**
-   ```bash
-   cd ../repairshop-frontend
-   npm install
-   ```
-
-4. **Set up environment variables**
-   ```bash
-   cd ../repairshop-backend
-   cp env.example .env
-   # Edit .env with your configuration
-   ```
-
-5. **Initialize the database**
-   ```bash
-   cd repairshop-backend
-   npm run db:init
-   ```
-
-### Development
-
-#### Option 1: Using the provided scripts
+### 2. Backend Setup
 ```bash
-# Windows
+cd repairshop-backend
+npm install
+cp env.example .env
+# Edit .env with your database credentials
+npm run dev
+```
+
+### 3. Frontend Setup
+```bash
+cd repairshop-frontend
+npm install
+npm run dev
+```
+
+### 4. Using Startup Scripts (Recommended)
+```bash
+# Windows Batch
 start-dev.bat
 
 # PowerShell
-./start-dev.ps1
+start-dev.ps1
 ```
 
-#### Option 2: Manual startup
-```bash
-# Terminal 1 - Start backend
-cd repairshop-backend
-npm run dev
+## 🌐 Access URLs
 
-# Terminal 2 - Start frontend
-cd repairshop-frontend
-npm run dev
-```
+- **Frontend Application**: http://localhost:3000
+- **Backend API**: http://localhost:3001
+- **API Health Check**: http://localhost:3001/health
+- **Cache Statistics**: http://localhost:3001/api/cache/stats
 
-The application will be available at:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3000
+## 🏗 Architecture
 
-## Configuration
+### Port Configuration
+- **Frontend (React)**: Port 3000
+- **Backend (Node.js API)**: Port 3001
+- **PostgreSQL**: Port 5432 (default)
+- **Redis**: Port 6379 (default)
 
-### Environment Variables
+### Real-Time Features
+The application uses WebSocket (Socket.IO) for real-time updates:
+- Work order status changes
+- New repair ticket notifications
+- User presence indicators
+- Inventory low-stock alerts
+- Sales opportunity updates
 
-Create a `.env` file in the `repairshop-backend` directory:
+### Caching Strategy
+Redis is used for:
+- Session storage
+- API response caching
+- Real-time data synchronization
+- Performance optimization
 
+## 📊 Database Schema
+
+### Core Tables
+- `users` - System users with role-based access
+- `customers` - Customer information and contacts
+- `machine_models` - Equipment model definitions
+- `machine_serials` - Individual machine serial numbers
+- `assigned_machines` - Customer-machine relationships
+- `repair_tickets` - Service requests and intake
+- `work_orders` - Active repair jobs
+- `inventory` - Parts and stock management
+
+### Sales Tables
+- `leads` - Sales prospects and opportunities
+- `lead_follow_ups` - Follow-up activities and notes
+- `quotes` - Customer quotations
+- `quote_items` - Itemized quote details
+
+### System Tables
+- `notifications` - User notifications
+- `customer_communications` - Communication history
+- `attachments` - File uploads and documents
+
+## 🔐 Authentication & Authorization
+
+### User Roles
+- **Admin** - Full system access and configuration
+- **Manager** - Operations management and reporting
+- **Technician** - Work orders and repair tickets
+- **Sales** - CRM, leads, and sales pipeline
+
+### Security Features
+- JWT-based authentication
+- Role-based route protection
+- API rate limiting
+- CORS configuration
+- Input validation and sanitization
+- SQL injection prevention
+
+## 🌍 Internationalization
+
+The application supports multiple languages:
+- **English** (default)
+- **Bosnian** - Complete translation coverage
+
+Language switching is available in the user interface, with automatic persistence of user preferences.
+
+## 📱 Responsive Design
+
+The application is fully responsive and optimized for:
+- **Desktop** - Full feature access
+- **Tablet** - Touch-friendly interface
+- **Mobile** - Streamlined mobile experience
+
+## 🔧 Development
+
+### Environment Configuration
+Create `.env` files in both frontend and backend directories:
+
+**Backend (.env)**:
 ```env
-# Server Configuration
-PORT=3000
-NODE_ENV=development
-
-# Database
-DB_PATH=./repairshop.db
-
-# JWT Secret
-JWT_SECRET=your-secret-key-here
-
-# Redis Configuration (optional)
+DATABASE_URL=postgresql://repairadmin:password@localhost:5432/repairshop
 REDIS_URL=redis://localhost:6379
-
-# CORS Configuration
-CORS_ORIGIN=http://localhost:5173
+JWT_SECRET=your-jwt-secret
+PORT=3001
+NODE_ENV=development
 ```
 
-## API Documentation
+**Frontend** uses Vite's environment variables for API configuration.
 
-The backend provides RESTful APIs for all major functionality:
+### Development Scripts
+```bash
+# Backend
+npm run dev        # Start development server
+npm run start      # Start production server
+npm test           # Run tests
 
-- **Authentication**: `/api/auth/*`
-- **Users**: `/api/users/*`
-- **Customers**: `/api/customers/*`
-- **Machines**: `/api/machines/*`
-- **Work Orders**: `/api/work-orders/*`
-- **Repair Tickets**: `/api/repair-tickets/*`
-- **Inventory**: `/api/inventory/*`
-- **Analytics**: `/api/analytics/*`
+# Frontend
+npm run dev        # Start development server
+npm run build      # Build for production
+npm run preview    # Preview production build
+```
 
-## Contributing
+### Code Quality
+- ESLint for code linting
+- Prettier for code formatting
+- Git hooks for pre-commit checks
+- TypeScript support (optional)
+
+## 🚀 Deployment
+
+### Production Build
+```bash
+# Frontend
+cd repairshop-frontend
+npm run build
+
+# Backend
+cd repairshop-backend
+npm run start
+```
+
+### Environment Setup
+- Configure production database
+- Set up Redis server
+- Configure reverse proxy (Nginx recommended)
+- Set up SSL certificates
+- Configure environment variables
+
+## 📈 Performance
+
+### Optimization Features
+- React query caching
+- Database query optimization
+- Redis caching layer
+- Lazy loading components
+- Image optimization
+- Bundle splitting
+
+### Monitoring
+- Application logging with Winston
+- Error tracking and reporting
+- Performance metrics
+- Database query monitoring
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+**Database Connection Errors**:
+- Verify PostgreSQL is running
+- Check database credentials in .env
+- Ensure database exists and migrations are applied
+
+**Redis Connection Issues**:
+- Verify Redis server is running
+- Check Redis URL configuration
+- Ensure Redis is accessible
+
+**Port Conflicts**:
+- Frontend: Port 3000
+- Backend: Port 3001
+- Use different ports if conflicts occur
+
+**WebSocket Connection Issues**:
+- Check firewall settings
+- Verify CORS configuration
+- Ensure Socket.IO versions match
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is proprietary software developed for repair shop management.
 
-## Support
+## 📞 Support
 
-For support and questions, please open an issue in the GitHub repository.
+For technical support or questions about the system, please contact the development team.
 
-## Version History
+---
 
-- **v0.4.0**: Current version with comprehensive features
-- **v0.3.0**: Added warranty system and enhanced UI
-- **v0.2.0**: Implemented real-time notifications
-- **v0.1.0**: Initial release with basic functionality
+**Built with ❤️ for efficient repair shop management**

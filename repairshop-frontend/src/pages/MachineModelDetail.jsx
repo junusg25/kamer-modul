@@ -55,7 +55,11 @@ import {
   CalendarToday as CalendarIcon,
   Receipt as ReceiptIcon,
   PersonAdd as PersonAddIcon,
-  ConfirmationNumber as SerialIcon
+  ConfirmationNumber as SerialIcon,
+  TrendingUp as SalesIcon,
+  AttachMoney as MoneyIcon,
+  Store as StoreIcon,
+  Assessment as MetricsIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -368,6 +372,72 @@ export default function MachineModelDetail() {
         </CardContent>
       </Card>
 
+      {/* Sales Metrics */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <SalesIcon />
+            {translate('common.salesMetrics')}
+          </Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={3}>
+              <Box display="flex" alignItems="center" mb={2}>
+                <StoreIcon sx={{ mr: 1, color: 'success.main' }} />
+                <Typography variant="body1">
+                  <strong>{translate('common.totalSales')}:</strong> {model?.total_sales || 0}
+                </Typography>
+              </Box>
+              <Box display="flex" alignItems="center" mb={2}>
+                <PersonAddIcon sx={{ mr: 1, color: 'info.main' }} />
+                <Typography variant="body1">
+                  <strong>{translate('common.totalAssignments')}:</strong> {model?.total_assignments || 0}
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Box display="flex" alignItems="center" mb={2}>
+                <CheckCircleIcon sx={{ mr: 1, color: 'success.main' }} />
+                <Typography variant="body1">
+                  <strong>{translate('forms.new')}:</strong> {model?.new_machines_sold || 0}
+                </Typography>
+              </Box>
+              <Box display="flex" alignItems="center" mb={2}>
+                <WarningIcon sx={{ mr: 1, color: 'warning.main' }} />
+                <Typography variant="body1">
+                  <strong>{translate('forms.used')}:</strong> {model?.used_machines_sold || 0}
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Box display="flex" alignItems="center" mb={2}>
+                <MoneyIcon sx={{ mr: 1, color: 'primary.main' }} />
+                <Typography variant="body1">
+                  <strong>{translate('common.totalRevenue')}:</strong> €{parseFloat(model?.total_sales_revenue || 0).toFixed(2)}
+                </Typography>
+              </Box>
+              <Box display="flex" alignItems="center" mb={2}>
+                <MetricsIcon sx={{ mr: 1, color: 'secondary.main' }} />
+                <Typography variant="body1">
+                  <strong>{translate('common.avgSalePrice')}:</strong> €{parseFloat(model?.avg_sale_price || 0).toFixed(2)}
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Box display="flex" alignItems="center" mb={2}>
+                <SalesIcon sx={{ mr: 1, color: 'primary.main' }} />
+                <Typography variant="body1">
+                  <strong>{translate('common.salesRatio')}:</strong> {
+                    model?.total_assigned > 0 
+                      ? `${Math.round((model?.total_sales || 0) / model?.total_assigned * 100)}%`
+                      : '0%'
+                  }
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
       {/* Warranty Filter */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <FormControl size="small" sx={{ minWidth: 200 }}>
@@ -392,6 +462,9 @@ export default function MachineModelDetail() {
               <TableRow>
                 <TableCell>{translate('tableHeaders.serialNumber')}</TableCell>
                 <TableCell>{translate('tableHeaders.customer')}</TableCell>
+                <TableCell>{translate('forms.transactionType')}</TableCell>
+                <TableCell>{translate('forms.soldBy')}</TableCell>
+                <TableCell>{translate('forms.salePrice')}</TableCell>
                 <TableCell>{translate('tableHeaders.purchaseDate')}</TableCell>
                 <TableCell>{translate('tableHeaders.warrantyExpiry')}</TableCell>
                 <TableCell>{translate('tableHeaders.warrantyStatus')}</TableCell>
@@ -401,7 +474,7 @@ export default function MachineModelDetail() {
             <TableBody>
               {serials?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
+                  <TableCell colSpan={9} align="center">
                     {translate('common.noSerialsFound')}
                   </TableCell>
                 </TableRow>
@@ -439,6 +512,32 @@ export default function MachineModelDetail() {
                         </Box>
                       ) : (
                         <Chip label={translate('common.unassigned')} color="default" size="small" />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {serial.assigned_machine_id ? (
+                        <Chip
+                          label={serial.is_sale ? translate('forms.sale') : translate('forms.assignment')}
+                          color={serial.is_sale ? 'success' : 'default'}
+                          size="small"
+                          variant="outlined"
+                        />
+                      ) : (
+                        <Typography variant="body2" color="textSecondary">-</Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {serial.sold_by_name || (
+                        <Typography variant="body2" color="textSecondary">-</Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {serial.sale_price ? (
+                        <Typography variant="body2" fontWeight="medium">
+                          €{parseFloat(serial.sale_price).toFixed(2)}
+                        </Typography>
+                      ) : (
+                        <Typography variant="body2" color="textSecondary">-</Typography>
                       )}
                     </TableCell>
                     <TableCell>

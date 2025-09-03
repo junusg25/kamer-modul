@@ -41,6 +41,11 @@ import {
   Brightness7,
   AccountCircle,
   Logout,
+  TrendingUp as SalesIcon,
+  Star as LeadIcon,
+  Timeline as PipelineIcon,
+  Assessment as ReportsIcon,
+  RequestQuote as QuoteIcon,
 } from '@mui/icons-material'
 import { useAuth } from '../contexts/AuthContext'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -53,14 +58,38 @@ export default function Layout({ onThemeToggle, mode }) {
   const { user, logout } = useAuth()
   const { translate } = useLanguage()
   
-  const menuItems = [
-    { text: translate('navigation.dashboard'), icon: <DashboardIcon />, path: '/dashboard' },
-    { text: translate('navigation.warranty'), icon: <SecurityIcon />, path: '/warranty' },
-    { text: translate('navigation.nonWarranty'), icon: <BuildIcon />, path: '/non-warranty' },
-    { text: translate('navigation.machines'), icon: <MachineIcon />, path: '/machines' },
-    { text: translate('navigation.customers'), icon: <CustomerIcon />, path: '/customers' },
-    { text: translate('navigation.inventory'), icon: <InventoryIcon />, path: '/inventory' },
-  ]
+  // Dynamic menu items based on user role
+  const menuItems = React.useMemo(() => {
+    const items = [];
+    
+    // Dashboard - Sales users get Sales Dashboard, others get regular Dashboard
+    if (user?.role === 'sales') {
+      items.push({ text: translate('navigation.salesDashboard'), icon: <SalesIcon />, path: '/sales-dashboard' });
+    } else {
+      items.push({ text: translate('navigation.dashboard'), icon: <DashboardIcon />, path: '/dashboard' });
+    }
+    
+    // Common navigation items
+    items.push(
+      { text: translate('navigation.warranty'), icon: <SecurityIcon />, path: '/warranty' },
+      { text: translate('navigation.nonWarranty'), icon: <BuildIcon />, path: '/non-warranty' },
+      { text: translate('navigation.machines'), icon: <MachineIcon />, path: '/machines' },
+      { text: translate('navigation.customers'), icon: <CustomerIcon />, path: '/customers' },
+      { text: translate('navigation.inventory'), icon: <InventoryIcon />, path: '/inventory' }
+    );
+    
+    // Sales-specific items (show for sales users and admins)
+    if (user?.role === 'sales' || user?.role === 'admin') {
+      items.push(
+        { text: translate('navigation.leadManagement'), icon: <LeadIcon />, path: '/lead-management' },
+        { text: translate('navigation.salesPipeline'), icon: <PipelineIcon />, path: '/sales-pipeline' },
+        { text: translate('navigation.salesReports'), icon: <ReportsIcon />, path: '/sales-reports' },
+        { text: translate('navigation.quoteManagement'), icon: <QuoteIcon />, path: '/quote-management' }
+      );
+    }
+    
+    return items;
+  }, [user?.role, translate]);
   const theme = useTheme()
   const { pathname } = useLocation()
   const [anchorEl, setAnchorEl] = React.useState(null)

@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const db = require('../db')
 const { authenticateToken, authorizeRoles } = require('../middleware/auth')
-const { format } = require('date-fns')
+const { format, subDays, subWeeks, subMonths, subQuarters, subYears, startOfWeek, startOfMonth, startOfQuarter, startOfYear } = require('date-fns')
 
 // Analytics Overview - Comprehensive dashboard data
 router.get('/overview', authenticateToken, async (req, res) => {
@@ -1183,5 +1183,566 @@ router.get('/most-used-parts', authenticateToken, async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Failed to fetch most used parts' })
   }
 })
+
+// Sales Analytics Endpoints
+
+// GET sales metrics with period comparison
+router.get('/sales-metrics', authenticateToken, async (req, res) => {
+  try {
+    const { period = 'month' } = req.query;
+    
+    // Calculate date ranges
+    let startDate, previousStartDate, previousEndDate;
+    const now = new Date();
+    
+    switch (period) {
+      case 'week':
+        startDate = startOfWeek(now);
+        previousStartDate = startOfWeek(subWeeks(now, 1));
+        previousEndDate = subDays(startDate, 1);
+        break;
+      case 'quarter':
+        startDate = startOfQuarter(now);
+        previousStartDate = startOfQuarter(subQuarters(now, 1));
+        previousEndDate = subDays(startDate, 1);
+        break;
+      case 'year':
+        startDate = startOfYear(now);
+        previousStartDate = startOfYear(subYears(now, 1));
+        previousEndDate = subDays(startDate, 1);
+        break;
+      default: // month
+        startDate = startOfMonth(now);
+        previousStartDate = startOfMonth(subMonths(now, 1));
+        previousEndDate = subDays(startDate, 1);
+    }
+
+    // Current period metrics
+    const currentMetricsQuery = `
+      SELECT 
+        COUNT(CASE WHEN is_sale = true THEN 1 END) as total_sales,
+        COALESCE(SUM(CASE WHEN is_sale = true THEN sale_price END), 0) as total_revenue,
+        COALESCE(AVG(CASE WHEN is_sale = true THEN sale_price END), 0) as avg_sale_price,
+        COUNT(CASE WHEN is_sale = false THEN 1 END) as total_assignments
+      FROM assigned_machines 
+      WHERE assigned_at >= $1
+    `;
+    
+    // Previous period metrics
+    const previousMetricsQuery = `
+      SELECT 
+        COUNT(CASE WHEN is_sale = true THEN 1 END) as total_sales,
+        COALESCE(SUM(CASE WHEN is_sale = true THEN sale_price END), 0) as total_revenue,
+        COALESCE(AVG(CASE WHEN is_sale = true THEN sale_price END), 0) as avg_sale_price
+      FROM assigned_machines 
+      WHERE assigned_at >= $1 AND assigned_at <= $2
+    `;
+
+    const [currentResult, previousResult] = await Promise.all([
+      db.query(currentMetricsQuery, [startDate]),
+      db.query(previousMetricsQuery, [previousStartDate, previousEndDate])
+    ]);
+
+    const current = currentResult.rows[0];
+    const previous = previousResult.rows[0];
+
+    // Calculate percentage changes
+    const salesChange = previous.total_sales > 0 
+      ? ((current.total_sales - previous.total_sales) / previous.total_sales * 100)
+      : 0;
+    
+    const revenueChange = previous.total_revenue > 0 
+      ? ((current.total_revenue - previous.total_revenue) / previous.total_revenue * 100)
+      : 0;
+    
+    const avgPriceChange = previous.avg_sale_price > 0 
+      ? ((current.avg_sale_price - previous.avg_sale_price) / previous.avg_sale_price * 100)
+      : 0;
+
+    res.json({
+      status: 'success',
+      data: {
+        totalSales: parseInt(current.total_sales),
+        totalRevenue: parseFloat(current.total_revenue),
+        avgSalePrice: parseFloat(current.avg_sale_price),
+        totalAssignments: parseInt(current.total_assignments),
+        salesChange: parseFloat(salesChange.toFixed(2)),
+        revenueChange: parseFloat(revenueChange.toFixed(2)),
+        avgPriceChange: parseFloat(avgPriceChange.toFixed(2))
+      }
+    });
+  } catch (error) {
+    console.error('Sales metrics error:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch sales metrics' });
+  }
+});
+
+// GET sales opportunities from repair tickets and work orders
+router.get('/sales-opportunities', authenticateToken, async (req, res) => {
+  try {
+    const { sales_user_id } = req.query;
+    
+    let whereClause = '';
+    let params = [];
+    
+    if (sales_user_id && sales_user_id !== 'all') {
+      whereClause = 'WHERE sales_user_id = $1';
+      params.push(sales_user_id);
+    }
+
+    const query = `
+      SELECT * FROM sales_opportunities
+      ${whereClause}
+      ORDER BY 
+        CASE lead_quality 
+          WHEN 'high' THEN 1 
+          WHEN 'medium' THEN 2 
+          ELSE 3 
+        END,
+        potential_value DESC
+      LIMIT 50
+    `;
+
+    const result = await db.query(query, params);
+    
+    res.json({
+      status: 'success',
+      data: result.rows
+    });
+  } catch (error) {
+    console.error('Sales opportunities error:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch sales opportunities' });
+  }
+});
+
+// GET sales team performance
+router.get('/sales-team', authenticateToken, async (req, res) => {
+  try {
+    const { period = 'month' } = req.query;
+    
+    // Calculate date range
+    let startDate;
+    const now = new Date();
+    
+    switch (period) {
+      case 'week':
+        startDate = startOfWeek(now);
+        break;
+      case 'quarter':
+        startDate = startOfQuarter(now);
+        break;
+      case 'year':
+        startDate = startOfYear(now);
+        break;
+      default: // month
+        startDate = startOfMonth(now);
+    }
+
+    const query = `
+      SELECT 
+        u.id,
+        u.name,
+        u.email,
+        COUNT(CASE WHEN am.is_sale = true THEN 1 END) as total_sales,
+        COALESCE(SUM(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as total_revenue,
+        COALESCE(AVG(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as avg_sale_price,
+        -- Assuming a monthly target of €10,000 per sales person
+        10000 as target
+      FROM users u
+      LEFT JOIN assigned_machines am ON u.id = am.sold_by_user_id 
+        AND am.assigned_at >= $1
+        AND am.is_sale = true
+      WHERE u.role = 'sales' AND u.status = 'active'
+      GROUP BY u.id, u.name, u.email
+      ORDER BY total_revenue DESC
+    `;
+
+    const result = await db.query(query, [startDate]);
+    
+    res.json({
+      status: 'success',
+      data: result.rows.map(row => ({
+        ...row,
+        totalSales: parseInt(row.total_sales),
+        totalRevenue: parseFloat(row.total_revenue),
+        avgSalePrice: parseFloat(row.avg_sale_price),
+        target: parseFloat(row.target)
+      }))
+    });
+  } catch (error) {
+    console.error('Sales team error:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch sales team performance' });
+  }
+});
+
+// GET recent sales activity
+router.get('/recent-sales', authenticateToken, async (req, res) => {
+  try {
+    const { limit = 10 } = req.query;
+    
+    const query = `
+      SELECT 
+        am.id,
+        am.sale_date,
+        am.sale_price,
+        c.name as customer_name,
+        c.company_name,
+        mm.name as model_name,
+        ms.serial_number,
+        u.name as sold_by_name
+      FROM assigned_machines am
+      INNER JOIN machine_serials ms ON am.serial_id = ms.id
+      INNER JOIN machine_models mm ON ms.model_id = mm.id
+      INNER JOIN customers c ON am.customer_id = c.id
+      LEFT JOIN users u ON am.sold_by_user_id = u.id
+      WHERE am.is_sale = true
+      ORDER BY am.sale_date DESC, am.assigned_at DESC
+      LIMIT $1
+    `;
+
+    const result = await db.query(query, [limit]);
+    
+    res.json({
+      status: 'success',
+      data: result.rows
+    });
+  } catch (error) {
+    console.error('Recent sales error:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch recent sales' });
+  }
+});
+
+// Sales Reports Analytics Endpoints
+
+// GET comprehensive sales reports
+router.get('/sales-reports', authenticateToken, async (req, res) => {
+  try {
+    const { period = 'month', sales_person } = req.query;
+    
+    // Calculate date range
+    let startDate, previousStartDate, previousEndDate;
+    const now = new Date();
+    
+    switch (period) {
+      case 'week':
+        startDate = startOfWeek(now);
+        previousStartDate = startOfWeek(subWeeks(now, 1));
+        previousEndDate = subDays(startDate, 1);
+        break;
+      case 'quarter':
+        startDate = startOfQuarter(now);
+        previousStartDate = startOfQuarter(subQuarters(now, 1));
+        previousEndDate = subDays(startDate, 1);
+        break;
+      case 'year':
+        startDate = startOfYear(now);
+        previousStartDate = startOfYear(subYears(now, 1));
+        previousEndDate = subDays(startDate, 1);
+        break;
+      default: // month
+        startDate = startOfMonth(now);
+        previousStartDate = startOfMonth(subMonths(now, 1));
+        previousEndDate = subDays(startDate, 1);
+    }
+
+    let whereClause = 'WHERE am.assigned_at >= $1';
+    let previousWhereClause = 'WHERE am.assigned_at >= $1 AND am.assigned_at <= $2';
+    let params = [startDate];
+    let previousParams = [previousStartDate, previousEndDate];
+
+    if (sales_person && sales_person !== 'all') {
+      whereClause += ' AND am.sold_by_user_id = $2';
+      previousWhereClause += ' AND am.sold_by_user_id = $3';
+      params.push(sales_person);
+      previousParams.push(sales_person);
+    }
+
+    // Current period analytics
+    const currentAnalyticsQuery = `
+      SELECT 
+        COUNT(CASE WHEN am.is_sale = true THEN 1 END) as total_sales,
+        COALESCE(SUM(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as total_revenue,
+        COALESCE(AVG(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as avg_sale_price,
+        COUNT(CASE WHEN am.is_sale = false THEN 1 END) as total_assignments
+      FROM assigned_machines am
+      ${whereClause}
+    `;
+
+    // Previous period analytics
+    const previousAnalyticsQuery = `
+      SELECT 
+        COUNT(CASE WHEN am.is_sale = true THEN 1 END) as total_sales,
+        COALESCE(SUM(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as total_revenue,
+        COALESCE(AVG(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as avg_sale_price
+      FROM assigned_machines am
+      ${previousWhereClause}
+    `;
+
+    // Conversion rate calculation
+    const conversionQuery = `
+      SELECT 
+        COUNT(*) as total_leads,
+        COUNT(CASE WHEN sales_stage = 'won' THEN 1 END) as won_leads
+      FROM leads l
+      WHERE l.created_at >= $1
+      ${sales_person && sales_person !== 'all' ? 'AND l.assigned_to = $2' : ''}
+    `;
+
+    const [currentResult, previousResult, conversionResult] = await Promise.all([
+      db.query(currentAnalyticsQuery, params),
+      db.query(previousAnalyticsQuery, previousParams),
+      db.query(conversionQuery, sales_person && sales_person !== 'all' ? [startDate, sales_person] : [startDate])
+    ]);
+
+    const current = currentResult.rows[0];
+    const previous = previousResult.rows[0];
+    const conversion = conversionResult.rows[0];
+
+    // Calculate percentage changes
+    const salesChange = previous.total_sales > 0 
+      ? ((current.total_sales - previous.total_sales) / previous.total_sales * 100)
+      : 0;
+    
+    const revenueChange = previous.total_revenue > 0 
+      ? ((current.total_revenue - previous.total_revenue) / previous.total_revenue * 100)
+      : 0;
+    
+    const avgPriceChange = previous.avg_sale_price > 0 
+      ? ((current.avg_sale_price - previous.avg_sale_price) / previous.avg_sale_price * 100)
+      : 0;
+
+    const conversionRate = conversion.total_leads > 0 
+      ? (conversion.won_leads / conversion.total_leads * 100)
+      : 0;
+
+    res.json({
+      status: 'success',
+      data: {
+        totalSales: parseInt(current.total_sales),
+        totalRevenue: parseFloat(current.total_revenue),
+        avgSalePrice: parseFloat(current.avg_sale_price),
+        totalAssignments: parseInt(current.total_assignments),
+        conversionRate: parseFloat(conversionRate.toFixed(2)),
+        salesChange: parseFloat(salesChange.toFixed(2)),
+        revenueChange: parseFloat(revenueChange.toFixed(2)),
+        avgPriceChange: parseFloat(avgPriceChange.toFixed(2)),
+        conversionChange: 0 // Would need historical data to calculate
+      }
+    });
+  } catch (error) {
+    console.error('Sales reports error:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch sales reports' });
+  }
+});
+
+// GET sales trends over time
+router.get('/sales-trends', authenticateToken, async (req, res) => {
+  try {
+    const { period = 'month' } = req.query;
+    
+    let dateFormat, intervalClause;
+    switch (period) {
+      case 'week':
+        dateFormat = 'YYYY-"W"WW';
+        intervalClause = "DATE_TRUNC('week', am.assigned_at)";
+        break;
+      case 'quarter':
+        dateFormat = 'YYYY-"Q"Q';
+        intervalClause = "DATE_TRUNC('quarter', am.assigned_at)";
+        break;
+      case 'year':
+        dateFormat = 'YYYY';
+        intervalClause = "DATE_TRUNC('year', am.assigned_at)";
+        break;
+      default: // month
+        dateFormat = 'YYYY-MM';
+        intervalClause = "DATE_TRUNC('month', am.assigned_at)";
+    }
+
+    const trendsQuery = `
+      SELECT 
+        TO_CHAR(${intervalClause}, '${dateFormat}') as period,
+        COUNT(CASE WHEN am.is_sale = true THEN 1 END) as sales,
+        COALESCE(SUM(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as revenue,
+        COALESCE(AVG(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as avg_deal_size
+      FROM assigned_machines am
+      WHERE am.assigned_at >= CURRENT_DATE - INTERVAL '12 months'
+        AND am.is_sale = true
+      GROUP BY ${intervalClause}
+      ORDER BY ${intervalClause}
+    `;
+
+    const result = await db.query(trendsQuery);
+    
+    res.json({
+      status: 'success',
+      data: result.rows.map(row => ({
+        period: row.period,
+        sales: parseInt(row.sales),
+        revenue: parseFloat(row.revenue),
+        avgDealSize: parseFloat(row.avg_deal_size)
+      }))
+    });
+  } catch (error) {
+    console.error('Sales trends error:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch sales trends' });
+  }
+});
+
+// GET team performance metrics
+router.get('/team-performance', authenticateToken, async (req, res) => {
+  try {
+    const { period = 'month' } = req.query;
+    
+    let startDate;
+    const now = new Date();
+    
+    switch (period) {
+      case 'week':
+        startDate = startOfWeek(now);
+        break;
+      case 'quarter':
+        startDate = startOfQuarter(now);
+        break;
+      case 'year':
+        startDate = startOfYear(now);
+        break;
+      default: // month
+        startDate = startOfMonth(now);
+    }
+
+    const teamQuery = `
+      SELECT 
+        u.id,
+        u.name,
+        u.email,
+        COUNT(l.id) as leads_generated,
+        COUNT(CASE WHEN l.sales_stage = 'won' THEN 1 END) as leads_converted,
+        COUNT(CASE WHEN am.is_sale = true THEN 1 END) as total_sales,
+        COALESCE(SUM(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as total_revenue,
+        COALESCE(AVG(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as avg_deal_size,
+        CASE 
+          WHEN COUNT(l.id) > 0 THEN 
+            ROUND((COUNT(CASE WHEN l.sales_stage = 'won' THEN 1 END)::FLOAT / COUNT(l.id)::FLOAT * 100)::NUMERIC, 2)
+          ELSE 0 
+        END as conversion_rate,
+        10000 as target -- Default monthly target
+      FROM users u
+      LEFT JOIN leads l ON u.id = l.assigned_to 
+        AND l.created_at >= $1
+      LEFT JOIN assigned_machines am ON u.id = am.sold_by_user_id 
+        AND am.assigned_at >= $1
+        AND am.is_sale = true
+      WHERE u.role = 'sales' AND u.status = 'active'
+      GROUP BY u.id, u.name, u.email
+      ORDER BY total_revenue DESC
+    `;
+
+    const result = await db.query(teamQuery, [startDate]);
+    
+    res.json({
+      status: 'success',
+      data: result.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        leadsGenerated: parseInt(row.leads_generated),
+        leadsConverted: parseInt(row.leads_converted),
+        totalSales: parseInt(row.total_sales),
+        totalRevenue: parseFloat(row.total_revenue),
+        avgDealSize: parseFloat(row.avg_deal_size),
+        conversionRate: parseFloat(row.conversion_rate),
+        target: parseFloat(row.target)
+      }))
+    });
+  } catch (error) {
+    console.error('Team performance error:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch team performance' });
+  }
+});
+
+// GET conversion funnel data
+router.get('/conversion-funnel', authenticateToken, async (req, res) => {
+  try {
+    const { period = 'month' } = req.query;
+    
+    let startDate;
+    const now = new Date();
+    
+    switch (period) {
+      case 'week':
+        startDate = startOfWeek(now);
+        break;
+      case 'quarter':
+        startDate = startOfQuarter(now);
+        break;
+      case 'year':
+        startDate = startOfYear(now);
+        break;
+      default: // month
+        startDate = startOfMonth(now);
+    }
+
+    const funnelQuery = `
+      SELECT 
+        sales_stage as stage,
+        COUNT(*) as count
+      FROM leads
+      WHERE created_at >= $1
+      GROUP BY sales_stage
+      ORDER BY 
+        CASE sales_stage 
+          WHEN 'new' THEN 1 
+          WHEN 'contacted' THEN 2 
+          WHEN 'qualified' THEN 3 
+          WHEN 'proposal' THEN 4 
+          WHEN 'negotiation' THEN 5 
+          WHEN 'won' THEN 6 
+          WHEN 'lost' THEN 7 
+          ELSE 8 
+        END
+    `;
+
+    const result = await db.query(funnelQuery, [startDate]);
+    const totalLeads = result.rows.reduce((sum, row) => sum + parseInt(row.count), 0);
+    
+    res.json({
+      status: 'success',
+      data: result.rows.map(row => ({
+        stage: row.stage,
+        count: parseInt(row.count),
+        percentage: totalLeads > 0 ? (parseInt(row.count) / totalLeads * 100) : 0
+      }))
+    });
+  } catch (error) {
+    console.error('Conversion funnel error:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch conversion funnel' });
+  }
+});
+
+// GET export sales report (Excel/CSV)
+router.get('/sales-reports/export', authenticateToken, async (req, res) => {
+  try {
+    const { period = 'month', sales_person } = req.query;
+    
+    // This would typically use a library like xlsx or csv-writer
+    // For now, we'll return a simple JSON response that could be processed client-side
+    const reportData = {
+      period,
+      sales_person,
+      generated_at: new Date().toISOString(),
+      // Include all the analytics data here
+    };
+    
+    res.json({
+      status: 'success',
+      message: 'Export functionality would be implemented here',
+      data: reportData
+    });
+  } catch (error) {
+    console.error('Export error:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to export report' });
+  }
+});
 
 module.exports = router

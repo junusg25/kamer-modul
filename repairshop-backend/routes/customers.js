@@ -21,25 +21,41 @@ router.get('/',
     
     if (search) {
       const like = `%${search}%`;
-      whereClause = `WHERE name ILIKE $1 OR COALESCE(email,'') ILIKE $1 OR COALESCE(phone,'') ILIKE $1 OR COALESCE(company_name,'') ILIKE $1 OR COALESCE(city,'') ILIKE $1 OR COALESCE(vat_number,'') ILIKE $1`;
+      whereClause = `WHERE c.name ILIKE $1 OR COALESCE(c.email,'') ILIKE $1 OR COALESCE(c.phone,'') ILIKE $1 OR COALESCE(c.company_name,'') ILIKE $1 OR COALESCE(c.city,'') ILIKE $1 OR COALESCE(c.vat_number,'') ILIKE $1`;
       params.push(like);
     }
     
     // Get total count
     const countQuery = `
       SELECT COUNT(*) 
-      FROM customers
+      FROM customers c
       ${whereClause}
     `;
     const countResult = await db.query(countQuery, params);
     const total = parseInt(countResult.rows[0].count);
     
-    // Get customers with pagination
+    // Get customers with pagination and sales metrics
     const query = `
-      SELECT id, name, phone, email, address, company_name, vat_number, city, postal_code, street_address, phone2, fax, created_at, updated_at
-      FROM customers
+      SELECT 
+        c.id, c.name, c.phone, c.email, c.address, c.company_name, c.vat_number, 
+        c.city, c.postal_code, c.street_address, c.phone2, c.fax, c.created_at, c.updated_at,
+        -- Sales metrics
+        COUNT(am.id) as total_machines,
+        COUNT(CASE WHEN am.is_sale = true THEN 1 END) as machines_purchased,
+        COUNT(CASE WHEN am.is_sale = false THEN 1 END) as machines_assigned,
+        COALESCE(SUM(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as total_spent,
+        COALESCE(AVG(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as avg_purchase_price,
+        MAX(am.assigned_at) as last_purchase_date,
+        -- Sales person info
+        sales_user.name as primary_sales_person
+      FROM customers c
+      LEFT JOIN assigned_machines am ON c.id = am.customer_id
+      LEFT JOIN users sales_user ON am.sold_by_user_id = sales_user.id
       ${whereClause}
-      ORDER BY updated_at DESC
+      GROUP BY c.id, c.name, c.phone, c.email, c.address, c.company_name, c.vat_number, 
+               c.city, c.postal_code, c.street_address, c.phone2, c.fax, c.created_at, c.updated_at,
+               sales_user.name
+      ORDER BY c.updated_at DESC
       LIMIT $${params.length + 1} OFFSET $${params.length + 2}
     `;
     params.push(parseInt(limit), offset);
