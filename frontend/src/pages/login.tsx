@@ -119,25 +119,6 @@ export default function Login() {
                 )}
               </Button>
             </form>
-
-            {/* Demo Credentials */}
-            <div className="mt-6 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-              <h4 className="text-sm font-medium text-orange-900 dark:text-orange-100 mb-2">
-                🚀 Demo Mode Available
-              </h4>
-              <p className="text-xs text-orange-700 dark:text-orange-300 mb-3">
-                You can login with demo credentials to explore the system:
-              </p>
-              <div className="text-xs text-orange-600 dark:text-orange-400 space-y-1">
-                <p><strong>Admin:</strong> admin@repairshop.com / admin</p>
-                <p><strong>Technician:</strong> john@repairshop.com / admin</p>
-                <p><strong>Manager:</strong> manager@repairshop.com / admin</p>
-                <p><strong>Test User:</strong> test@repairshop.com / test123</p>
-              </div>
-              <p className="text-xs text-orange-600 dark:text-orange-400 mt-2">
-                💡 The system will work with mock data if the backend is not running.
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>

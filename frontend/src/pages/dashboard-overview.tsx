@@ -634,8 +634,8 @@ const DashboardOverview = () => {
                           <ChartTooltipContent
                             labelFormatter={(value) => formatDate(value)}
                             formatter={(value, name) => [
-                              name === 'revenue' ? formatCurrency(Number(value)) : value,
-                              name === 'revenue' ? 'Revenue' : name === 'sales' ? 'Sales' : 'Customers'
+                              name === 'revenue' ? `${formatCurrency(Number(value))} Revenue` : `${value} ${name === 'sales' ? 'Sales' : 'Customers'}`,
+                              ''
                             ]}
                           />
                         }

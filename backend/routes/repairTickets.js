@@ -680,11 +680,8 @@ router.post('/:id/convert', authenticateToken, async (req, res, next) => {
           // Notify the assigned technician about work order assignment (not creation)
           await createNotification(
             workOrder.technician_id,
-            'notifications.workOrderAssignedToYou',
-            'notifications.workOrderAssignedToYou',
-            { 
-              number: workOrder.formatted_number || `#${workOrder.id}`
-            },
+            'Work Order Assigned',
+            `You have been assigned to work order ${workOrder.formatted_number || `#${workOrder.id}`}`,
             'work_order',
             'work_order',
             workOrder.id
@@ -694,11 +691,8 @@ router.post('/:id/convert', authenticateToken, async (req, res, next) => {
         // Notify all managers about work order creation (except the converter)
         if (req.user.role !== 'admin' && req.user.role !== 'manager') {
           await createNotificationForManagers(
-            'notifications.workOrderCreated',
-            'notifications.workOrderCreatedMessage',
-            { 
-              number: workOrder.formatted_number || `#${workOrder.id}`
-            },
+            'Work Order Created',
+            `New work order ${workOrder.formatted_number || `#${workOrder.id}`} has been created`,
             'work_order',
             'work_order',
             workOrder.id

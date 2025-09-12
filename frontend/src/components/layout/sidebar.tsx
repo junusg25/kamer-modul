@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible'
-import { QuickCreateButton } from '../dashboard/quick-create-button'
 import { useAuth } from '../../contexts/auth-context'
 import apiService from '../../services/api'
 import {
@@ -32,9 +31,6 @@ interface SidebarCounts {
   warranty_repair_tickets: number
   non_warranty_total: number
   warranty_total: number
-  notifications: {
-    unread: number
-  }
 }
 
 interface NavigationChild {
@@ -136,13 +132,6 @@ const getNavigationItems = (counts: SidebarCounts | null, userRole?: string): Na
     type: 'single' 
   },
   
-  { 
-    name: 'Notifications', 
-    href: '/notifications', 
-    icon: Bell, 
-    badge: counts?.notifications.unread ? counts.notifications.unread.toString() : null, 
-    type: 'single' 
-  },
   ]
 
   // Filter out sales management items for technicians
@@ -163,26 +152,26 @@ export function Sidebar({ className }: SidebarProps) {
   const [openDropdowns, setOpenDropdowns] = useState<string[]>([])
   const [sidebarCounts, setSidebarCounts] = useState<SidebarCounts | null>(null)
   // Fetch sidebar counts
-  useEffect(() => {
-    const fetchSidebarCounts = async () => {
-      try {
-        const response = await apiService.getSidebarCounts()
-        setSidebarCounts((response as any).data)
-      } catch (error) {
-        console.error('Failed to fetch sidebar counts:', error)
-        // Set default counts on error
-        setSidebarCounts({
-          repair_tickets: 0,
-          warranty_repair_tickets: 0,
-          non_warranty_total: 0,
-          warranty_total: 0,
-          notifications: { unread: 0 }
-        })
-      }
+  const fetchSidebarCounts = useCallback(async () => {
+    try {
+      const response = await apiService.getSidebarCounts()
+      setSidebarCounts((response as any).data)
+    } catch (error) {
+      console.error('Failed to fetch sidebar counts:', error)
+      // Set default counts on error
+      setSidebarCounts({
+        repair_tickets: 0,
+        warranty_repair_tickets: 0,
+        non_warranty_total: 0,
+        warranty_total: 0
+      })
     }
-
-    fetchSidebarCounts()
   }, [])
+
+  useEffect(() => {
+    fetchSidebarCounts()
+  }, [fetchSidebarCounts])
+
 
   // Auto-open dropdowns when on child pages
   React.useEffect(() => {
@@ -335,18 +324,6 @@ export function Sidebar({ className }: SidebarProps) {
           return null
         })}
       </nav>
-
-      {/* Spacing between navigation and quick create */}
-      <div className="h-4"></div>
-
-      {/* Quick Actions */}
-      <div className="border-t p-4 pt-6">
-        <h3 className="mb-3 text-sm font-medium text-muted-foreground">Quick Actions</h3>
-        <div className="space-y-2">
-          <QuickCreateButton />
-        </div>
-      </div>
-
     </div>
   )
 }

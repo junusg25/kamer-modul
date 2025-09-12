@@ -21,6 +21,12 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isAuthenticated || !token || !user) {
+      // Clear any pending reconnect attempts
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+        reconnectTimeoutRef.current = undefined
+      }
+      
       // Disconnect if not authenticated
       if (socket) {
         console.log('Disconnecting WebSocket due to logout')
@@ -54,12 +60,21 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       console.log('WebSocket disconnected')
       setIsConnected(false)
       
-      // Attempt to reconnect after 3 seconds
-      reconnectTimeoutRef.current = setTimeout(() => {
-        if (isAuthenticated && token) {
-          newSocket.connect()
-        }
-      }, 3000)
+      // Clear any existing reconnect timeout
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+        reconnectTimeoutRef.current = undefined
+      }
+      
+      // Only attempt to reconnect if still authenticated
+      if (isAuthenticated && token && user) {
+        reconnectTimeoutRef.current = setTimeout(() => {
+          // Double-check authentication state before reconnecting
+          if (isAuthenticated && token && user) {
+            newSocket.connect()
+          }
+        }, 3000)
+      }
     })
 
     newSocket.on('connect_error', (error) => {

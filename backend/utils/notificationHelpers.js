@@ -2,57 +2,29 @@ const db = require('../db');
 const websocketService = require('../services/websocketService');
 
 /**
- * Translate work order status to translation key
- * @param {string} status - Raw status value
- * @returns {string} Translation key
- */
-function translateStatus(status) {
-  const statusKeys = {
-    'intake': 'status.intake',
-    'quoted': 'status.quoted',
-    'awaiting_approval': 'status.awaiting_approval',
-    'declined': 'status.declined',
-    'pending': 'status.pending',
-    'in_progress': 'status.in_progress',
-    'completed': 'status.completed',
-    'ready_for_pickup': 'status.ready_for_pickup',
-    'cancelled': 'status.cancelled',
-    'converted': 'status.converted',
-    'all': 'status.all',
-    'testing': 'status.testing',
-    'parts_ordered': 'status.partsOrdered',
-    'waiting_supplier_intervention': 'status.waitingSupplier',
-    'service_cancelled': 'status.serviceCancelled',
-    'warranty_rejected': 'status.warrantyRejected'
-  };
-  
-  return statusKeys[status] || status;
-}
-
-/**
  * Create a notification for a user
  * @param {number} userId - The user ID to create notification for
- * @param {string} titleKey - Notification title translation key
- * @param {string} messageKey - Notification message translation key
- * @param {Object} messageParams - Parameters for message translation (optional)
+ * @param {string} title - Notification title
+ * @param {string} message - Notification message
  * @param {string} type - Notification type (info, success, warning, error, work_order, warranty_work_order, repair_ticket, inventory, communication, customer, machine, system)
  * @param {string} relatedEntityType - Type of related entity (optional)
  * @param {number} relatedEntityId - ID of related entity (optional)
  * @returns {Promise<Object>} Created notification
  */
-async function createNotification(userId, titleKey, messageKey, messageParams = {}, type = 'info', relatedEntityType = null, relatedEntityId = null) {
+async function createNotification(userId, title, message, type = 'info', relatedEntityType = null, relatedEntityId = null) {
   try {
     const result = await db.query(
       `INSERT INTO notifications (user_id, title, message, type, related_entity_type, related_entity_id, title_key, message_key, message_params)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [userId, '', '', type, relatedEntityType, relatedEntityId, titleKey, messageKey, JSON.stringify(messageParams)]
+      [userId, title, message, type, relatedEntityType, relatedEntityId, '', '', '{}']
     );
     
     const notification = result.rows[0];
     
     // Emit real-time notification via WebSocket
-    await websocketService.emitNotification(notification);
+    const wsInstance = websocketService.getInstance();
+    await wsInstance.emitNotification(notification);
     
     return notification;
   } catch (error) {
@@ -64,19 +36,18 @@ async function createNotification(userId, titleKey, messageKey, messageParams = 
 /**
  * Create notifications for multiple users
  * @param {Array<number>} userIds - Array of user IDs
- * @param {string} titleKey - Notification title translation key
- * @param {string} messageKey - Notification message translation key
- * @param {Object} messageParams - Parameters for message translation (optional)
+ * @param {string} title - Notification title
+ * @param {string} message - Notification message
  * @param {string} type - Notification type
  * @param {string} relatedEntityType - Type of related entity (optional)
  * @param {number} relatedEntityId - ID of related entity (optional)
  * @returns {Promise<Array>} Created notifications
  */
-async function createNotificationsForUsers(userIds, titleKey, messageKey, messageParams = {}, type = 'info', relatedEntityType = null, relatedEntityId = null) {
+async function createNotificationsForUsers(userIds, title, message, type = 'info', relatedEntityType = null, relatedEntityId = null) {
   try {
     const notifications = [];
     for (const userId of userIds) {
-      const notification = await createNotification(userId, titleKey, messageKey, messageParams, type, relatedEntityType, relatedEntityId);
+      const notification = await createNotification(userId, title, message, type, relatedEntityType, relatedEntityId);
       notifications.push(notification);
     }
     return notifications;
@@ -87,16 +58,15 @@ async function createNotificationsForUsers(userIds, titleKey, messageKey, messag
 }
 
 /**
- * Create notifications for all admins and managers
- * @param {string} titleKey - Notification title translation key
- * @param {string} messageKey - Notification message translation key
- * @param {Object} messageParams - Parameters for message translation (optional)
+ * Create notification for all managers
+ * @param {string} title - Notification title
+ * @param {string} message - Notification message
  * @param {string} type - Notification type
  * @param {string} relatedEntityType - Type of related entity (optional)
  * @param {number} relatedEntityId - ID of related entity (optional)
  * @returns {Promise<Array>} Created notifications
  */
-async function createNotificationForManagers(titleKey, messageKey, messageParams = {}, type = 'info', relatedEntityType = null, relatedEntityId = null) {
+async function createNotificationForManagers(title, message, type = 'info', relatedEntityType = null, relatedEntityId = null) {
   try {
     const result = await db.query(
       'SELECT id FROM users WHERE role IN ($1, $2)',
@@ -104,7 +74,7 @@ async function createNotificationForManagers(titleKey, messageKey, messageParams
     );
     
     const managerIds = result.rows.map(row => row.id);
-    return await createNotificationsForUsers(managerIds, titleKey, messageKey, messageParams, type, relatedEntityType, relatedEntityId);
+    return await createNotificationsForUsers(managerIds, title, message, type, relatedEntityType, relatedEntityId);
   } catch (error) {
     console.error('Error creating notification for managers:', error);
     throw error;
@@ -112,91 +82,23 @@ async function createNotificationForManagers(titleKey, messageKey, messageParams
 }
 
 /**
- * Create comprehensive ticket notifications (repair and warranty)
- * @param {number} ticketId - Ticket ID
- * @param {string} action - Action performed (created, updated, deleted, converted)
- * @param {string} ticketType - Type of ticket (repair_ticket, warranty_repair_ticket)
- * @param {number} currentUserId - ID of the user who performed the action
- * @returns {Promise<Array>} Created notifications
+ * Create a simple test notification
+ * @param {number} userId - The user ID to create notification for
+ * @returns {Promise<Object>} Created notification
  */
-async function createTicketNotification(ticketId, action, ticketType = 'repair_ticket', currentUserId) {
-  try {
-    console.log(`createTicketNotification called with: ticketId=${ticketId}, action=${action}, ticketType=${ticketType}, currentUserId=${currentUserId}`);
-    
-    // Get ticket details based on type
-    let ticketQuery;
-    if (ticketType === 'warranty_repair_ticket') {
-      ticketQuery = `
-        SELECT wrt.*, wrt.formatted_number, c.name as customer_name, u.name as submitted_by_name
-        FROM warranty_repair_tickets wrt
-        LEFT JOIN customers c ON wrt.customer_id = c.id
-        LEFT JOIN users u ON wrt.submitted_by = u.id
-        WHERE wrt.id = $1
-      `;
-    } else {
-      ticketQuery = `
-        SELECT rt.*, rt.formatted_number, c.name as customer_name, u.name as submitted_by_name
-        FROM repair_tickets rt
-        LEFT JOIN customers c ON rt.customer_id = c.id
-        LEFT JOIN users u ON rt.submitted_by = u.id
-        WHERE rt.id = $1
-      `;
-    }
-
-    const ticketResult = await db.query(ticketQuery, [ticketId]);
-    if (ticketResult.rows.length === 0) {
-      console.error(`${ticketType} not found for notification:`, ticketId);
-      return [];
-    }
-
-    const ticket = ticketResult.rows[0];
-    const formattedNumber = ticket.formatted_number || `#${ticketId}`;
-
-    let titleKey, messageKey, messageParams, type;
-
-    switch (action) {
-      case 'created':
-        titleKey = ticketType === 'warranty_repair_ticket' ? 'notifications.warrantyTicketCreated' : 'notifications.ticketCreated';
-        messageKey = ticketType === 'warranty_repair_ticket' ? 'notifications.warrantyTicketCreatedMessage' : 'notifications.ticketCreatedMessage';
-        messageParams = { number: formattedNumber };
-        type = ticketType;
-        break;
-
-      case 'updated':
-        titleKey = ticketType === 'warranty_repair_ticket' ? 'notifications.warrantyTicketUpdated' : 'notifications.ticketUpdated';
-        messageKey = ticketType === 'warranty_repair_ticket' ? 'notifications.warrantyTicketUpdatedMessage' : 'notifications.ticketUpdatedMessage';
-        messageParams = { number: formattedNumber };
-        type = ticketType;
-        break;
-
-      case 'deleted':
-        titleKey = ticketType === 'warranty_repair_ticket' ? 'notifications.warrantyTicketDeleted' : 'notifications.ticketDeleted';
-        messageKey = ticketType === 'warranty_repair_ticket' ? 'notifications.warrantyTicketDeletedMessage' : 'notifications.ticketDeletedMessage';
-        messageParams = { number: formattedNumber };
-        type = ticketType;
-        break;
-
-      case 'converted':
-        titleKey = ticketType === 'warranty_repair_ticket' ? 'notifications.warrantyTicketConverted' : 'notifications.ticketConverted';
-        messageKey = ticketType === 'warranty_repair_ticket' ? 'notifications.warrantyTicketConvertedMessage' : 'notifications.ticketConvertedMessage';
-        messageParams = { number: formattedNumber };
-        type = ticketType;
-        break;
-
-      default:
-        console.warn(`Unknown ${ticketType} notification action:`, action);
-        return [];
-    }
-
-    return await createNotificationForEveryoneExcept(currentUserId, titleKey, messageKey, messageParams, type, ticketType, ticketId);
-  } catch (error) {
-    console.error(`Error creating ${ticketType} notification:`, error);
-    return [];
-  }
+async function createTestNotification(userId) {
+  return await createNotification(
+    userId, 
+    'Test Notification', 
+    'This is a test notification to verify the system is working correctly.', 
+    'info',
+    'system',
+    null
+  );
 }
 
 /**
- * Create comprehensive work order notifications (regular and warranty)
+ * Create work order notifications
  * @param {number} workOrderId - Work order ID
  * @param {string} action - Action performed (created, updated, deleted, assigned, completed, status_changed)
  * @param {string} workOrderType - Type of work order (work_order, warranty_work_order)
@@ -206,7 +108,7 @@ async function createTicketNotification(ticketId, action, ticketType = 'repair_t
  */
 async function createWorkOrderNotification(workOrderId, action, workOrderType = 'work_order', currentUserId, additionalData = {}) {
   try {
-    console.log(`createWorkOrderNotification called with: workOrderId=${workOrderId}, action=${action}, workOrderType=${workOrderType}, currentUserId=${currentUserId}`);
+    console.log(`Creating ${workOrderType} notification: ${action} for work order ${workOrderId}`);
     
     const workOrderQuery = `
       SELECT wo.*, wo.formatted_number, c.name as customer_name, u.name as technician_name
@@ -224,58 +126,42 @@ async function createWorkOrderNotification(workOrderId, action, workOrderType = 
 
     const workOrder = workOrderResult.rows[0];
     const formattedNumber = workOrder.formatted_number || `#${workOrderId}`;
+    const workOrderPrefix = workOrderType === 'warranty_work_order' ? 'Warranty ' : '';
 
-    let titleKey, messageKey, messageParams, type;
+    let title, message, type = workOrderType;
 
     switch (action) {
       case 'created':
-        titleKey = workOrderType === 'warranty_work_order' ? 'notifications.warrantyWorkOrderCreated' : 'notifications.workOrderCreated';
-        messageKey = workOrderType === 'warranty_work_order' ? 'notifications.warrantyWorkOrderCreatedMessage' : 'notifications.workOrderCreatedMessage';
-        messageParams = { number: formattedNumber };
-        type = workOrderType;
+        title = `${workOrderPrefix}Work Order Created`;
+        message = `New ${workOrderPrefix.toLowerCase()}work order ${formattedNumber} has been created`;
         break;
 
       case 'updated':
-        titleKey = workOrderType === 'warranty_work_order' ? 'notifications.warrantyWorkOrderUpdated' : 'notifications.workOrderUpdated';
-        messageKey = workOrderType === 'warranty_work_order' ? 'notifications.warrantyWorkOrderUpdatedMessage' : 'notifications.workOrderUpdatedMessage';
-        messageParams = { number: formattedNumber };
-        type = workOrderType;
+        title = `${workOrderPrefix}Work Order Updated`;
+        message = `${workOrderPrefix}Work order ${formattedNumber} has been updated`;
         break;
 
       case 'deleted':
-        titleKey = workOrderType === 'warranty_work_order' ? 'notifications.warrantyWorkOrderDeleted' : 'notifications.workOrderDeleted';
-        messageKey = workOrderType === 'warranty_work_order' ? 'notifications.warrantyWorkOrderDeletedMessage' : 'notifications.workOrderDeletedMessage';
-        messageParams = { number: formattedNumber };
-        type = workOrderType;
+        title = `${workOrderPrefix}Work Order Deleted`;
+        message = `${workOrderPrefix}Work order ${formattedNumber} has been deleted`;
         break;
 
       case 'assigned':
-        // For assignment notifications, use actual technician name
         const technicianName = additionalData.technicianName || workOrder.technician_name || 'Unknown';
-        titleKey = workOrderType === 'warranty_work_order' ? 'notifications.warrantyWorkOrderAssigned' : 'notifications.workOrderAssigned';
-        messageKey = workOrderType === 'warranty_work_order' ? 'notifications.warrantyWorkOrderAssignedMessage' : 'notifications.workOrderAssignedMessage';
-        messageParams = { number: formattedNumber, technician: technicianName };
-        type = workOrderType;
+        title = `${workOrderPrefix}Work Order Assigned`;
+        message = `${workOrderPrefix}Work order ${formattedNumber} has been assigned to ${technicianName}`;
         break;
 
       case 'status_changed':
         const oldStatus = additionalData.oldStatus || 'Unknown';
         const newStatus = additionalData.newStatus || 'Unknown';
-        titleKey = workOrderType === 'warranty_work_order' ? 'notifications.warrantyWorkOrderStatusChanged' : 'notifications.workOrderStatusChanged';
-        messageKey = workOrderType === 'warranty_work_order' ? 'notifications.warrantyWorkOrderStatusChangedMessage' : 'notifications.workOrderStatusChangedMessage';
-        messageParams = { 
-          number: formattedNumber, 
-          oldStatus: translateStatus(oldStatus), 
-          newStatus: translateStatus(newStatus) 
-        };
-        type = workOrderType;
+        title = `${workOrderPrefix}Work Order Status Changed`;
+        message = `${workOrderPrefix}Work order ${formattedNumber} status changed from ${oldStatus} to ${newStatus}`;
         break;
 
       case 'completed':
-        titleKey = workOrderType === 'warranty_work_order' ? 'notifications.warrantyWorkOrderCompleted' : 'notifications.workOrderCompleted';
-        messageKey = workOrderType === 'warranty_work_order' ? 'notifications.warrantyWorkOrderCompletedMessage' : 'notifications.workOrderCompletedMessage';
-        messageParams = { number: formattedNumber };
-        type = workOrderType;
+        title = `${workOrderPrefix}Work Order Completed`;
+        message = `${workOrderPrefix}Work order ${formattedNumber} has been completed`;
         break;
 
       default:
@@ -283,7 +169,11 @@ async function createWorkOrderNotification(workOrderId, action, workOrderType = 
         return [];
     }
 
-    return await createNotificationForEveryoneExcept(currentUserId, titleKey, messageKey, messageParams, type, workOrderType, workOrderId);
+    // Get all users except the one who performed the action
+    const result = await db.query('SELECT id FROM users WHERE id != $1', [currentUserId]);
+    const userIdsToNotify = result.rows.map(row => row.id);
+    
+    return await createNotificationsForUsers(userIdsToNotify, title, message, type, workOrderType, workOrderId);
   } catch (error) {
     console.error(`Error creating ${workOrderType} notification:`, error);
     return [];
@@ -291,120 +181,69 @@ async function createWorkOrderNotification(workOrderId, action, workOrderType = 
 }
 
 /**
- * Create machine notifications
- * @param {number} machineId - Machine ID
- * @param {string} action - Action performed (created, updated, deleted)
+ * Create ticket notifications
+ * @param {number} ticketId - Ticket ID
+ * @param {string} action - Action performed (created, updated, deleted, converted)
+ * @param {string} ticketType - Type of ticket (repair_ticket, warranty_repair_ticket)
  * @param {number} currentUserId - ID of the user who performed the action
  * @returns {Promise<Array>} Created notifications
  */
-async function createMachineNotification(machineId, action, currentUserId) {
+async function createTicketNotification(ticketId, action, ticketType = 'repair_ticket', currentUserId) {
   try {
-    const machineQuery = `
-      SELECT mm.*, mc.name as category_name
-      FROM machine_models mm
-      LEFT JOIN machine_categories mc ON mm.category_id = mc.id
-      WHERE mm.id = $1
+    console.log(`Creating ${ticketType} notification: ${action} for ticket ${ticketId}`);
+    
+    const ticketQuery = `
+      SELECT rt.*, rt.formatted_number, c.name as customer_name
+      FROM ${ticketType === 'warranty_repair_ticket' ? 'warranty_repair_tickets' : 'repair_tickets'} rt
+      LEFT JOIN customers c ON rt.customer_id = c.id
+      WHERE rt.id = $1
     `;
 
-    const machineResult = await db.query(machineQuery, [machineId]);
-    if (machineResult.rows.length === 0) {
-      console.error('Machine not found for notification:', machineId);
+    const ticketResult = await db.query(ticketQuery, [ticketId]);
+    if (ticketResult.rows.length === 0) {
+      console.error(`${ticketType} not found for notification:`, ticketId);
       return [];
     }
 
-    const machine = machineResult.rows[0];
-    const machineName = `${machine.manufacturer} ${machine.name}`;
+    const ticket = ticketResult.rows[0];
+    const formattedNumber = ticket.formatted_number || `#${ticketId}`;
+    const ticketPrefix = ticketType === 'warranty_repair_ticket' ? 'Warranty ' : '';
 
-    let titleKey, messageKey, messageParams;
-
-    switch (action) {
-      case 'created':
-        titleKey = 'notifications.machineCreated';
-        messageKey = 'notifications.machineCreatedMessage';
-        messageParams = { name: machineName };
-        break;
-
-      case 'updated':
-        titleKey = 'notifications.machineUpdated';
-        messageKey = 'notifications.machineUpdatedMessage';
-        messageParams = { name: machineName };
-        break;
-
-      case 'deleted':
-        titleKey = 'notifications.machineDeleted';
-        messageKey = 'notifications.machineDeletedMessage';
-        messageParams = { name: machineName };
-        break;
-
-      default:
-        console.warn('Unknown machine notification action:', action);
-        return [];
-    }
-
-    return await createNotificationForEveryoneExcept(currentUserId, titleKey, messageKey, messageParams, 'machine', 'machine', machineId);
-  } catch (error) {
-    console.error('Error creating machine notification:', error);
-    return [];
-  }
-}
-
-/**
- * Create assigned machine notifications
- * @param {number} assignedMachineId - Assigned machine ID
- * @param {string} action - Action performed (created, updated, deleted)
- * @param {number} currentUserId - ID of the user who performed the action
- * @returns {Promise<Array>} Created notifications
- */
-async function createAssignedMachineNotification(assignedMachineId, action, currentUserId) {
-  try {
-    const assignedMachineQuery = `
-      SELECT am.*, c.name as customer_name, mm.name as machine_name, mm.manufacturer
-      FROM assigned_machines am
-      LEFT JOIN customers c ON am.customer_id = c.id
-      LEFT JOIN machine_serials ms ON am.serial_id = ms.id
-      LEFT JOIN machine_models mm ON ms.model_id = mm.id
-      WHERE am.id = $1
-    `;
-
-    const assignedMachineResult = await db.query(assignedMachineQuery, [assignedMachineId]);
-    if (assignedMachineResult.rows.length === 0) {
-      console.error('Assigned machine not found for notification:', assignedMachineId);
-      return [];
-    }
-
-    const assignedMachine = assignedMachineResult.rows[0];
-    const machineName = `${assignedMachine.manufacturer} ${assignedMachine.machine_name}`;
-    const customerName = assignedMachine.customer_name || 'Unknown Customer';
-
-    let titleKey, messageKey, messageParams;
+    let title, message, type = ticketType;
 
     switch (action) {
       case 'created':
-        titleKey = 'notifications.assignedMachineCreated';
-        messageKey = 'notifications.assignedMachineCreatedMessage';
-        messageParams = { machine: machineName, customer: customerName };
+        title = `${ticketPrefix}Repair Ticket Created`;
+        message = `New ${ticketPrefix.toLowerCase()}repair ticket ${formattedNumber} has been created`;
         break;
 
       case 'updated':
-        titleKey = 'notifications.assignedMachineUpdated';
-        messageKey = 'notifications.assignedMachineUpdatedMessage';
-        messageParams = { machine: machineName, customer: customerName };
+        title = `${ticketPrefix}Repair Ticket Updated`;
+        message = `${ticketPrefix}Repair ticket ${formattedNumber} has been updated`;
         break;
 
       case 'deleted':
-        titleKey = 'notifications.assignedMachineDeleted';
-        messageKey = 'notifications.assignedMachineDeletedMessage';
-        messageParams = { machine: machineName, customer: customerName };
+        title = `${ticketPrefix}Repair Ticket Deleted`;
+        message = `${ticketPrefix}Repair ticket ${formattedNumber} has been deleted`;
+        break;
+
+      case 'converted':
+        title = `${ticketPrefix}Repair Ticket Converted`;
+        message = `${ticketPrefix}Repair ticket ${formattedNumber} has been converted to a work order`;
         break;
 
       default:
-        console.warn('Unknown assigned machine notification action:', action);
+        console.warn(`Unknown ${ticketType} notification action:`, action);
         return [];
     }
 
-    return await createNotificationForEveryoneExcept(currentUserId, titleKey, messageKey, messageParams, 'machine', 'assigned_machine', assignedMachineId);
+    // Get all users except the one who performed the action
+    const result = await db.query('SELECT id FROM users WHERE id != $1', [currentUserId]);
+    const userIdsToNotify = result.rows.map(row => row.id);
+    
+    return await createNotificationsForUsers(userIdsToNotify, title, message, type, ticketType, ticketId);
   } catch (error) {
-    console.error('Error creating assigned machine notification:', error);
+    console.error(`Error creating ${ticketType} notification:`, error);
     return [];
   }
 }
@@ -427,27 +266,22 @@ async function createCustomerNotification(customerId, action, currentUserId) {
     }
 
     const customer = customerResult.rows[0];
-    const customerName = customer.name || customer.company_name || 'Unknown Customer';
-
-    let titleKey, messageKey, messageParams;
+    let title, message, type = 'customer';
 
     switch (action) {
       case 'created':
-        titleKey = 'notifications.customerCreated';
-        messageKey = 'notifications.customerCreatedMessage';
-        messageParams = { name: customerName };
+        title = 'Customer Created';
+        message = `New customer "${customer.name}" has been added`;
         break;
 
       case 'updated':
-        titleKey = 'notifications.customerUpdated';
-        messageKey = 'notifications.customerUpdatedMessage';
-        messageParams = { name: customerName };
+        title = 'Customer Updated';
+        message = `Customer "${customer.name}" has been updated`;
         break;
 
       case 'deleted':
-        titleKey = 'notifications.customerDeleted';
-        messageKey = 'notifications.customerDeletedMessage';
-        messageParams = { name: customerName };
+        title = 'Customer Deleted';
+        message = `Customer "${customer.name}" has been deleted`;
         break;
 
       default:
@@ -455,7 +289,11 @@ async function createCustomerNotification(customerId, action, currentUserId) {
         return [];
     }
 
-    return await createNotificationForEveryoneExcept(currentUserId, titleKey, messageKey, messageParams, 'customer', 'customer', customerId);
+    // Get all users except the one who performed the action
+    const result = await db.query('SELECT id FROM users WHERE id != $1', [currentUserId]);
+    const userIdsToNotify = result.rows.map(row => row.id);
+    
+    return await createNotificationsForUsers(userIdsToNotify, title, message, type, 'customer', customerId);
   } catch (error) {
     console.error('Error creating customer notification:', error);
     return [];
@@ -480,33 +318,27 @@ async function createInventoryNotification(inventoryId, action, currentUserId) {
     }
 
     const inventory = inventoryResult.rows[0];
-    const itemName = inventory.name || 'Unknown Item';
-
-    let titleKey, messageKey, messageParams;
+    let title, message, type = 'inventory';
 
     switch (action) {
       case 'created':
-        titleKey = 'notifications.inventoryCreated';
-        messageKey = 'notifications.inventoryCreatedMessage';
-        messageParams = { name: itemName };
+        title = 'Inventory Item Created';
+        message = `New inventory item "${inventory.name}" has been added`;
         break;
 
       case 'updated':
-        titleKey = 'notifications.inventoryUpdated';
-        messageKey = 'notifications.inventoryUpdatedMessage';
-        messageParams = { name: itemName };
+        title = 'Inventory Item Updated';
+        message = `Inventory item "${inventory.name}" has been updated`;
         break;
 
       case 'deleted':
-        titleKey = 'notifications.inventoryDeleted';
-        messageKey = 'notifications.inventoryDeletedMessage';
-        messageParams = { name: itemName };
+        title = 'Inventory Item Deleted';
+        message = `Inventory item "${inventory.name}" has been deleted`;
         break;
 
       case 'low_stock':
-        titleKey = 'notifications.inventoryLowStock';
-        messageKey = 'notifications.inventoryLowStockMessage';
-        messageParams = { name: itemName, quantity: inventory.quantity };
+        title = 'Low Stock Alert';
+        message = `Inventory item "${inventory.name}" is running low (${inventory.quantity} items remaining)`;
         break;
 
       default:
@@ -514,7 +346,11 @@ async function createInventoryNotification(inventoryId, action, currentUserId) {
         return [];
     }
 
-    return await createNotificationForEveryoneExcept(currentUserId, titleKey, messageKey, messageParams, 'inventory', 'inventory', inventoryId);
+    // Get all users except the one who performed the action
+    const result = await db.query('SELECT id FROM users WHERE id != $1', [currentUserId]);
+    const userIdsToNotify = result.rows.map(row => row.id);
+    
+    return await createNotificationsForUsers(userIdsToNotify, title, message, type, 'inventory', inventoryId);
   } catch (error) {
     console.error('Error creating inventory notification:', error);
     return [];
@@ -522,71 +358,22 @@ async function createInventoryNotification(inventoryId, action, currentUserId) {
 }
 
 /**
- * Create user assignment notifications
- * @param {number} userId - User ID being assigned
- * @param {string} action - Action performed (assigned_to_work_order, role_changed, etc.)
- * @param {Object} details - Additional details about the assignment
- * @returns {Promise<Array>} Created notifications
- */
-async function createUserAssignmentNotification(userId, action, details = {}) {
-  try {
-    let titleKey, messageKey, messageParams, type = 'info';
-    let notifications = [];
-
-    switch (action) {
-      case 'work_order_assigned':
-        titleKey = 'notifications.workOrderAssignment';
-        const formattedNumber = details.formattedNumber || `#${details.workOrderId}`;
-        messageKey = 'notifications.workOrderAssignmentMessage';
-        messageParams = { number: formattedNumber };
-        type = 'work_order';
-        notifications = await createNotification(userId, titleKey, messageKey, messageParams, type, 'work_order', details.workOrderId);
-        break;
-      
-      case 'role_changed':
-        titleKey = 'notifications.roleUpdated';
-        messageKey = 'notifications.roleUpdatedMessage';
-        messageParams = { role: details.newRole };
-        type = 'info';
-        notifications = await createNotification(userId, titleKey, messageKey, messageParams, type);
-        break;
-      
-      case 'bulk_assigned':
-        titleKey = 'notifications.multipleWorkOrdersAssigned';
-        messageKey = 'notifications.multipleWorkOrdersAssignedMessage';
-        messageParams = { count: details.count };
-        type = 'work_order';
-        notifications = await createNotification(userId, titleKey, messageKey, messageParams, type);
-        break;
-      
-      default:
-        throw new Error(`Unknown user assignment action: ${action}`);
-    }
-
-    return notifications;
-  } catch (error) {
-    console.error('Error creating user assignment notification:', error);
-  }
-}
-
-/**
  * Create system notifications
- * @param {string} titleKey - Notification title translation key
- * @param {string} messageKey - Notification message translation key
- * @param {Object} messageParams - Parameters for message translation (optional)
+ * @param {string} title - Notification title
+ * @param {string} message - Notification message
  * @param {string} type - Notification type
- * @param {Array<number>} userIds - Specific user IDs to notify (optional, if not provided, notify all)
+ * @param {Array<number>} userIds - Specific user IDs to notify (optional, if not provided, notify all users)
  * @returns {Promise<Array>} Created notifications
  */
-async function createSystemNotification(titleKey, messageKey, messageParams = {}, type = 'info', userIds = null) {
+async function createSystemNotification(title, message, type = 'system', userIds = null) {
   try {
     if (userIds) {
-      return await createNotificationsForUsers(userIds, titleKey, messageKey, messageParams, type);
+      return await createNotificationsForUsers(userIds, title, message, type);
     } else {
       // Notify all users
       const result = await db.query('SELECT id FROM users');
       const allUserIds = result.rows.map(row => row.id);
-      return await createNotificationsForUsers(allUserIds, titleKey, messageKey, messageParams, type);
+      return await createNotificationsForUsers(allUserIds, title, message, type);
     }
   } catch (error) {
     console.error('Error creating system notification:', error);
@@ -594,38 +381,14 @@ async function createSystemNotification(titleKey, messageKey, messageParams = {}
   }
 }
 
-/**
- * Helper to create notifications for everyone except a specific user.
- * @param {number} excludeUserId - The user ID to exclude from notifications.
- * @param {string} titleKey - Notification title translation key.
- * @param {string} messageKey - Notification message translation key.
- * @param {Object} messageParams - Parameters for message translation (optional).
- * @param {string} type - Notification type.
- * @param {string} relatedEntityType - Type of related entity (optional).
- * @param {number} relatedEntityId - ID of related entity (optional).
- * @returns {Promise<Array>} Created notifications for everyone except the excluded user.
- */
-async function createNotificationForEveryoneExcept(excludeUserId, titleKey, messageKey, messageParams = {}, type = 'info', relatedEntityType = null, relatedEntityId = null) {
-  try {
-    const result = await db.query('SELECT id FROM users WHERE id != $1', [excludeUserId]);
-    const userIdsToNotify = result.rows.map(row => row.id);
-    return await createNotificationsForUsers(userIdsToNotify, titleKey, messageKey, messageParams, type, relatedEntityType, relatedEntityId);
-  } catch (error) {
-    console.error('Error creating notification for everyone except:', error);
-    return [];
-  }
-}
-
 module.exports = {
   createNotification,
   createNotificationsForUsers,
   createNotificationForManagers,
-  createTicketNotification,
+  createTestNotification,
   createWorkOrderNotification,
-  createMachineNotification,
-  createAssignedMachineNotification,
+  createTicketNotification,
   createCustomerNotification,
   createInventoryNotification,
-  createUserAssignmentNotification,
   createSystemNotification,
 };

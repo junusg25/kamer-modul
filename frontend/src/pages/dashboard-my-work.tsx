@@ -7,6 +7,7 @@ import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog'
 import { Label } from '../components/ui/label'
+import { QuickCreateButton } from '../components/dashboard/quick-create-button'
 import { 
   User, 
   Clock, 
@@ -18,8 +19,6 @@ import {
   Target,
   RefreshCw,
   Plus,
-  Package,
-  Settings,
   TrendingUp
 } from 'lucide-react'
 import { 
@@ -232,10 +231,7 @@ const DashboardMyWork = () => {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Quick Add
-            </Button>
+            <QuickCreateButton />
           </div>
         </div>
 
@@ -806,8 +802,8 @@ const DashboardMyWork = () => {
                           <ChartTooltipContent
                             labelFormatter={(value) => formatDate(value)}
                             formatter={(value, name) => [
-                              name === 'revenue' ? formatCurrency(Number(value)) : value,
-                              name === 'revenue' ? 'Revenue' : name === 'sales' ? 'Sales' : 'Customers'
+                              name === 'revenue' ? `${formatCurrency(Number(value))} Revenue` : `${value} ${name === 'sales' ? 'Sales' : 'Customers'}`,
+                              ''
                             ]}
                           />
                         }
@@ -859,7 +855,7 @@ const DashboardMyWork = () => {
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-orange-600">
-                        {mySalesTrends.length > 0 ? formatCurrency(mySalesTrends.reduce((sum, t) => sum + (t.revenue || 0), 0) / mySalesTrends.reduce((sum, t) => sum + (t.sales || 0), 1)) : '0.00 KM'}
+                        {mySalesTrends.reduce((sum, t) => sum + (t.sales || 0), 0) > 0 ? formatCurrency(mySalesTrends.reduce((sum, t) => sum + (t.revenue || 0), 0) / mySalesTrends.reduce((sum, t) => sum + (t.sales || 0), 0)) : '0.00 KM'}
                       </div>
                       <div className="text-sm text-muted-foreground">Avg Sale Value</div>
                     </div>
@@ -874,133 +870,6 @@ const DashboardMyWork = () => {
           </Card>
         )}
 
-        {/* Quick Actions - Role Specific */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5" />
-              Quick Actions
-            </CardTitle>
-            <CardDescription>Common tasks for your role</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-2 md:grid-cols-4">
-              {/* Technician Actions */}
-              {isTechnician && (
-                <>
-                  <Button 
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={() => navigate('/create-repair-ticket')}
-                  >
-                    <Wrench className="h-4 w-4 mr-2" />
-                    New Repair Ticket
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={() => navigate('/create-warranty-repair-ticket')}
-                  >
-                    <AlertTriangle className="h-4 w-4 mr-2" />
-                    New Warranty Repair Ticket
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={() => navigate('/add-inventory-item')}
-                  >
-                    <Package className="h-4 w-4 mr-2" />
-                    New Inventory Item
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={() => navigate('/add-machine-model')}
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    New Machine Model
-                  </Button>
-                </>
-              )}
-
-              {/* Sales Actions */}
-              {isSales && (
-                <>
-                  <Button 
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={() => navigate('/pipeline-leads')}
-                  >
-                    <Target className="h-4 w-4 mr-2" />
-                    New Lead
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={() => navigate('/quote-management')}
-                  >
-                    <DollarSign className="h-4 w-4 mr-2" />
-                    New Quote
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={() => navigate('/pipeline-leads')}
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Schedule Follow-up
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={() => navigate('/add-customer')}
-                  >
-                    <User className="h-4 w-4 mr-2" />
-                    Add Customer
-                  </Button>
-                </>
-              )}
-
-              {/* Manager/Admin Actions */}
-              {isManagerOrAdmin && (
-                <>
-                  <Button 
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={() => navigate('/create-repair-ticket')}
-                  >
-                    <Wrench className="h-4 w-4 mr-2" />
-                    New Repair Ticket
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={() => navigate('/create-warranty-repair-ticket')}
-                  >
-                    <AlertTriangle className="h-4 w-4 mr-2" />
-                    New Warranty Repair Ticket
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={() => navigate('/add-inventory-item')}
-                  >
-                    <Package className="h-4 w-4 mr-2" />
-                    New Inventory Item
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={() => navigate('/add-machine-model')}
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    New Machine Model
-                  </Button>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* View Lead Dialog */}

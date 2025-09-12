@@ -4,6 +4,7 @@ const { body, param, query } = require('express-validator');
 const { authenticateToken } = require('../middleware/auth');
 const { handleValidationErrors } = require('../middleware/validators');
 const db = require('../db');
+const { createTestNotification } = require('../utils/notificationHelpers');
 
 // Get all notifications for the authenticated user
 router.get('/', authenticateToken, [
@@ -269,41 +270,6 @@ router.get('/:id', authenticateToken, [
   }
 });
 
-// Test endpoint to create a notification (for development only)
-router.post('/test', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    
-    // Create a test notification with translation keys and related entity
-    const result = await db.query(
-      `INSERT INTO notifications (user_id, title, message, type, related_entity_type, related_entity_id, title_key, message_key, message_params)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING *`,
-      [
-        userId,
-        '', // title (empty, will use translation key)
-        '', // message (empty, will use translation key)
-        'work_order',
-        'work_order', // related_entity_type
-        1, // related_entity_id (assuming work order with ID 1 exists)
-        'notifications.workOrderUpdated',
-        'notifications.workOrderUpdatedMessage',
-        JSON.stringify({ number: 'WO-2024-001' })
-      ]
-    );
-    
-    const notification = result.rows[0];
-    
-    res.json({
-      message: 'Test notification created with related entity',
-      notification
-    });
-  } catch (error) {
-    console.error('Error creating test notification:', error);
-    res.status(500).json({ error: 'Failed to create test notification' });
-  }
-});
-
 // Test endpoint to create a warranty repair ticket notification (for debugging)
 router.post('/test-warranty-ticket', authenticateToken, async (req, res) => {
   try {
@@ -348,6 +314,91 @@ router.post('/test-warranty-ticket', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error creating test warranty repair ticket notification:', error);
     res.status(500).json({ error: 'Failed to create test notification' });
+  }
+});
+
+// Test endpoint to create a simple notification
+router.post('/test', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const notification = await createTestNotification(userId);
+    
+    res.json({
+      status: 'success',
+      message: 'Test notification created successfully',
+      notification
+    });
+  } catch (error) {
+    console.error('Error creating test notification:', error);
+    res.status(500).json({ error: 'Failed to create test notification' });
+  }
+});
+
+// Create multiple test notifications
+router.post('/test-multiple', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { createNotification } = require('../utils/notificationHelpers');
+    
+    const testNotifications = [
+      {
+        title: 'Work Order Created',
+        message: 'A new work order #WO-2024-001 has been created for customer John Doe.',
+        type: 'work_order',
+        relatedEntityType: 'work_order',
+        relatedEntityId: 1
+      },
+      {
+        title: 'Repair Ticket Updated',
+        message: 'Repair ticket #RT-2024-002 status has been updated to "In Progress".',
+        type: 'repair_ticket',
+        relatedEntityType: 'repair_ticket',
+        relatedEntityId: 2
+      },
+      {
+        title: 'Customer Added',
+        message: 'New customer "ABC Company" has been added to the system.',
+        type: 'customer',
+        relatedEntityType: 'customer',
+        relatedEntityId: 3
+      },
+      {
+        title: 'Low Stock Alert',
+        message: 'Inventory item "Screw Driver Set" is running low (5 items remaining).',
+        type: 'inventory',
+        relatedEntityType: 'inventory',
+        relatedEntityId: 4
+      },
+      {
+        title: 'System Maintenance',
+        message: 'Scheduled system maintenance will occur tonight at 2:00 AM.',
+        type: 'system',
+        relatedEntityType: null,
+        relatedEntityId: null
+      }
+    ];
+    
+    const notifications = [];
+    for (const notif of testNotifications) {
+      const notification = await createNotification(
+        userId, 
+        notif.title, 
+        notif.message, 
+        notif.type,
+        notif.relatedEntityType,
+        notif.relatedEntityId
+      );
+      notifications.push(notification);
+    }
+    
+    res.json({
+      status: 'success',
+      message: 'Test notifications created successfully',
+      notifications
+    });
+  } catch (error) {
+    console.error('Error creating test notifications:', error);
+    res.status(500).json({ error: 'Failed to create test notifications' });
   }
 });
 

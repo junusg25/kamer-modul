@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { authenticateToken } = require('../middleware/auth');
+const { createNotification } = require('../utils/notificationHelpers');
 
 // GET all assigned machines
 router.get('/', async (req, res, next) => {
@@ -71,7 +73,7 @@ router.get('/customer/:customerId', async (req, res, next) => {
 });
 
 // POST assign a serial number to a customer (includes transaction to update serial status)
-router.post('/', async (req, res, next) => {
+router.post('/', authenticateToken, async (req, res, next) => {
   const client = await db.connect();
   
   try {
@@ -190,6 +192,75 @@ router.post('/', async (req, res, next) => {
     );
     
     await client.query('COMMIT');
+    
+    // Create notifications for machine assignment/sale
+    try {
+      const assignedMachine = assignmentResult.rows[0];
+      
+      // Get machine and customer details for notification
+      const detailsQuery = `
+        SELECT 
+          am.*,
+          c.name as customer_name,
+          mm.name as model_name,
+          mm.manufacturer,
+          u.name as seller_name
+        FROM assigned_machines am
+        LEFT JOIN customers c ON am.customer_id = c.id
+        LEFT JOIN machine_serials ms ON am.serial_id = ms.id
+        LEFT JOIN machine_models mm ON ms.model_id = mm.id
+        LEFT JOIN users u ON am.sold_by_user_id = u.id
+        WHERE am.id = $1
+      `;
+      
+      const detailsResult = await db.query(detailsQuery, [assignedMachine.id]);
+      const details = detailsResult.rows[0];
+      
+      if (details) {
+        if (details.is_sale) {
+          // Machine sale notification
+          const title = 'Machine Sold';
+          const message = `${details.model_name} (${details.manufacturer}) has been sold to ${details.customer_name} for ${details.sale_price ? `$${details.sale_price}` : 'undisclosed amount'}`;
+          
+          // Notify all users except the seller
+          const usersQuery = 'SELECT id FROM users WHERE id != $1';
+          const usersResult = await db.query(usersQuery, [req.user.id]);
+          
+          for (const user of usersResult.rows) {
+            await createNotification(
+              user.id,
+              title,
+              message,
+              'machine',
+              'assigned_machine',
+              assignedMachine.id
+            );
+          }
+        } else {
+          // Machine assignment notification (for repair)
+          const title = 'Machine Assigned';
+          const message = `${details.model_name} (${details.manufacturer}) has been assigned to ${details.customer_name} for repair`;
+          
+          // Notify all users except the one who assigned it
+          const usersQuery = 'SELECT id FROM users WHERE id != $1';
+          const usersResult = await db.query(usersQuery, [req.user.id]);
+          
+          for (const user of usersResult.rows) {
+            await createNotification(
+              user.id,
+              title,
+              message,
+              'machine',
+              'assigned_machine',
+              assignedMachine.id
+            );
+          }
+        }
+      }
+    } catch (notificationError) {
+      console.error('Error creating machine assignment notification:', notificationError);
+      // Don't fail the request if notification fails
+    }
     
     res.status(201).json({
       status: 'success',

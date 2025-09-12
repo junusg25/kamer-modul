@@ -36,6 +36,7 @@ import DashboardOverview from './pages/dashboard-overview'
 import DashboardMyWork from './pages/dashboard-my-work'
 import DashboardAdmin from './pages/dashboard-admin'
 import Settings from './pages/settings'
+import Notifications from './pages/notifications'
 
 function App() {
   return (
@@ -183,10 +184,7 @@ function App() {
               } />
               <Route path="/notifications" element={
                 <ProtectedRoute>
-                  <div className="p-6">
-                    <h1 className="text-2xl font-bold">Notifications</h1>
-                    <p className="text-muted-foreground">System notifications and alerts</p>
-                  </div>
+                  <Notifications />
                 </ProtectedRoute>
               } />
               <Route path="/settings" element={

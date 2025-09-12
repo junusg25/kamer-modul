@@ -781,11 +781,8 @@ router.post('/:id/convert', authenticateToken, async (req, res, next) => {
           // Notify the assigned technician about work order assignment (not creation)
           await createNotification(
             workOrder.technician_id,
-            'notifications.warrantyWorkOrderAssignedToYou',
-            'notifications.warrantyWorkOrderAssignedToYou',
-            { 
-              number: workOrder.formatted_number || `#${workOrder.id}`
-            },
+            'Warranty Work Order Assigned',
+            `You have been assigned to warranty work order ${workOrder.formatted_number || `#${workOrder.id}`}`,
             'warranty_work_order',
             'warranty_work_order',
             workOrder.id
@@ -795,11 +792,8 @@ router.post('/:id/convert', authenticateToken, async (req, res, next) => {
         // Notify all managers about warranty work order creation (except the converter)
         if (req.user.role !== 'admin' && req.user.role !== 'manager') {
           await createNotificationForManagers(
-            'notifications.warrantyWorkOrderCreated',
-            'notifications.warrantyWorkOrderCreatedMessage',
-            { 
-              number: workOrder.formatted_number || `#${workOrder.id}`
-            },
+            'Warranty Work Order Created',
+            `New warranty work order ${workOrder.formatted_number || `#${workOrder.id}`} has been created`,
             'warranty_work_order',
             'warranty_work_order',
             workOrder.id
