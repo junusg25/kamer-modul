@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TICKET_TYPE}} - {{FORMATTED_NUMBER}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 10px;
+            line-height: 1.3;
+            color: #000;
+            background: white;
+        }
+
+        .container {
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        /* Header Section */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 2px solid #000;
+            background: white;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            height: 40px;
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .company-info h1 {
+            font-size: 14px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 2px;
+        }
+
+        .company-info p {
+            font-size: 9px;
+            color: #000;
+            margin-bottom: 1px;
+        }
+
+        .ticket-info {
+            text-align: right;
+        }
+
+        .ticket-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 5px;
+        }
+
+        .ticket-number {
+            font-size: 12px;
+            color: #000;
+            font-weight: bold;
+            border: 1px solid #000;
+            padding: 2px 6px;
+            display: inline-block;
+        }
+
+        .ticket-date {
+            font-size: 9px;
+            color: #000;
+            margin-top: 2px;
+        }
+
+        /* Warranty Badge */
+        .warranty-badge {
+            display: inline-block;
+            background: white;
+            color: #000;
+            padding: 2px 8px;
+            border: 1px solid #000;
+            font-size: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-left: 8px;
+        }
+
+        /* Two Column Layout for Customer and Machine Info */
+        .info-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .info-column {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        .column-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #000;
+            background: #f0f0f0;
+            padding: 4px 8px;
+            margin: -8px -8px 8px -8px;
+            border-bottom: 1px solid #000;
+            text-transform: uppercase;
+        }
+
+        /* Section Styling */
+        .section {
+            margin-bottom: 12px;
+            page-break-inside: avoid;
+            border: 1px solid #000;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #000;
+            background: #f0f0f0;
+            padding: 4px 8px;
+            margin: 0;
+            text-transform: uppercase;
+            border-bottom: 1px solid #000;
+        }
+
+        .section-content {
+            padding: 8px;
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+        }
+
+        .field {
+            margin-bottom: 4px;
+        }
+
+        .field-label {
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 1px;
+            font-size: 9px;
+        }
+
+        .field-value {
+            color: #000;
+            padding: 2px 4px;
+            background: white;
+            border: 1px solid #ccc;
+            min-height: 16px;
+            font-size: 9px;
+        }
+
+        /* Customer Type Badge */
+        .customer-type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border: 1px solid #000;
+            font-size: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: white;
+            color: #000;
+        }
+
+        /* Problem Description */
+        .problem-description {
+            background: white;
+            border: 1px solid #000;
+            padding: 6px;
+            margin: 5px 0;
+        }
+
+        .problem-description .field-label {
+            color: #000;
+            font-weight: bold;
+            font-size: 9px;
+        }
+
+        .problem-description .field-value {
+            min-height: 40px;
+            white-space: pre-wrap;
+            font-size: 9px;
+            background: white;
+            border: 1px solid #ccc;
+        }
+
+        /* Warranty Information */
+        .warranty-info {
+            background: white;
+            border: 1px solid #000;
+            padding: 6px;
+            margin: 5px 0;
+        }
+
+        .warranty-info .field-label {
+            color: #000;
+            font-weight: bold;
+            font-size: 9px;
+        }
+
+        .warranty-info .field-value {
+            background: white;
+            border: 1px solid #ccc;
+        }
+
+        /* Notes Section */
+        .notes-section {
+            background: white;
+            border: 1px solid #000;
+            padding: 6px;
+            margin: 5px 0;
+        }
+
+        .notes-section .field-value {
+            background: white;
+            border: 1px solid #ccc;
+            min-height: 30px;
+        }
+
+        /* Status and Priority */
+        .status-priority {
+            display: flex;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .status-badge, .priority-badge {
+            padding: 2px 6px;
+            border: 1px solid #000;
+            font-weight: bold;
+            font-size: 8px;
+            text-transform: uppercase;
+            background: white;
+            color: #000;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                background: white;
+            }
+            
+            .container {
+                max-width: none;
+                margin: 0;
+                padding: 8px;
+            }
+            
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* Conditional Display */
+        .hide-if-empty {
+            display: none;
+        }
+
+        .show-if-company {
+            display: none;
+        }
+
+        .show-if-private {
+            display: block;
+        }
+
+        .customer-type-company .show-if-company {
+            display: block;
+        }
+
+        .customer-type-company .show-if-private {
+            display: none;
+        }
+
+        /* Signature Styles */
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            gap: 30px;
+            padding: 10px;
+            border: 1px solid #000;
+        }
+
+        .signature-box {
+            flex: 1;
+            text-align: center;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #000;
+            height: 25px;
+            margin-bottom: 3px;
+            width: 100%;
+        }
+
+        .signature-label {
+            font-size: 8px;
+            color: #000;
+            font-weight: normal;
+        }
+
+        /* Generation Timestamp */
+        .generation-timestamp {
+            text-align: center;
+            font-size: 8px;
+            color: #000;
+            margin-top: 10px;
+            padding: 4px;
+            border-top: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="logo-section">
+                <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=" alt="Kamer.ba" class="logo">
+                <div class="company-info">
+                    <h1>Kamer.ba</h1>
+                    <p>Prodajni i Servisni modul</p>
+                    <p>Tel: +387 XX XXX XXX | Email: info@kamer.ba</p>
+                    <p>Adresa: [Adresa kompanije]</p>
+                </div>
+            </div>
+            <div class="ticket-info">
+                <div class="ticket-title">
+                    {{TICKET_TYPE}}
+                    <span class="warranty-badge">GARANCIJA</span>
+                </div>
+                <div class="ticket-number">{{FORMATTED_NUMBER}}</div>
+                <div class="ticket-date">Datum: {{CREATED_AT}}</div>
+            </div>
+        </div>
+
+        <!-- Customer and Machine Information in Two Columns -->
+        <div class="info-columns">
+            <!-- Customer Information Column -->
+            <div class="info-column">
+                <div class="column-title">INFORMACIJE O KUPACU</div>
+                <div class="field">
+                    <div class="field-label">Ime i prezime:</div>
+                    <div class="field-value">{{CUSTOMER_NAME}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Tip kupca:</div>
+                    <div class="field-value">
+                        <span class="customer-type-badge badge-{{CUSTOMER_TYPE}}">{{CUSTOMER_TYPE_BADGE}}</span>
+                    </div>
+                </div>
+                <div class="field show-if-company">
+                    <div class="field-label">Kontakt osoba:</div>
+                    <div class="field-value">{{CONTACT_PERSON}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Telefon:</div>
+                    <div class="field-value">{{PHONE1}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Email:</div>
+                    <div class="field-value">{{EMAIL}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Adresa:</div>
+                    <div class="field-value">{{STREET_ADDRESS}}, {{POSTAL_CODE}} {{CITY}}</div>
+                </div>
+                <div class="field show-if-company">
+                    <div class="field-label">Naziv kompanije:</div>
+                    <div class="field-value">{{COMPANY_NAME}}</div>
+                </div>
+            </div>
+
+            <!-- Machine Information Column -->
+            <div class="info-column">
+                <div class="column-title">INFORMACIJE O MAŠINI</div>
+                <div class="field">
+                    <div class="field-label">Proizvođač:</div>
+                    <div class="field-value">{{MANUFACTURER}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Model:</div>
+                    <div class="field-value">{{MODEL_NAME}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Serijski broj:</div>
+                    <div class="field-value">{{SERIAL_NUMBER}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Kategorija:</div>
+                    <div class="field-value">{{CATEGORY_NAME}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Kataloški broj:</div>
+                    <div class="field-value">{{CATALOGUE_NUMBER}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Datum kupovine:</div>
+                    <div class="field-value">{{PURCHASE_DATE}}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warranty Information -->
+        <div class="section">
+            <div class="section-title">INFORMACIJE O GARANCIJI</div>
+            <div class="section-content">
+                <div class="warranty-info">
+                    <div class="grid">
+                        <div class="field">
+                            <div class="field-label">Datum isteka garancije:</div>
+                            <div class="field-value">{{WARRANTY_EXPIRY_DATE}}</div>
+                        </div>
+                        <div class="field">
+                            <div class="field-label">Status garancije:</div>
+                            <div class="field-value">
+                                <span class="status-badge status-{{WARRANTY_STATUS}}">{{WARRANTY_STATUS}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Equipment and Brought By -->
+        <div class="section">
+            <div class="section-title">DODATNE INFORMACIJE</div>
+            <div class="section-content">
+                <div class="grid">
+                    <div class="field">
+                        <div class="field-label">Dodatna oprema:</div>
+                        <div class="field-value">{{ADDITIONAL_EQUIPMENT}}</div>
+                    </div>
+                    <div class="field">
+                        <div class="field-label">Doneseno od strane:</div>
+                        <div class="field-value">{{BROUGHT_BY}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Problem Description -->
+        <div class="section">
+            <div class="section-title">OPIS PROBLEMA</div>
+            <div class="section-content">
+                <div class="problem-description">
+                    <div class="field-label">Opis problema:</div>
+                    <div class="field-value" style="min-height: 40px; white-space: pre-wrap;">{{PROBLEM_DESCRIPTION}}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="section">
+            <div class="section-title">NAPOMENE</div>
+            <div class="section-content">
+                <div class="notes-section">
+                    <div class="field-value" style="min-height: 40px; white-space: pre-wrap;">{{NOTES}}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signatures -->
+        <div class="section" style="margin-top: 20px;">
+            <div class="signatures">
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <div class="signature-label">Potpis kupca / Customer Signature</div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <div class="signature-label">Potpis servisera / Technician Signature</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generation Timestamp -->
+        <div class="generation-timestamp">
+            Generisano: {{GENERATION_TIMESTAMP}}
+        </div>
+    </div>
+
+    <script>
+        // Add customer type class to body for conditional styling
+        document.body.classList.add('customer-type-{{CUSTOMER_TYPE}}');
+    </script>
+</body>
+</html>
+

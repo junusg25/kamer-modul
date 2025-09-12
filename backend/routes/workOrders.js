@@ -1,0 +1,819 @@
+const express = require('express');
+const router = express.Router();
+const db = require('../db');
+const { validateIdParam, handleValidationErrors } = require('../middleware/validators');
+const { body } = require('express-validator');
+const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+const { createWorkOrderNotification } = require('../utils/notificationHelpers');
+const { createUserAssignmentNotification } = require('../utils/notificationHelpers');
+const { createNotificationForManagers } = require('../utils/notificationHelpers');
+const websocketService = require('../services/websocketService');
+
+// Middleware to check work order ownership
+const checkWorkOrderOwnership = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    // Admins and managers can access all work orders
+    if (userRole === 'admin' || userRole === 'manager') {
+      return next();
+    }
+
+    // Check if the work order exists and get ownership info
+    const result = await db.query(
+      'SELECT owner_technician_id, technician_id FROM work_orders WHERE id = $1',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Work order not found' });
+    }
+
+    const workOrder = result.rows[0];
+
+    // Technicians can only access work orders they own
+    if (workOrder.owner_technician_id !== userId && workOrder.technician_id !== userId) {
+      return res.status(403).json({ 
+        message: 'Access denied. You can only view work orders assigned to you.' 
+      });
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET work orders that use a specific inventory item
+router.get('/by-inventory/:inventoryId', authenticateToken, async (req, res, next) => {
+  try {
+    const { inventoryId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    // Get work orders that use this inventory item
+    const result = await db.query(`
+      SELECT DISTINCT
+        wo.id, 
+        wo.machine_id, 
+        wo.customer_id, 
+        wo.description, 
+        wo.status, 
+        wo.technician_id, 
+        wo.priority, 
+        wo.ticket_number,
+        wo.formatted_number,
+        wo.created_at,
+        wo.updated_at,
+        c.name as customer_name,
+        c.email as customer_email,
+        c.phone as customer_phone,
+        ms.serial_number,
+        mm.name as machine_name,
+        u.name as technician_name,
+        woi.quantity as quantity_used
+      FROM work_orders wo
+      INNER JOIN work_order_inventory woi ON wo.id = woi.work_order_id
+      LEFT JOIN customers c ON wo.customer_id = c.id
+      LEFT JOIN assigned_machines am ON wo.machine_id = am.id
+      LEFT JOIN machine_serials ms ON am.serial_id = ms.id
+      LEFT JOIN machine_models mm ON ms.model_id = mm.id
+      LEFT JOIN users u ON wo.technician_id = u.id
+      WHERE woi.inventory_id = $1
+      ORDER BY wo.created_at DESC
+      LIMIT $2 OFFSET $3
+    `, [inventoryId, limit, offset]);
+
+    // Get total count
+    const totalResult = await db.query(`
+      SELECT COUNT(DISTINCT wo.id) 
+      FROM work_orders wo
+      INNER JOIN work_order_inventory woi ON wo.id = woi.work_order_id
+      WHERE woi.inventory_id = $1
+    `, [inventoryId]);
+
+    res.json({
+      data: result.rows,
+      pagination: {
+        page,
+        limit,
+        total: parseInt(totalResult.rows[0].count),
+        pages: Math.ceil(parseInt(totalResult.rows[0].count) / limit)
+      }
+    });
+  } catch (err) { 
+    next(err); 
+  }
+});
+
+// GET all work orders (with pagination and search)
+router.get('/', authenticateToken, async (req, res, next) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = (page - 1) * limit;
+  const { search, status, priority, technician_id, customer_id, machine_id } = req.query;
+  
+  try {
+    let whereConditions = [];
+    let queryParams = [];
+    let paramIndex = 1;
+
+    if (search) {
+      whereConditions.push(`(wo.description ILIKE $${paramIndex} OR c.name ILIKE $${paramIndex} OR mm.name ILIKE $${paramIndex})`);
+      queryParams.push(`%${search}%`);
+      paramIndex++;
+    }
+
+    // Include all work orders by default, but allow filtering by status
+    if (status) {
+      whereConditions.push(`wo.status = $${paramIndex}`);
+      queryParams.push(status);
+      paramIndex++;
+    }
+    // Remove the default exclusion of 'intake' status to show all work orders
+
+    if (priority) {
+      whereConditions.push(`wo.priority = $${paramIndex}`);
+      queryParams.push(priority);
+      paramIndex++;
+    }
+
+    if (technician_id) {
+      whereConditions.push(`wo.technician_id = $${paramIndex}`);
+      queryParams.push(technician_id);
+      paramIndex++;
+    }
+
+    if (customer_id) {
+      whereConditions.push(`wo.customer_id = $${paramIndex}`);
+      queryParams.push(customer_id);
+      paramIndex++;
+    }
+
+    if (machine_id) {
+      whereConditions.push(`wo.machine_id = $${paramIndex}`);
+      queryParams.push(machine_id);
+      paramIndex++;
+    }
+
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
+    const result = await db.query(`
+      SELECT 
+        wo.id, 
+        wo.machine_id, 
+        wo.customer_id, 
+        wo.description, 
+        wo.status, 
+        wo.technician_id, 
+        wo.priority, 
+        wo.ticket_number,
+        wo.formatted_number,
+        wo.created_at,
+        wo.updated_at,
+
+        wo.started_at,
+        wo.completed_at,
+        wo.due_date,
+        wo.is_warranty,
+        wo.labor_hours,
+        wo.labor_rate,
+        wo.troubleshooting_fee,
+        wo.quote_subtotal_parts,
+        wo.quote_total,
+        wo.total_cost,
+        wo.converted_from_ticket_id,
+        c.name as customer_name,
+        c.email as customer_email,
+        mm.name as machine_name,
+        mm.catalogue_number as catalogue_number,
+        ms.serial_number as serial_number,
+        u.name as technician_name
+      FROM work_orders wo
+      LEFT JOIN customers c ON wo.customer_id = c.id
+      LEFT JOIN assigned_machines am ON wo.machine_id = am.id
+      LEFT JOIN machine_serials ms ON am.serial_id = ms.id
+      LEFT JOIN machine_models mm ON ms.model_id = mm.id
+      LEFT JOIN users u ON wo.technician_id = u.id
+      ${whereClause}
+      ORDER BY wo.created_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `, [...queryParams, limit, offset]);
+
+    const totalResult = await db.query(`
+      SELECT COUNT(*) 
+      FROM work_orders wo
+      LEFT JOIN customers c ON wo.customer_id = c.id
+      LEFT JOIN assigned_machines am ON wo.machine_id = am.id
+      LEFT JOIN machine_serials ms ON am.serial_id = ms.id
+      LEFT JOIN machine_models mm ON ms.model_id = mm.id
+      ${whereClause}
+    `, queryParams);
+
+    res.json({
+      data: result.rows,
+      pagination: {
+        page,
+        limit,
+        total: parseInt(totalResult.rows[0].count),
+        pages: Math.ceil(parseInt(totalResult.rows[0].count) / limit)
+      }
+    });
+  } catch (err) { next(err); }
+});
+
+router.get('/:id', authenticateToken, async (req, res, next) => {
+  try {
+    const result = await db.query(
+      `SELECT wo.id, wo.machine_id, wo.customer_id, wo.description, wo.status, wo.technician_id, wo.priority, 
+                             wo.updated_at, wo.ticket_number, wo.formatted_number, wo.created_at, wo.started_at, wo.completed_at, 
+               wo.total_cost, wo.is_warranty, wo.labor_hours, wo.labor_rate, wo.quote_subtotal_parts, 
+              wo.quote_total, wo.approval_status, wo.approval_at, wo.troubleshooting_fee, wo.paid_at,
+              wo.converted_from_ticket_id, wo.owner_technician_id,
+              c.name as customer_name, c.email as customer_email, c.phone as customer_phone,
+              mm.name as machine_name, ms.serial_number as serial_number,
+              u.name as technician_name,
+              owner.name as owner_technician_name
+       FROM work_orders wo
+       LEFT JOIN customers c ON wo.customer_id = c.id
+       LEFT JOIN assigned_machines am ON wo.machine_id = am.id
+       LEFT JOIN machine_serials ms ON am.serial_id = ms.id
+       LEFT JOIN machine_models mm ON ms.model_id = mm.id
+       LEFT JOIN users u ON wo.technician_id = u.id
+       LEFT JOIN users owner ON wo.owner_technician_id = owner.id
+       WHERE wo.id = $1`,
+      [req.params.id]
+    );
+    if (!result.rows.length) return res.status(404).json({ status: 'fail', message: 'Work order not found' });
+    res.json({ status: 'success', data: result.rows[0] });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /api/workOrders/:id/priority
+router.patch('/:id/priority', [
+  validateIdParam,
+  body('priority').isIn(['low', 'medium', 'high']).withMessage('Priority must be low/medium/high'),
+  handleValidationErrors
+], async (req, res) => {
+  const { id } = req.params;
+  const { priority } = req.body;
+
+  try {
+    const result = await db.query(
+      `UPDATE work_orders 
+       SET priority = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2 
+       RETURNING *`,
+      [priority, id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Work order not found' });
+    }
+    const workOrder = result.rows[0];
+    try {
+      await createWorkOrderNotification(workOrder.id, 'priority_changed', 'work_order', req.user.id);
+    } catch {}
+    res.json(workOrder);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update priority" });
+  }
+});
+
+// POST create new work order - DISABLED: Work orders can only be created by converting repair tickets
+router.post('/', authenticateToken, async (req, res, next) => {
+  return res.status(403).json({
+    status: 'fail',
+    message: 'Direct work order creation is disabled. Work orders can only be created by converting repair tickets.'
+  });
+});
+
+// Bulk update work orders
+router.patch('/bulk-update', authenticateToken, async (req, res, next) => {
+  try {
+    const { work_order_ids, updates } = req.body;
+    
+    if (!work_order_ids || !Array.isArray(work_order_ids) || work_order_ids.length === 0) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'work_order_ids array is required'
+      });
+    }
+
+    if (!updates || Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'At least one update field is required'
+      });
+    }
+
+    // Validate allowed update fields
+    const allowedFields = ['status', 'priority', 'technician_id'];
+    const updateFields = Object.keys(updates).filter(field => allowedFields.includes(field));
+    
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Only status, priority, and technician_id can be updated in bulk'
+      });
+    }
+
+    // Build update query
+    const setClause = updateFields.map((field, index) => `${field} = $${index + 2}`).join(', ');
+    const query = `
+      UPDATE work_orders 
+      SET ${setClause}, updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ANY($1) 
+      RETURNING id, status, priority, technician_id, updated_at
+    `;
+
+    const values = [work_order_ids, ...updateFields.map(field => updates[field])];
+    const result = await db.query(query, values);
+
+    // Create notifications for bulk updates
+    try {
+      const notifications = [];
+      
+      for (const workOrder of result.rows) {
+        if (updates.status) {
+          notifications.push(
+                      createWorkOrderNotification(
+            workOrder.id, 
+            'status_changed', 
+            'work_order',
+            req.user.id,
+            { oldStatus: workOrder.status, newStatus: status }
+          )
+          );
+        }
+        
+        if (updates.technician_id) {
+          notifications.push(
+                      createWorkOrderNotification(
+            workOrder.id, 
+            'assigned', 
+            'work_order',
+            req.user.id
+          )
+          );
+        }
+        
+        if (updates.priority) {
+          notifications.push(
+                      createWorkOrderNotification(
+            workOrder.id, 
+            'updated', 
+            'work_order',
+            req.user.id
+          )
+          );
+        }
+      }
+
+      // Wait for all notifications to be created
+      await Promise.all(notifications);
+    } catch (notificationError) {
+      console.error('Error creating bulk update notifications:', notificationError);
+      // Don't fail the request if notifications fail
+    }
+
+    res.json({
+      status: 'success',
+      message: `Updated ${result.rows.length} work orders`,
+      data: result.rows
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Bulk assign technician
+router.patch('/bulk-assign', authenticateToken, async (req, res, next) => {
+  try {
+    const { work_order_ids, technician_id } = req.body;
+    
+    if (!work_order_ids || !Array.isArray(work_order_ids) || work_order_ids.length === 0) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'work_order_ids array is required'
+      });
+    }
+
+    if (!technician_id) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'technician_id is required'
+      });
+    }
+
+    // Verify technician exists and is a technician
+    const techCheck = await db.query(
+      'SELECT id, name FROM users WHERE id = $1 AND role = $2',
+      [technician_id, 'technician']
+    );
+
+    if (techCheck.rows.length === 0) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Invalid technician_id or user is not a technician'
+      });
+    }
+
+    const result = await db.query(
+      `UPDATE work_orders 
+       SET technician_id = $1, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = ANY($2) 
+       RETURNING id, technician_id, updated_at`,
+      [technician_id, work_order_ids]
+    );
+
+    // Create notifications for bulk assignment
+    try {
+      const notifications = [];
+      
+      // Notify the technician about the bulk assignment
+      if (result.rows.length > 0) {
+        notifications.push(
+          createUserAssignmentNotification(
+            technician_id,
+            'bulk_assigned',
+            { count: result.rows.length }
+          )
+        );
+      }
+
+      // Notify about individual work order assignments
+      for (const workOrder of result.rows) {
+        notifications.push(
+          createWorkOrderNotification(
+            workOrder.id, 
+            'assigned', 
+            'work_order',
+            req.user.id
+          )
+        );
+      }
+
+      // Wait for all notifications to be created
+      await Promise.all(notifications);
+    } catch (notificationError) {
+      console.error('Error creating bulk assign notifications:', notificationError);
+      // Don't fail the request if notifications fail
+    }
+
+    res.json({
+      status: 'success',
+      message: `Assigned ${result.rows.length} work orders to ${techCheck.rows[0].name}`,
+      data: result.rows
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH update work order by id
+router.patch('/:id', authenticateToken, checkWorkOrderOwnership, [
+  validateIdParam,
+  body('description').optional().isString().trim(),
+  body('status').optional().isIn(['intake','quoted','awaiting_approval','declined','pending','in_progress','completed','ready_for_pickup','cancelled','testing','parts_ordered','waiting_approval','waiting_supplier','service_cancelled']),
+  body('technician_id').optional().isInt(),
+  body('priority').optional().isIn(['low', 'medium', 'high']).withMessage('Invalid priority'),
+  body('is_warranty').optional().isBoolean().withMessage('is_warranty must be a boolean'),
+  body('labor_hours').optional().isNumeric().withMessage('labor_hours must be a number'),
+  body('labor_rate').optional().isNumeric().withMessage('labor_rate must be a number'),
+  body('quote_subtotal_parts').optional().isNumeric().withMessage('quote_subtotal_parts must be a number'),
+  body('quote_total').optional().isNumeric().withMessage('quote_total must be a number'),
+  body('troubleshooting_fee').optional().isNumeric().withMessage('troubleshooting_fee must be a number'),
+  body('total_cost').optional().isNumeric().withMessage('total_cost must be a number'),
+  handleValidationErrors
+], async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { description, status, technician_id, priority, is_warranty, labor_hours, labor_rate, quote_subtotal_parts, quote_total, approval_status, approval_at, troubleshooting_fee, paid_at, total_cost } = req.body;
+
+    // Check if at least one field is being updated
+    const hasUpdates = description !== undefined || status !== undefined || technician_id !== undefined || priority !== undefined || 
+                      is_warranty !== undefined || labor_hours !== undefined || labor_rate !== undefined || 
+                      quote_subtotal_parts !== undefined || quote_total !== undefined || approval_status !== undefined || 
+                      approval_at !== undefined || troubleshooting_fee !== undefined || paid_at !== undefined || 
+                      total_cost !== undefined;
+    
+    if (!hasUpdates) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'At least one update field is required'
+      });
+    }
+
+    // Get current work order to check status changes
+    const currentWorkOrder = await db.query(
+      'SELECT status, started_at, completed_at, technician_id FROM work_orders WHERE id = $1',
+      [id]
+    );
+
+    if (currentWorkOrder.rows.length === 0) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Work order not found'
+      });
+    }
+
+    const currentStatus = currentWorkOrder.rows[0].status;
+    const currentStartedAt = currentWorkOrder.rows[0].started_at;
+    const currentCompletedAt = currentWorkOrder.rows[0].completed_at;
+    const currentTechnicianId = currentWorkOrder.rows[0].technician_id;
+
+    const fields = [];
+    const values = [];
+    let idx = 1;
+
+    if (description !== undefined) {
+      fields.push(`description = $${idx++}`);
+      values.push(description);
+    }
+    if (status !== undefined) {
+      fields.push(`status = $${idx++}`);
+      values.push(status);
+      
+      // Automatically set started_at when status changes to 'in_progress'
+      if (status === 'in_progress' && currentStatus !== 'in_progress' && !currentStartedAt) {
+        fields.push(`started_at = CURRENT_TIMESTAMP`);
+      }
+      
+      // Revert started_at to NULL when status changes from 'in_progress' back to 'pending'
+      if (status === 'pending' && currentStatus === 'in_progress') {
+        fields.push(`started_at = NULL`);
+      }
+      
+      // Automatically set completed_at when status changes to 'completed'
+      if (status === 'completed' && currentStatus !== 'completed' && !currentCompletedAt) {
+        fields.push(`completed_at = CURRENT_TIMESTAMP`);
+      }
+      
+      // Clear completed_at when status changes from 'completed' to any other status
+      if (status !== 'completed' && currentStatus === 'completed') {
+        fields.push(`completed_at = NULL`);
+      }
+    }
+    if (technician_id !== undefined) {
+      fields.push(`technician_id = $${idx++}`);
+      values.push(technician_id);
+    }
+    if (priority !== undefined) {
+      fields.push(`priority = $${idx++}`);
+      values.push(priority);
+    }
+
+    if (is_warranty !== undefined) { fields.push(`is_warranty = $${idx++}`); values.push(Boolean(is_warranty)); }
+    if (labor_hours !== undefined) { fields.push(`labor_hours = $${idx++}`); values.push(labor_hours === '' ? null : Number(labor_hours)); }
+    if (labor_rate !== undefined) { fields.push(`labor_rate = $${idx++}`); values.push(labor_rate === '' ? null : Number(labor_rate)); }
+    if (quote_subtotal_parts !== undefined) { fields.push(`quote_subtotal_parts = $${idx++}`); values.push(quote_subtotal_parts === '' ? null : Number(quote_subtotal_parts)); }
+    if (quote_total !== undefined) { fields.push(`quote_total = $${idx++}`); values.push(quote_total === '' ? null : Number(quote_total)); }
+    if (approval_status !== undefined) { fields.push(`approval_status = $${idx++}`); values.push(approval_status); }
+    if (approval_at !== undefined) { fields.push(`approval_at = $${idx++}`); values.push(approval_at); }
+    if (troubleshooting_fee !== undefined) { fields.push(`troubleshooting_fee = $${idx++}`); values.push(troubleshooting_fee === '' ? null : Number(troubleshooting_fee)); }
+    if (paid_at !== undefined) { fields.push(`paid_at = $${idx++}`); values.push(paid_at); }
+    if (total_cost !== undefined) { fields.push(`total_cost = $${idx++}`); values.push(total_cost === '' ? null : Number(total_cost)); }
+
+    fields.push(`updated_at = CURRENT_TIMESTAMP`);
+    values.push(id);
+
+    const query = `
+      UPDATE work_orders 
+      SET ${fields.join(', ')} 
+      WHERE id = $${idx} 
+      RETURNING *
+    `;
+
+    const result = await db.query(query, values);
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Work order not found'
+      });
+    }
+
+    const updatedWorkOrder = result.rows[0];
+
+    // Create notifications for relevant changes
+    try {
+      const notifications = [];
+
+      // Notify on status change
+      if (status !== undefined && status !== currentStatus) {
+        notifications.push(
+          createWorkOrderNotification(
+            updatedWorkOrder.id, 
+            'status_changed', 
+            'work_order',
+            req.user.id,
+            { oldStatus: currentStatus, newStatus: status }
+          )
+        );
+        
+        // Emit real-time WebSocket update
+        await websocketService.emitWorkOrderUpdate(updatedWorkOrder.id, 'status_changed', {
+          oldStatus: currentStatus,
+          newStatus: status,
+          updatedBy: req.user.id
+        });
+      }
+
+      // Notify on technician assignment
+      if (technician_id !== undefined && technician_id !== currentTechnicianId) {
+        if (technician_id) {
+          notifications.push(
+            createWorkOrderNotification(
+              updatedWorkOrder.id, 
+              'assigned', 
+              'work_order',
+              req.user.id
+            )
+          );
+          
+          // Emit real-time WebSocket update for assignment
+          await websocketService.emitWorkOrderUpdate(updatedWorkOrder.id, 'assigned', {
+            technicianId: technician_id,
+            assignedBy: req.user.id
+          });
+        }
+      }
+
+      // Notify on general updates
+      if (description !== undefined || priority !== undefined) {
+        notifications.push(
+          createWorkOrderNotification(
+            updatedWorkOrder.id, 
+            'updated', 
+            'work_order',
+            req.user.id
+          )
+        );
+        
+        // Emit real-time WebSocket update for general changes
+        await websocketService.emitWorkOrderUpdate(updatedWorkOrder.id, 'updated', {
+          updatedFields: {
+            description: description !== undefined,
+            priority: priority !== undefined
+          },
+          updatedBy: req.user.id
+        });
+      }
+
+      // Wait for all notifications to be created
+      await Promise.all(notifications);
+    } catch (notificationError) {
+      console.error('Error creating notifications:', notificationError);
+      // Don't fail the request if notifications fail
+    }
+
+    res.json(updatedWorkOrder);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Start a work order (sets started_at)
+router.patch('/:id/start', authenticateToken, checkWorkOrderOwnership, validateIdParam, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await db.query(
+      `UPDATE work_orders 
+       SET status = 'in_progress', started_at = CURRENT_TIMESTAMP 
+       WHERE id = $1 
+       RETURNING *`,
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Work order not found' });
+    }
+
+    const workOrder = result.rows[0];
+
+    // Create start notification
+    try {
+      await createWorkOrderNotification(workOrder.id, 'status_changed', 'work_order', req.user.id, { oldStatus: workOrder.status, newStatus: 'in_progress' });
+    } catch (notificationError) {
+      console.error('Error creating start notification:', notificationError);
+      // Don't fail the request if notification fails
+    }
+
+    res.json(workOrder);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to start work order" });
+  }
+});
+
+// Complete a work order (sets completed_at)
+router.patch('/:id/complete', authenticateToken, checkWorkOrderOwnership, validateIdParam, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await db.query(
+      `UPDATE work_orders 
+       SET status = 'completed', completed_at = CURRENT_TIMESTAMP 
+       WHERE id = $1 
+       RETURNING *`,
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Work order not found' });
+    }
+
+    const workOrder = result.rows[0];
+
+    // Create completion notification
+    try {
+      await createWorkOrderNotification(workOrder.id, 'completed', 'work_order', req.user.id);
+    } catch (notificationError) {
+      console.error('Error creating completion notification:', notificationError);
+      // Don't fail the request if notification fails
+    }
+
+    res.json(workOrder);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to complete work order" });
+  }
+});
+
+// DELETE work order or ticket
+router.delete('/:id', authenticateToken, validateIdParam, async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    // Start a transaction to ensure data consistency
+    await db.query('BEGIN');
+
+    // First, get the work order details to check if it was converted from a ticket
+    const workOrderResult = await db.query(
+      'SELECT id, converted_from_ticket_id, is_warranty, formatted_number, owner_technician_id, technician_id FROM work_orders WHERE id = $1',
+      [req.params.id]
+    );
+
+    if (!workOrderResult.rows.length) {
+      await db.query('ROLLBACK');
+      return res.status(404).json({ status: 'fail', message: 'Work order not found' });
+    }
+
+    const workOrder = workOrderResult.rows[0];
+
+    // Check ownership: admins and managers can delete any work order, technicians can only delete their own
+    if (userRole !== 'admin' && userRole !== 'manager') {
+      if (workOrder.owner_technician_id !== userId && workOrder.technician_id !== userId) {
+        await db.query('ROLLBACK');
+        return res.status(403).json({ 
+          status: 'fail', 
+          message: 'Access denied. You can only delete work orders assigned to you.' 
+        });
+      }
+    }
+
+    // Delete the work order
+    const deleteResult = await db.query('DELETE FROM work_orders WHERE id = $1 RETURNING id', [req.params.id]);
+    
+    if (!deleteResult.rows.length) {
+      await db.query('ROLLBACK');
+      return res.status(404).json({ status: 'fail', message: 'Work order not found' });
+    }
+
+    // If this work order was converted from a repair ticket, reset the conversion information
+    if (workOrder.converted_from_ticket_id) {
+      const ticketId = workOrder.converted_from_ticket_id;
+      const formattedNumber = workOrder.formatted_number || `#${workOrder.id}`;
+      
+      await db.query(
+        'UPDATE repair_tickets SET status = $1, converted_to_work_order_id = NULL, converted_at = NULL WHERE id = $2',
+        ['intake', ticketId]
+      );
+      
+      console.log(`Repair ticket #${ticketId} has been reset to intake status after work order ${formattedNumber} was deleted. The ticket can now be converted to a new work order.`);
+    }
+
+    // Commit the transaction
+    await db.query('COMMIT');
+
+    res.json({ 
+      status: 'success', 
+      message: 'Work order deleted successfully', 
+      id: deleteResult.rows[0].id,
+      ticket_reset: workOrder.converted_from_ticket_id ? true : false
+    });
+  } catch (err) {
+    await db.query('ROLLBACK');
+    if (err.code === '23503') {
+      return res.status(409).json({ status: 'fail', message: 'Cannot delete: referenced by other records' });
+    }
+    next(err);
+  }
+});
+
+module.exports = router;

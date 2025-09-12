@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{WORK_ORDER_TYPE}} - {{FORMATTED_NUMBER}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 10px;
+            line-height: 1.3;
+            color: #000;
+            background: white;
+        }
+
+        .container {
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        /* Header Section */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 2px solid #000;
+            background: white;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            height: 40px;
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .company-info h1 {
+            font-size: 14px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 2px;
+        }
+
+        .company-info p {
+            font-size: 9px;
+            color: #000;
+            margin-bottom: 1px;
+        }
+
+        .work-order-info {
+            text-align: right;
+        }
+
+        .work-order-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 5px;
+        }
+
+        .work-order-number {
+            font-size: 12px;
+            color: #000;
+            font-weight: bold;
+            border: 1px solid #000;
+            padding: 2px 6px;
+            display: inline-block;
+        }
+
+        .work-order-date {
+            font-size: 9px;
+            color: #000;
+            margin-top: 2px;
+        }
+
+        /* Two Column Layout for Customer and Machine Info */
+        .info-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .info-column {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        .column-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #000;
+            background: #f0f0f0;
+            padding: 4px 8px;
+            margin: -8px -8px 8px -8px;
+            border-bottom: 1px solid #000;
+            text-transform: uppercase;
+        }
+
+        /* Section Styling */
+        .section {
+            margin-bottom: 12px;
+            page-break-inside: avoid;
+            border: 1px solid #000;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #000;
+            background: #f0f0f0;
+            padding: 4px 8px;
+            margin: 0;
+            text-transform: uppercase;
+            border-bottom: 1px solid #000;
+        }
+
+        .section-content {
+            padding: 8px;
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+        }
+
+        .field {
+            margin-bottom: 4px;
+        }
+
+        .field-label {
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 1px;
+            font-size: 9px;
+        }
+
+        .field-value {
+            color: #000;
+            padding: 2px 4px;
+            background: white;
+            border: 1px solid #ccc;
+            min-height: 16px;
+            font-size: 9px;
+        }
+
+        /* Work Order Description */
+        .work-order-description {
+            background: white;
+            border: 1px solid #000;
+            padding: 6px;
+            margin: 5px 0;
+        }
+
+        .work-order-description .field-label {
+            color: #000;
+            font-weight: bold;
+            font-size: 9px;
+        }
+
+        .work-order-description .field-value {
+            min-height: 40px;
+            white-space: pre-wrap;
+            font-size: 9px;
+            background: white;
+            border: 1px solid #ccc;
+        }
+
+        /* Notes Section */
+        .notes-section {
+            background: white;
+            border: 1px solid #000;
+            padding: 6px;
+            margin: 5px 0;
+        }
+
+        .notes-section .field-value {
+            background: white;
+            border: 1px solid #ccc;
+            min-height: 30px;
+        }
+
+        /* Status and Priority */
+        .status-priority {
+            display: flex;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .status-badge, .priority-badge {
+            padding: 2px 6px;
+            border: 1px solid #000;
+            font-weight: bold;
+            font-size: 8px;
+            text-transform: uppercase;
+            background: white;
+            color: #000;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                background: white;
+            }
+            
+            .container {
+                max-width: none;
+                margin: 0;
+                padding: 8px;
+            }
+            
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* Signature Styles */
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            gap: 30px;
+            padding: 10px;
+            border: 1px solid #000;
+        }
+
+        .signature-box {
+            flex: 1;
+            text-align: center;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #000;
+            height: 25px;
+            margin-bottom: 3px;
+            width: 100%;
+        }
+
+        .signature-label {
+            font-size: 8px;
+            color: #000;
+            font-weight: normal;
+        }
+
+        /* Generation Timestamp */
+        .generation-timestamp {
+            text-align: center;
+            font-size: 8px;
+            color: #000;
+            margin-top: 10px;
+            padding: 4px;
+            border-top: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="logo-section">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iNCIgZmlsbD0iIzAwMCIvPgo8dGV4dCB4PSIyMCIgeT0iMjYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5LPC90ZXh0Pgo8L3N2Zz4K" alt="Kamer.ba Logo" class="logo">
+                <div class="company-info">
+                    <h1>Kamer.ba</h1>
+                    <p>Prodajni i Servisni modul</p>
+                    <p>Tel: +387 XX XXX XXX | Email: info@kamer.ba</p>
+                    <p>Adresa: [Adresa kompanije]</p>
+                </div>
+            </div>
+            <div class="work-order-info">
+                <div class="work-order-title">{{WORK_ORDER_TYPE}}</div>
+                <div class="work-order-number">{{FORMATTED_NUMBER}}</div>
+                <div class="work-order-date">Datum: {{CREATED_AT}}</div>
+            </div>
+        </div>
+
+        <!-- Customer and Machine Information in Two Columns -->
+        <div class="info-columns">
+            <!-- Customer Information Column -->
+            <div class="info-column">
+                <div class="column-title">INFORMACIJE O KUPACU</div>
+                <div class="field">
+                    <div class="field-label">Ime i prezime:</div>
+                    <div class="field-value">{{CUSTOMER_NAME}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Telefon:</div>
+                    <div class="field-value">{{CUSTOMER_PHONE}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Email:</div>
+                    <div class="field-value">{{CUSTOMER_EMAIL}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Kompanija:</div>
+                    <div class="field-value">{{CUSTOMER_COMPANY}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Adresa:</div>
+                    <div class="field-value">{{CUSTOMER_ADDRESS}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Grad:</div>
+                    <div class="field-value">{{CUSTOMER_CITY}}</div>
+                </div>
+            </div>
+
+            <!-- Machine Information Column -->
+            <div class="info-column">
+                <div class="column-title">INFORMACIJE O MAŠINI</div>
+                <div class="field">
+                    <div class="field-label">Naziv mašine:</div>
+                    <div class="field-value">{{MACHINE_NAME}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Kataloški broj:</div>
+                    <div class="field-value">{{CATALOGUE_NUMBER}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Serijski broj:</div>
+                    <div class="field-value">{{SERIAL_NUMBER}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Tehničar:</div>
+                    <div class="field-value">{{TECHNICIAN_NAME}}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Vlasnik radnog naloga:</div>
+                    <div class="field-value">{{OWNER_TECHNICIAN_NAME}}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Work Order Description -->
+        <div class="section">
+            <div class="section-title">OPIS RADNOG NALOGA</div>
+            <div class="section-content">
+                <div class="work-order-description">
+                    <div class="field-label">Opis:</div>
+                    <div class="field-value">{{DESCRIPTION}}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Work Order Details -->
+        <div class="section">
+            <div class="section-title">DETALJI RADNOG NALOGA</div>
+            <div class="section-content">
+                <div class="grid">
+                    <div class="field">
+                        <div class="field-label">Datum početka:</div>
+                        <div class="field-value">{{STARTED_AT}}</div>
+                    </div>
+                    <div class="field">
+                        <div class="field-label">Datum završetka:</div>
+                        <div class="field-value">{{COMPLETED_AT}}</div>
+                    </div>
+                </div>
+                <div class="grid">
+                    <div class="field">
+                        <div class="field-label">Radni sati:</div>
+                        <div class="field-value">{{LABOR_HOURS}}</div>
+                    </div>
+                    <div class="field">
+                        <div class="field-label">Tarifa po satu:</div>
+                        <div class="field-value">{{LABOR_RATE}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cost Information -->
+        <div class="section">
+            <div class="section-title">INFORMACIJE O TROŠKOVIMA</div>
+            <div class="section-content">
+                <div class="grid">
+                    <div class="field">
+                        <div class="field-label">Troškovi dijagnostike:</div>
+                        <div class="field-value">{{TROUBLESHOOTING_FEE}} KM</div>
+                    </div>
+                    <div class="field">
+                        <div class="field-label">Ukupni troškovi:</div>
+                        <div class="field-value">{{TOTAL_COST}} KM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes Section -->
+        <div class="section">
+            <div class="section-title">NAPOMENE</div>
+            <div class="section-content">
+                <div class="notes-section">
+                    <div class="field-label">Napomene:</div>
+                    <div class="field-value">{{NOTES}}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Parts Used -->
+        <div class="section">
+            <div class="section-title">KORIŠTENI DIJELOVI</div>
+            <div class="section-content">
+                <div class="field">
+                    <div class="field-value">{{INVENTORY_ITEMS}}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signatures -->
+        <div class="signatures">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">Potpis kupca</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">Potpis tehničara</div>
+            </div>
+        </div>
+
+        <!-- Generation Timestamp -->
+        <div class="generation-timestamp">
+            Generirano: {{GENERATION_TIMESTAMP}}
+        </div>
+    </div>
+</body>
+</html>
