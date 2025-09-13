@@ -2,6 +2,7 @@ import React from 'react'
 import { cn } from '@/lib/utils'
 import { Sidebar } from './sidebar'
 import { Header } from './header'
+import { FeedbackWidget } from '../feedback/feedback-widget'
 
 interface MainLayoutProps {
   children: React.ReactNode
@@ -48,6 +49,9 @@ export function MainLayout({ children, className }: MainLayoutProps) {
           {children}
         </main>
       </div>
+      
+      {/* Global Feedback Widget */}
+      <FeedbackWidget />
     </div>
   )
 }

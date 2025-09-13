@@ -36,6 +36,8 @@ const getNotificationIcon = (type: string) => {
       return <AlertTriangle className="h-4 w-4 text-red-500" />
     case 'system':
       return <Info className="h-4 w-4 text-gray-500" />
+    case 'feedback':
+      return <Bell className="h-4 w-4 text-blue-500" />
     default:
       return <Bell className="h-4 w-4 text-gray-500" />
   }
@@ -57,6 +59,8 @@ const getNotificationColor = (type: string) => {
       return 'border-l-red-500 bg-red-50'
     case 'system':
       return 'border-l-gray-500 bg-gray-50'
+    case 'feedback':
+      return 'border-l-blue-500 bg-blue-50'
     default:
       return 'border-l-gray-300 bg-gray-50'
   }
@@ -132,6 +136,9 @@ export function SimpleNotificationDropdown() {
           case 'machine':
             navigate(`/machines/${notification.related_entity_id}`)
             break
+          case 'feedback':
+            navigate('/admin-feedback')
+            break
           default:
             navigate('/notifications')
         }
@@ -162,8 +169,8 @@ export function SimpleNotificationDropdown() {
         variant="ghost" 
         size="icon" 
         className={cn(
-          "relative transition-all duration-200 hover:bg-gray-100",
-          isOpen && "bg-gray-100"
+          "relative",
+          isOpen && "bg-accent"
         )}
         onClick={() => setIsOpen(!isOpen)}
       >

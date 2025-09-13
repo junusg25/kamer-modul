@@ -137,6 +137,7 @@ app.use('/api/machine-categories', require('./routes/machineCategories'));
 app.use('/api/inventory-categories', require('./routes/inventoryCategories'));
 app.use('/api/websocket', require('./routes/websocket'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/feedback', require('./routes/feedback'));
 app.use('/history/customers', require('./routes/history/customerHistory'));
 app.use('/history/machines', require('./routes/history/machineHistory'));
 app.use('/history/users', require('./routes/history/userHistory'));

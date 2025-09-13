@@ -1,6 +1,43 @@
 const API_BASE_URL = 'http://localhost:3000/api'
 
 class ApiService {
+  private logoutCallback: (() => void) | null = null
+
+  // Method to set the logout callback from auth context
+  setLogoutCallback(callback: () => void) {
+    this.logoutCallback = callback
+  }
+
+  // Helper function to show session expired notification
+  private showSessionExpiredNotification() {
+    // Create a simple notification
+    const notification = document.createElement('div')
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #dc2626;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 9999;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      max-width: 300px;
+    `
+    notification.textContent = 'Your session has expired. Please log in again.'
+    
+    document.body.appendChild(notification)
+    
+    // Remove notification after 5 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification)
+      }
+    }, 5000)
+  }
+
   private getAuthHeaders() {
     const token = localStorage.getItem('token')
     return {
@@ -23,6 +60,22 @@ class ApiService {
       const response = await fetch(url, config)
       
       if (!response.ok) {
+        // Check for authentication errors
+        if (response.status === 401 || response.status === 403) {
+          // Token is expired or invalid, trigger automatic logout
+          console.warn('Authentication error detected, logging out automatically')
+          
+          // Show session expired notification
+          this.showSessionExpiredNotification()
+          
+          if (this.logoutCallback) {
+            this.logoutCallback()
+          }
+          // Redirect to login page
+          window.location.href = '/login'
+          throw new Error('Session expired. Please log in again.')
+        }
+
         const errorText = await response.text()
         let errorMessage = `HTTP error! status: ${response.status}`
         
@@ -52,6 +105,11 @@ class ApiService {
       if (error instanceof TypeError && error.message.includes('fetch')) {
         console.warn('Backend not available, using mock data')
         return this.getMockData<T>(endpoint)
+      }
+      
+      // Re-throw authentication errors
+      if (error instanceof Error && error.message.includes('Session expired')) {
+        throw error
       }
       
       throw error

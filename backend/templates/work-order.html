@@ -27,13 +27,17 @@
 
         /* Header Section */
         .header {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-bottom: 2px solid #333;
+            background: white;
+        }
+
+        .header-top {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 15px;
-            padding: 10px;
-            border: 2px solid #000;
-            background: white;
+            margin-bottom: 10px;
         }
 
         .logo-section {
@@ -62,74 +66,141 @@
 
         .work-order-info {
             text-align: right;
+            min-width: 200px;
         }
 
         .work-order-title {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
-            color: #000;
-            margin-bottom: 5px;
+            color: #333;
+            margin-bottom: 8px;
+            text-transform: uppercase;
         }
 
         .work-order-number {
-            font-size: 12px;
-            color: #000;
+            font-size: 14px;
+            color: #333;
             font-weight: bold;
-            border: 1px solid #000;
-            padding: 2px 6px;
+            background: #f5f5f5;
+            border: 1px solid #ccc;
+            padding: 6px 12px;
             display: inline-block;
+            margin-bottom: 5px;
         }
 
         .work-order-date {
-            font-size: 9px;
-            color: #000;
-            margin-top: 2px;
+            font-size: 10px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .header-bottom-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .technician-info {
+            color: #666;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        /* Section Divider */
+        .section-divider {
+            height: 1px;
+            background: #ddd;
+            margin: 4px 0;
+            width: 100%;
+        }
+
+        /* Service Information Title - Full Width */
+        .service-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            background: #e8e8e8;
+            padding: 6px 10px;
+            margin: 0 0 10px 0;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
         }
 
         /* Two Column Layout for Customer and Machine Info */
         .info-columns {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
+            gap: 20px;
+            margin-bottom: 20px;
         }
 
         .info-column {
-            border: 1px solid #000;
-            padding: 8px;
+            padding: 12px;
+            background: #fafafa;
         }
 
         .column-title {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
-            color: #000;
-            background: #f0f0f0;
-            padding: 4px 8px;
-            margin: -8px -8px 8px -8px;
-            border-bottom: 1px solid #000;
+            color: #333;
+            background: #e8e8e8;
+            padding: 6px 10px;
+            margin: -12px -12px 10px -12px;
+            border-bottom: 1px solid #ddd;
             text-transform: uppercase;
+        }
+
+        /* Compact Grid Layout */
+        .compact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .compact-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .compact-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 2px;
+        }
+
+        .compact-value {
+            font-size: 9px;
+            color: #333;
+            padding: 3px 5px;
+            background: #f9f9f9;
+            border-radius: 2px;
+            min-height: 16px;
         }
 
         /* Section Styling */
         .section {
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             page-break-inside: avoid;
-            border: 1px solid #000;
         }
 
         .section-title {
-            font-size: 11px;
+            font-size: 13px;
             font-weight: bold;
-            color: #000;
-            background: #f0f0f0;
-            padding: 4px 8px;
-            margin: 0;
+            color: #333;
+            background: #e8e8e8;
+            padding: 8px 12px;
+            margin: 0 0 10px 0;
             text-transform: uppercase;
-            border-bottom: 1px solid #000;
+            border-left: 4px solid #007bff;
+            border-bottom: 1px solid #ddd;
         }
 
         .section-content {
-            padding: 8px;
+            padding: 12px;
+            background: white;
         }
 
         /* Grid Layout */
@@ -150,25 +221,24 @@
         }
 
         .field-label {
-            font-weight: bold;
-            color: #000;
-            margin-bottom: 1px;
-            font-size: 9px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 3px;
+            font-size: 10px;
         }
 
         .field-value {
-            color: #000;
-            padding: 2px 4px;
-            background: white;
-            border: 1px solid #ccc;
-            min-height: 16px;
-            font-size: 9px;
+            color: #333;
+            padding: 4px 6px;
+            background: #f9f9f9;
+            min-height: 18px;
+            font-size: 10px;
+            border-radius: 2px;
         }
 
         /* Work Order Description */
         .work-order-description {
             background: white;
-            border: 1px solid #000;
             padding: 6px;
             margin: 5px 0;
         }
@@ -184,20 +254,17 @@
             white-space: pre-wrap;
             font-size: 9px;
             background: white;
-            border: 1px solid #ccc;
         }
 
         /* Notes Section */
         .notes-section {
             background: white;
-            border: 1px solid #000;
             padding: 6px;
             margin: 5px 0;
         }
 
         .notes-section .field-value {
             background: white;
-            border: 1px solid #ccc;
             min-height: 30px;
         }
 
@@ -241,10 +308,9 @@
         .signatures {
             display: flex;
             justify-content: space-between;
-            margin-top: 15px;
-            gap: 30px;
-            padding: 10px;
-            border: 1px solid #000;
+            margin-top: 20px;
+            gap: 40px;
+            padding: 15px;
         }
 
         .signature-box {
@@ -253,16 +319,49 @@
         }
 
         .signature-line {
-            border-bottom: 1px solid #000;
-            height: 25px;
-            margin-bottom: 3px;
+            border-bottom: 1px solid #333;
+            height: 30px;
+            margin-bottom: 5px;
             width: 100%;
         }
 
         .signature-label {
-            font-size: 8px;
-            color: #000;
-            font-weight: normal;
+            font-size: 9px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        /* Parts Table */
+        .parts-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 9px;
+        }
+
+        .parts-table th,
+        .parts-table td {
+            border: 1px solid #ddd;
+            padding: 4px 6px;
+            text-align: left;
+        }
+
+        .parts-table th {
+            background: #e8e8e8;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .parts-table td {
+            background: white;
+        }
+
+        /* Two Column Layout for Notes and Description */
+        .notes-description-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
         }
 
         /* Generation Timestamp */
@@ -280,18 +379,23 @@
     <div class="container">
         <!-- Header Section -->
         <div class="header">
-            <div class="logo-section">
-                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iNCIgZmlsbD0iIzAwMCIvPgo8dGV4dCB4PSIyMCIgeT0iMjYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5LPC90ZXh0Pgo8L3N2Zz4K" alt="Kamer.ba Logo" class="logo">
-                <div class="company-info">
-                    <h1>Kamer.ba</h1>
-                    <p>Prodajni i Servisni modul</p>
-                    <p>Tel: +387 XX XXX XXX | Email: info@kamer.ba</p>
-                    <p>Adresa: [Adresa kompanije]</p>
+            <div class="header-top">
+                <div class="logo-section">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iNCIgZmlsbD0iIzAwMCIvPgo8dGV4dCB4PSIyMCIgeT0iMjYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5LPC90ZXh0Pgo8L3N2Zz4K" alt="Kamer.ba Logo" class="logo">
+                    <div class="company-info">
+                        <h1>Kamer.ba</h1>
+                        <p>Prodajni i Servisni modul</p>
+                        <p>Tel: +387 XX XXX XXX | Email: info@kamer.ba</p>
+                        <p>Adresa: [Adresa kompanije]</p>
+                    </div>
+                </div>
+                <div class="work-order-info">
+                    <div class="work-order-title">{{WORK_ORDER_TYPE}}</div>
+                    <div class="work-order-number">{{FORMATTED_NUMBER}}</div>
                 </div>
             </div>
-            <div class="work-order-info">
-                <div class="work-order-title">{{WORK_ORDER_TYPE}}</div>
-                <div class="work-order-number">{{FORMATTED_NUMBER}}</div>
+            <div class="header-bottom-info">
+                <div class="technician-info">Tehničar: {{TECHNICIAN_NAME}}</div>
                 <div class="work-order-date">Datum: {{CREATED_AT}}</div>
             </div>
         </div>
@@ -301,72 +405,71 @@
             <!-- Customer Information Column -->
             <div class="info-column">
                 <div class="column-title">INFORMACIJE O KUPACU</div>
-                <div class="field">
-                    <div class="field-label">Ime i prezime:</div>
-                    <div class="field-value">{{CUSTOMER_NAME}}</div>
+                <div class="compact-grid">
+                    <div class="compact-field">
+                        <div class="compact-label">Ime i prezime:</div>
+                        <div class="compact-value">{{CUSTOMER_NAME}}</div>
+                    </div>
+                    <div class="compact-field">
+                        <div class="compact-label">Telefon:</div>
+                        <div class="compact-value">{{CUSTOMER_PHONE}}</div>
+                    </div>
                 </div>
-                <div class="field">
-                    <div class="field-label">Telefon:</div>
-                    <div class="field-value">{{CUSTOMER_PHONE}}</div>
+                <div class="compact-grid">
+                    <div class="compact-field">
+                        <div class="compact-label">Email:</div>
+                        <div class="compact-value">{{CUSTOMER_EMAIL}}</div>
+                    </div>
+                    <div class="compact-field">
+                        <div class="compact-label">Kompanija:</div>
+                        <div class="compact-value">{{CUSTOMER_COMPANY}}</div>
+                    </div>
                 </div>
-                <div class="field">
-                    <div class="field-label">Email:</div>
-                    <div class="field-value">{{CUSTOMER_EMAIL}}</div>
-                </div>
-                <div class="field">
-                    <div class="field-label">Kompanija:</div>
-                    <div class="field-value">{{CUSTOMER_COMPANY}}</div>
-                </div>
-                <div class="field">
-                    <div class="field-label">Adresa:</div>
-                    <div class="field-value">{{CUSTOMER_ADDRESS}}</div>
-                </div>
-                <div class="field">
-                    <div class="field-label">Grad:</div>
-                    <div class="field-value">{{CUSTOMER_CITY}}</div>
+                <div class="compact-grid">
+                    <div class="compact-field">
+                        <div class="compact-label">Adresa:</div>
+                        <div class="compact-value">{{CUSTOMER_ADDRESS}}</div>
+                    </div>
+                    <div class="compact-field">
+                        <div class="compact-label">Grad:</div>
+                        <div class="compact-value">{{CUSTOMER_CITY}}</div>
+                    </div>
                 </div>
             </div>
 
             <!-- Machine Information Column -->
             <div class="info-column">
                 <div class="column-title">INFORMACIJE O MAŠINI</div>
-                <div class="field">
-                    <div class="field-label">Naziv mašine:</div>
-                    <div class="field-value">{{MACHINE_NAME}}</div>
+                <div class="compact-grid">
+                    <div class="compact-field">
+                        <div class="compact-label">Naziv mašine:</div>
+                        <div class="compact-value">{{MACHINE_NAME}}</div>
+                    </div>
+                    <div class="compact-field">
+                        <div class="compact-label">Kataloški broj:</div>
+                        <div class="compact-value">{{CATALOGUE_NUMBER}}</div>
+                    </div>
                 </div>
-                <div class="field">
-                    <div class="field-label">Kataloški broj:</div>
-                    <div class="field-value">{{CATALOGUE_NUMBER}}</div>
-                </div>
-                <div class="field">
-                    <div class="field-label">Serijski broj:</div>
-                    <div class="field-value">{{SERIAL_NUMBER}}</div>
-                </div>
-                <div class="field">
-                    <div class="field-label">Tehničar:</div>
-                    <div class="field-value">{{TECHNICIAN_NAME}}</div>
-                </div>
-                <div class="field">
-                    <div class="field-label">Vlasnik radnog naloga:</div>
-                    <div class="field-value">{{OWNER_TECHNICIAN_NAME}}</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Work Order Description -->
-        <div class="section">
-            <div class="section-title">OPIS RADNOG NALOGA</div>
-            <div class="section-content">
-                <div class="work-order-description">
-                    <div class="field-label">Opis:</div>
-                    <div class="field-value">{{DESCRIPTION}}</div>
+                <div class="compact-grid">
+                    <div class="compact-field">
+                        <div class="compact-label">Serijski broj:</div>
+                        <div class="compact-value">{{SERIAL_NUMBER}}</div>
+                    </div>
+                    <div class="compact-field">
+                        <!-- Empty field for alignment -->
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Work Order Details -->
+        <!-- Horizontal Divider -->
+        <div class="section-divider"></div>
+
+        <!-- Service Information Title -->
+        <div class="service-title">INFORMACIJE O SERVISU</div>
+
+        <!-- Work Order Details and Costs -->
         <div class="section">
-            <div class="section-title">DETALJI RADNOG NALOGA</div>
             <div class="section-content">
                 <div class="grid">
                     <div class="field">
@@ -388,13 +491,6 @@
                         <div class="field-value">{{LABOR_RATE}}</div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Cost Information -->
-        <div class="section">
-            <div class="section-title">INFORMACIJE O TROŠKOVIMA</div>
-            <div class="section-content">
                 <div class="grid">
                     <div class="field">
                         <div class="field-label">Troškovi dijagnostike:</div>
@@ -408,26 +504,53 @@
             </div>
         </div>
 
-        <!-- Notes Section -->
+        <!-- Horizontal Divider -->
+        <div class="section-divider"></div>
+
+        <!-- Parts Used Table -->
         <div class="section">
-            <div class="section-title">NAPOMENE</div>
             <div class="section-content">
-                <div class="notes-section">
-                    <div class="field-label">Napomene:</div>
-                    <div class="field-value">{{NOTES}}</div>
+                <table class="parts-table">
+                    <thead>
+                        <tr>
+                            <th>Naziv dijela</th>
+                            <th>SKU</th>
+                            <th>Količina</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="3">{{INVENTORY_ITEMS}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Horizontal Divider -->
+        <div class="section-divider"></div>
+
+        <!-- Notes and Description in Two Columns -->
+        <div class="notes-description-columns">
+            <div class="section">
+                <div class="section-content">
+                    <div class="notes-section">
+                        <div class="field-label">Napomene:</div>
+                        <div class="field-value">{{NOTES}}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-content">
+                    <div class="work-order-description">
+                        <div class="field-label">Opis:</div>
+                        <div class="field-value">{{DESCRIPTION}}</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Parts Used -->
-        <div class="section">
-            <div class="section-title">KORIŠTENI DIJELOVI</div>
-            <div class="section-content">
-                <div class="field">
-                    <div class="field-value">{{INVENTORY_ITEMS}}</div>
-                </div>
-            </div>
-        </div>
 
         <!-- Signatures -->
         <div class="signatures">

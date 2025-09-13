@@ -4,6 +4,7 @@ import { ThemeProvider } from './contexts/theme-context'
 import { AuthProvider } from './contexts/auth-context'
 import { NotificationsProvider } from './contexts/notifications-context'
 import { WebSocketProvider } from './contexts/websocket-context'
+import { FeedbackProvider } from './contexts/feedback-context'
 import { ProtectedRoute } from './components/protected-route'
 import { PermissionProtectedRoute } from './components/permission-protected-route'
 import { RoleProtectedRoute } from './components/role-protected-route'
@@ -35,6 +36,7 @@ import DashboardRouter from './pages/dashboard-router'
 import DashboardOverview from './pages/dashboard-overview'
 import DashboardMyWork from './pages/dashboard-my-work'
 import DashboardAdmin from './pages/dashboard-admin'
+import AdminFeedback from './pages/admin-feedback'
 import Settings from './pages/settings'
 import Notifications from './pages/notifications'
 
@@ -44,7 +46,8 @@ function App() {
       <AuthProvider>
         <WebSocketProvider>
           <NotificationsProvider>
-            <Router>
+            <FeedbackProvider>
+              <Router>
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/" element={
@@ -65,6 +68,11 @@ function App() {
               <Route path="/dashboard/admin" element={
                 <RoleProtectedRoute allowedRoles={['admin', 'manager']}>
                   <DashboardAdmin />
+                </RoleProtectedRoute>
+              } />
+              <Route path="/admin-feedback" element={
+                <RoleProtectedRoute allowedRoles={['admin']}>
+                  <AdminFeedback />
                 </RoleProtectedRoute>
               } />
               <Route path="/customers" element={
@@ -202,6 +210,7 @@ function App() {
               } />
             </Routes>
             </Router>
+            </FeedbackProvider>
           </NotificationsProvider>
         </WebSocketProvider>
       </AuthProvider>

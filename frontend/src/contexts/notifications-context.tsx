@@ -64,7 +64,13 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
   // Mark notification as read
   const markAsRead = useCallback(async (id: number) => {
     try {
-      await apiService.request(`/notifications/${id}/mark-read`, { method: 'PATCH' })
+      // Check if this is a local notification (temporary ID from Date.now())
+      const notification = notifications.find(n => n.id === id)
+      const isLocalNotification = notification && id > 1000000000000 // Date.now() creates large numbers
+      
+      if (!isLocalNotification) {
+        await apiService.request(`/notifications/${id}/mark-read`, { method: 'PATCH' })
+      }
       
       setNotifications(prev =>
         prev.map(notification =>
@@ -75,9 +81,15 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
       setUnreadCount(prev => Math.max(0, prev - 1))
     } catch (error) {
       console.error('Error marking notification as read:', error)
-      toast.error('Failed to mark notification as read')
+      // For local notifications, still update the UI even if backend call fails
+      setNotifications(prev =>
+        prev.map(notification =>
+          notification.id === id ? { ...notification, is_read: true } : notification
+        )
+      )
+      setUnreadCount(prev => Math.max(0, prev - 1))
     }
-  }, [])
+  }, [notifications])
 
   // Mark all notifications as read
   const markAllAsRead = useCallback(async () => {
@@ -99,7 +111,13 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
   // Delete notification
   const deleteNotification = useCallback(async (id: number) => {
     try {
-      await apiService.request(`/notifications/${id}`, { method: 'DELETE' })
+      // Check if this is a local notification (temporary ID from Date.now())
+      const notification = notifications.find(n => n.id === id)
+      const isLocalNotification = notification && id > 1000000000000 // Date.now() creates large numbers
+      
+      if (!isLocalNotification) {
+        await apiService.request(`/notifications/${id}`, { method: 'DELETE' })
+      }
       
       setNotifications(prev => prev.filter(notification => notification.id !== id))
       
@@ -113,7 +131,12 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
       window.dispatchEvent(new CustomEvent('notificationsChanged'))
     } catch (error) {
       console.error('Error deleting notification:', error)
-      toast.error('Failed to delete notification')
+      // For local notifications, still update the UI even if backend call fails
+      setNotifications(prev => prev.filter(notification => notification.id !== id))
+      const deletedNotification = notifications.find(n => n.id === id)
+      if (deletedNotification && !deletedNotification.is_read) {
+        setUnreadCount(prev => Math.max(0, prev - 1))
+      }
     }
   }, [notifications])
 
@@ -165,20 +188,6 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
     if (!notification.is_read) {
       setUnreadCount(prev => prev + 1)
     }
-
-    // Show toast notification
-    const getToastType = (type: string) => {
-      switch (type) {
-        case 'success': return 'success'
-        case 'error': return 'error'
-        case 'warning': return 'warning'
-        default: return 'info'
-      }
-    }
-
-    toast[getToastType(notification.type)](notification.title, {
-      description: notification.message,
-    })
   }, [])
 
   // Update unread count (for real-time updates)

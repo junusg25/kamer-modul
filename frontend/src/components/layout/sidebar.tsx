@@ -5,6 +5,7 @@ import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible'
 import { useAuth } from '../../contexts/auth-context'
+import { useFeedback } from '../../contexts/feedback-context'
 import apiService from '../../services/api'
 import {
   Home,
@@ -19,7 +20,8 @@ import {
   ChevronRight,
   AlertTriangle,
   Award,
-  TrendingUp
+  TrendingUp,
+  MessageSquare
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -49,7 +51,7 @@ interface NavigationItem {
   children?: NavigationChild[]
 }
 
-const getNavigationItems = (counts: SidebarCounts | null, userRole?: string): NavigationItem[] => {
+const getNavigationItems = (counts: SidebarCounts | null, userRole?: string, unreadFeedbackCount: number = 0): NavigationItem[] => {
   const baseItems: NavigationItem[] = [
   // General Section
   { name: 'General', href: '#', icon: null, badge: null, type: 'label' },
@@ -132,6 +134,18 @@ const getNavigationItems = (counts: SidebarCounts | null, userRole?: string): Na
     type: 'single' 
   },
   
+  // Admin Section
+  ...(userRole === 'admin' ? [
+    { name: 'Admin', href: '#', icon: null, badge: null, type: 'label' },
+    { 
+      name: 'User Feedback', 
+      href: '/admin-feedback', 
+      icon: MessageSquare, 
+      badge: unreadFeedbackCount > 0 ? unreadFeedbackCount.toString() : null, 
+      type: 'single' 
+    }
+  ] : []),
+  
   ]
 
   // Filter out sales management items for technicians
@@ -149,6 +163,7 @@ export function Sidebar({ className }: SidebarProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
+  const { unreadFeedbackCount } = useFeedback()
   const [openDropdowns, setOpenDropdowns] = useState<string[]>([])
   const [sidebarCounts, setSidebarCounts] = useState<SidebarCounts | null>(null)
   // Fetch sidebar counts
@@ -175,7 +190,7 @@ export function Sidebar({ className }: SidebarProps) {
 
   // Auto-open dropdowns when on child pages
   React.useEffect(() => {
-    const navigationItems = getNavigationItems(sidebarCounts)
+    const navigationItems = getNavigationItems(sidebarCounts, user?.role, unreadFeedbackCount)
     const autoOpenDropdowns: string[] = []
     
     navigationItems.forEach(item => {
@@ -191,7 +206,7 @@ export function Sidebar({ className }: SidebarProps) {
       const newOpenDropdowns = [...new Set([...prev, ...autoOpenDropdowns])]
       return newOpenDropdowns
     })
-  }, [location.pathname, sidebarCounts])
+  }, [location.pathname, sidebarCounts, user?.role, unreadFeedbackCount])
 
   const toggleDropdown = (itemName: string) => {
     setOpenDropdowns(prev => 
@@ -234,7 +249,7 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-2 py-1">
-        {getNavigationItems(sidebarCounts, user?.role).map((item) => {
+        {getNavigationItems(sidebarCounts, user?.role, unreadFeedbackCount).map((item) => {
           if (item.type === 'label') {
             return (
               <div key={item.name} className="px-2 py-1">

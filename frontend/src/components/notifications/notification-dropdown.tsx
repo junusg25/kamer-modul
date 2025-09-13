@@ -34,6 +34,8 @@ const getNotificationIcon = (type: string) => {
       return '📦'
     case 'system':
       return '⚙️'
+    case 'feedback':
+      return '💬'
     case 'success':
       return '✅'
     case 'warning':
@@ -201,6 +203,9 @@ export function NotificationDropdown() {
           break
         case 'inventory':
           navigate(`/inventory/${notification.related_entity_id}`)
+          break
+        case 'feedback':
+          navigate('/admin-feedback')
           break
         default:
           navigate('/notifications')

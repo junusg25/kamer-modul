@@ -6,6 +6,7 @@ import {
   ROLES, 
   isValidRole 
 } from '@/lib/permissions'
+import { apiService } from '@/services/api'
 
 interface User {
   id: string
@@ -27,6 +28,7 @@ interface AuthContextType {
   hasAnyRole: (roles: string[]) => boolean
   hasAnyPermission: (permissions: string[]) => boolean
   hasAllPermissions: (permissions: string[]) => boolean
+  validateToken: () => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -38,20 +40,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check for existing authentication on app load
-    const storedToken = localStorage.getItem('token')
-    const storedUser = localStorage.getItem('user')
+    const initializeAuth = async () => {
+      const storedToken = localStorage.getItem('token')
+      const storedUser = localStorage.getItem('user')
 
-    if (storedToken && storedUser) {
-      try {
-        setToken(storedToken)
-        setUser(JSON.parse(storedUser))
-      } catch (error) {
-        // Invalid stored data, clear it
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
+      if (storedToken && storedUser) {
+        try {
+          console.log('Found stored auth data, initializing...')
+          // First set the token and user in state
+          setToken(storedToken)
+          setUser(JSON.parse(storedUser))
+          
+          // Small delay to ensure state is set, then validate the token with backend
+          await new Promise(resolve => setTimeout(resolve, 100))
+          
+          try {
+            console.log('Validating token with backend...')
+            const response = await fetch('http://localhost:3000/api/users/me', {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${storedToken}`,
+                'Content-Type': 'application/json',
+              },
+            })
+            
+            console.log('Token validation response:', response.status, response.ok)
+            if (!response.ok) {
+              console.warn('Token validation failed during initialization, clearing auth data')
+              localStorage.removeItem('token')
+              localStorage.removeItem('user')
+              setToken(null)
+              setUser(null)
+            } else {
+              console.log('Token validation successful, user authenticated')
+            }
+          } catch (validationError) {
+            console.warn('Token validation error during initialization:', validationError)
+            // Don't clear auth data on network errors during initialization
+            // Let the periodic validation handle it later
+          }
+        } catch (error) {
+          // Invalid stored data, clear it
+          console.warn('Invalid stored auth data, clearing')
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+          setToken(null)
+          setUser(null)
+        }
       }
+      setIsLoading(false)
     }
-    setIsLoading(false)
+
+    initializeAuth()
   }, [])
 
   const login = async (email: string, password: string) => {
@@ -148,16 +188,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       // Call logout endpoint to clear refresh token and set last_logout
-      const response = await fetch('http://localhost:3000/api/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
-      
-      if (!response.ok) {
-        console.warn('Logout API call failed')
+      if (token) {
+        const response = await fetch('http://localhost:3000/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+        
+        if (!response.ok) {
+          console.warn('Logout API call failed')
+        }
       }
     } catch (error) {
       console.warn('Logout error:', error)
@@ -174,7 +216,86 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const validateToken = async (): Promise<boolean> => {
+    // Get token from localStorage if not in state yet
+    const tokenToValidate = token || localStorage.getItem('token')
+    if (!tokenToValidate) return false
+    
+    try {
+      // Try to make a simple authenticated request to validate the token
+      const response = await fetch('http://localhost:3000/api/users/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${tokenToValidate}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      return response.ok
+    } catch (error) {
+      console.warn('Token validation error:', error)
+      return false
+    }
+  }
+
+  // Helper function to show session expired notification
+  const showSessionExpiredNotification = () => {
+    // Create a simple notification
+    const notification = document.createElement('div')
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #dc2626;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 9999;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      max-width: 300px;
+    `
+    notification.textContent = 'Your session has expired. Please log in again.'
+    
+    document.body.appendChild(notification)
+    
+    // Remove notification after 5 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification)
+      }
+    }, 5000)
+  }
+
   const isAuthenticated = !!user && !!token
+
+  // Set up the logout callback with API service
+  useEffect(() => {
+    apiService.setLogoutCallback(logout)
+  }, [logout])
+
+  // Periodic token validation for active sessions
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    const validateInterval = setInterval(async () => {
+      try {
+        const isValid = await validateToken()
+        if (!isValid) {
+          console.warn('Token expired during session, logging out')
+          showSessionExpiredNotification()
+          await logout()
+          window.location.href = '/login'
+        }
+      } catch (error) {
+        console.warn('Token validation error during periodic check:', error)
+        // Don't logout on network errors, just log the error
+      }
+    }, 5 * 60 * 1000) // Check every 5 minutes
+
+    return () => clearInterval(validateInterval)
+  }, [isAuthenticated, validateToken, logout])
 
   // Permission checking functions
   const hasRole = (role: string): boolean => {
@@ -214,6 +335,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         hasAnyRole,
         hasAnyPermission,
         hasAllPermissions,
+        validateToken,
       }}
     >
       {children}
