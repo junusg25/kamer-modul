@@ -99,7 +99,7 @@ export default function DynamicPricing() {
     base_price_monthly: '',
     minimum_rental_days: '1',
     maximum_rental_days: '',
-    currency: 'EUR'
+    currency: 'KM'
   })
 
   const [simulationForm, setSimulationForm] = useState({
@@ -230,7 +230,11 @@ export default function DynamicPricing() {
       fetchData()
     } catch (error) {
       console.error('Error creating base pricing:', error)
-      setError('Failed to create base pricing')
+      if (error.message && error.message.includes('Validation failed')) {
+        setError('Please check all required fields are filled correctly')
+      } else {
+        setError('Failed to create base pricing')
+      }
     }
   }
 
@@ -245,7 +249,11 @@ export default function DynamicPricing() {
       fetchData()
     } catch (error) {
       console.error('Error updating base pricing:', error)
-      setError('Failed to update base pricing')
+      if (error.message && error.message.includes('Validation failed')) {
+        setError('Please check all required fields are filled correctly')
+      } else {
+        setError('Failed to update base pricing')
+      }
     }
   }
 
@@ -335,7 +343,7 @@ export default function DynamicPricing() {
       base_price_monthly: '',
       minimum_rental_days: '1',
       maximum_rental_days: '',
-      currency: 'EUR'
+      currency: 'KM'
     })
   }
 
@@ -885,6 +893,7 @@ export default function DynamicPricing() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="KM">KM</SelectItem>
                       <SelectItem value="EUR">EUR</SelectItem>
                       <SelectItem value="USD">USD</SelectItem>
                       <SelectItem value="GBP">GBP</SelectItem>

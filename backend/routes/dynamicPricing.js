@@ -73,9 +73,9 @@ router.get('/base/:id', authenticateToken, authorizeRoles('admin', 'manager', 't
 // PUT /api/dynamic-pricing/base/:id - Set base pricing for a machine
 router.put('/base/:id', authenticateToken, authorizeRoles('admin', 'manager'), [
   param('id').isInt().withMessage('Valid machine ID is required'),
-  body('base_price_daily').isDecimal().withMessage('Valid daily price is required'),
-  body('base_price_weekly').optional().isDecimal().withMessage('Valid weekly price is required'),
-  body('base_price_monthly').optional().isDecimal().withMessage('Valid monthly price is required'),
+  body('base_price_daily').isNumeric().withMessage('Valid daily price is required'),
+  body('base_price_weekly').optional().isNumeric().withMessage('Valid weekly price is required'),
+  body('base_price_monthly').optional().isNumeric().withMessage('Valid monthly price is required'),
   body('minimum_rental_days').optional().isInt().withMessage('Valid minimum rental days is required'),
   body('maximum_rental_days').optional().isInt().withMessage('Valid maximum rental days is required'),
   body('currency').optional().isLength({ min: 3, max: 3 }).withMessage('Valid currency code is required')

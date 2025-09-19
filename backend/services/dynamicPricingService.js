@@ -104,7 +104,7 @@ class DynamicPricingService {
           pricingData.base_price_monthly,
           pricingData.minimum_rental_days,
           pricingData.maximum_rental_days,
-          pricingData.currency || 'EUR',
+          pricingData.currency || 'KM',
           rentalMachineId
         ]);
       } else {
