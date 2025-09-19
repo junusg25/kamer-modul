@@ -93,6 +93,7 @@ export default function MachineRentals() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [rentalToDelete, setRentalToDelete] = useState<MachineRental | null>(null)
   const [isCalculatingPricing, setIsCalculatingPricing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -314,6 +315,7 @@ export default function MachineRentals() {
       maintenance_reminder_date: '',
       rental_notes: ''
     })
+    setError(null)
   }
 
   const openEditDialog = (rental: MachineRental) => {
@@ -333,6 +335,7 @@ export default function MachineRentals() {
       maintenance_reminder_date: rental.maintenance_reminder_date ? formatDate(rental.maintenance_reminder_date) : '',
       rental_notes: rental.rental_notes || ''
     })
+    setError(null)
     setIsEditDialogOpen(true)
   }
 
