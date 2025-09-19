@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '../components/ui/label'
 import { Textarea } from '../components/ui/textarea'
 import { DatePickerInput } from '../components/ui/date-picker'
-import { Plus, Search, Filter, Eye, Edit, Trash2, Calendar, Truck } from 'lucide-react'
+import { Plus, Search, Filter, Eye, Edit, Trash2, Calendar, Truck, Calculator } from 'lucide-react'
 import apiService from '../services/api'
 import { formatDate, formatDateTime, parseEuropeanDate, formatDateForInput } from '../lib/dateTime'
 import { formatCurrency } from '../lib/currency'
@@ -92,6 +92,7 @@ export default function MachineRentals() {
   const [editingRental, setEditingRental] = useState<MachineRental | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [rentalToDelete, setRentalToDelete] = useState<MachineRental | null>(null)
+  const [isCalculatingPricing, setIsCalculatingPricing] = useState(false)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -351,6 +352,48 @@ export default function MachineRentals() {
     return Object.values(filters).filter(value => value !== '').length
   }
 
+  const calculateDynamicPricing = async () => {
+    if (!formData.rental_machine_id || !formData.customer_id || !formData.rental_start_date) {
+      setError('Please select machine, customer, and start date first')
+      return
+    }
+
+    setIsCalculatingPricing(true)
+    try {
+      // Convert European date to ISO format for API
+      const startDate = formData.rental_start_date.includes('.') 
+        ? formatDateForInput(parseEuropeanDate(formData.rental_start_date)!)
+        : formData.rental_start_date
+      
+      const endDate = formData.rental_end_date && formData.rental_end_date.includes('.')
+        ? formatDateForInput(parseEuropeanDate(formData.rental_end_date)!)
+        : formData.rental_end_date
+
+      const pricing = await apiService.calculateDynamicPricing({
+        rental_machine_id: parseInt(formData.rental_machine_id),
+        start_date: startDate,
+        end_date: endDate || null,
+        customer_id: parseInt(formData.customer_id)
+      })
+
+      // Apply the calculated pricing to the form
+      setFormData(prev => ({
+        ...prev,
+        price_per_day: pricing.daily_price?.toString() || '',
+        price_per_week: pricing.weekly_price?.toString() || '',
+        price_per_month: pricing.monthly_price?.toString() || ''
+      }))
+
+      // Show success message
+      setError(null)
+    } catch (error) {
+      console.error('Error calculating dynamic pricing:', error)
+      setError('Failed to calculate dynamic pricing. Using manual pricing.')
+    } finally {
+      setIsCalculatingPricing(false)
+    }
+  }
+
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -468,6 +511,56 @@ export default function MachineRentals() {
                     />
                   </div>
                 </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium">Pricing</h3>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={calculateDynamicPricing}
+                      disabled={isCalculatingPricing}
+                    >
+                      <Calculator className="mr-2 h-4 w-4" />
+                      {isCalculatingPricing ? 'Calculating...' : 'Calculate Dynamic Pricing'}
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="price_per_day">Price per Day</Label>
+                      <Input
+                        id="price_per_day"
+                        type="number"
+                        step="0.01"
+                        value={formData.price_per_day}
+                        onChange={(e) => setFormData(prev => ({ ...prev, price_per_day: e.target.value }))}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="price_per_week">Price per Week</Label>
+                      <Input
+                        id="price_per_week"
+                        type="number"
+                        step="0.01"
+                        value={formData.price_per_week}
+                        onChange={(e) => setFormData(prev => ({ ...prev, price_per_week: e.target.value }))}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="price_per_month">Price per Month</Label>
+                      <Input
+                        id="price_per_month"
+                        type="number"
+                        step="0.01"
+                        value={formData.price_per_month}
+                        onChange={(e) => setFormData(prev => ({ ...prev, price_per_month: e.target.value }))}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="billing_period">Billing Period</Label>
@@ -503,6 +596,11 @@ export default function MachineRentals() {
                     placeholder="Enter rental notes"
                   />
                 </div>
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-sm text-red-600">{error}</p>
+                  </div>
+                )}
                 <div className="flex justify-end space-x-2">
                   <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                     Cancel
@@ -766,6 +864,56 @@ export default function MachineRentals() {
                   />
                 </div>
               </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Pricing</h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={calculateDynamicPricing}
+                    disabled={isCalculatingPricing}
+                  >
+                    <Calculator className="mr-2 h-4 w-4" />
+                    {isCalculatingPricing ? 'Calculating...' : 'Recalculate Pricing'}
+                  </Button>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="edit_price_per_day">Price per Day</Label>
+                    <Input
+                      id="edit_price_per_day"
+                      type="number"
+                      step="0.01"
+                      value={formData.price_per_day}
+                      onChange={(e) => setFormData(prev => ({ ...prev, price_per_day: e.target.value }))}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_price_per_week">Price per Week</Label>
+                    <Input
+                      id="edit_price_per_week"
+                      type="number"
+                      step="0.01"
+                      value={formData.price_per_week}
+                      onChange={(e) => setFormData(prev => ({ ...prev, price_per_week: e.target.value }))}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_price_per_month">Price per Month</Label>
+                    <Input
+                      id="edit_price_per_month"
+                      type="number"
+                      step="0.01"
+                      value={formData.price_per_month}
+                      onChange={(e) => setFormData(prev => ({ ...prev, price_per_month: e.target.value }))}
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="edit_billing_period">Billing Period</Label>
@@ -799,6 +947,11 @@ export default function MachineRentals() {
                   onChange={(e) => setFormData(prev => ({ ...prev, rental_notes: e.target.value }))}
                 />
               </div>
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                   Cancel
