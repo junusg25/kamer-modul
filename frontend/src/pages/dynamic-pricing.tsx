@@ -235,7 +235,6 @@ export default function DynamicPricing() {
         currency: pricingForm.currency || 'KM'
       }
       
-      console.log('Cleaned data being sent:', cleanedData)
       await apiService.setBasePricing(cleanedData.rental_machine_id, cleanedData)
       setIsPricingDialogOpen(false)
       resetPricingForm()

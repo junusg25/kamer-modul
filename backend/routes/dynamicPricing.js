@@ -8,9 +8,6 @@ const DynamicPricingService = require('../services/dynamicPricingService');
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    console.log('Validation errors:', errors.array());
-    console.log('Request body:', req.body);
-    console.log('Request params:', req.params);
     return res.status(400).json({ 
       message: 'Validation failed', 
       errors: errors.array() 
@@ -81,7 +78,7 @@ router.put('/base/:id', authenticateToken, authorizeRoles('admin', 'manager'), [
   body('base_price_monthly').optional({ nullable: true, checkFalsy: true }).isNumeric().withMessage('Valid monthly price is required'),
   body('minimum_rental_days').optional({ nullable: true, checkFalsy: true }).isInt({ min: 1 }).withMessage('Valid minimum rental days is required'),
   body('maximum_rental_days').optional({ nullable: true, checkFalsy: true }).isInt({ min: 1 }).withMessage('Valid maximum rental days is required'),
-  body('currency').optional({ nullable: true, checkFalsy: true }).isLength({ min: 3, max: 3 }).withMessage('Valid currency code is required')
+  body('currency').optional({ nullable: true, checkFalsy: true }).isLength({ min: 2, max: 3 }).withMessage('Valid currency code is required')
 ], handleValidationErrors, async (req, res) => {
   try {
     const { id } = req.params;
