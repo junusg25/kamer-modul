@@ -114,6 +114,7 @@ app.use('/api/assigned-machines', require('./routes/assignedMachines'));
 app.use('/api/rental-machines', require('./routes/rentalMachines'));
 app.use('/api/machine-rentals', require('./routes/machineRentals'));
 app.use('/api/rental-analytics', require('./routes/rentalAnalytics'));
+app.use('/api/dynamic-pricing', require('./routes/dynamicPricing'));
 app.use('/api/scheduler', require('./routes/scheduler'));
 app.use('/api/workOrders', require('./routes/workOrders'));
 app.use('/api/warrantyWorkOrders', require('./routes/warrantyWorkOrders'));

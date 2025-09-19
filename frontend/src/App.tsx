@@ -43,6 +43,7 @@ import RentalMachines from './pages/rental-machines'
 import MachineRentals from './pages/machine-rentals'
 import RentalDetail from './pages/rental-detail'
 import RentalAnalytics from './pages/rental-analytics'
+import DynamicPricing from './pages/dynamic-pricing'
 
 function App() {
   return (
@@ -212,6 +213,11 @@ function App() {
               <Route path="/rental-analytics" element={
                 <ProtectedRoute>
                   <RentalAnalytics />
+                </ProtectedRoute>
+              } />
+              <Route path="/dynamic-pricing" element={
+                <ProtectedRoute>
+                  <DynamicPricing />
                 </ProtectedRoute>
               } />
               <Route path="/notifications" element={

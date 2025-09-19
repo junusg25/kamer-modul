@@ -15,6 +15,7 @@ import {
   FileText,
   Bell,
   BarChart3,
+  DollarSign,
   ClipboardList,
   ChevronDown,
   ChevronRight,
@@ -156,6 +157,13 @@ const getNavigationItems = (counts: SidebarCounts | null, userRole?: string, unr
     name: 'Rental Analytics', 
     href: '/rental-analytics', 
     icon: BarChart3, 
+    badge: null, 
+    type: 'single' 
+  },
+  { 
+    name: 'Dynamic Pricing', 
+    href: '/dynamic-pricing', 
+    icon: DollarSign, 
     badge: null, 
     type: 'single' 
   },

@@ -1329,6 +1329,124 @@ class ApiService {
   async getRentalRealTimeDashboard() {
     return this.request('/rental-analytics/realtime')
   }
+
+  // Dynamic Pricing API
+  async calculateDynamicPricing(rentalMachineId: string, startDate: string, endDate: string, customerId?: string) {
+    return this.request('/dynamic-pricing/calculate', {
+      method: 'POST',
+      body: JSON.stringify({
+        rental_machine_id: rentalMachineId,
+        start_date: startDate,
+        end_date: endDate,
+        customer_id: customerId
+      })
+    })
+  }
+
+  async getBasePricing(rentalMachineId: string) {
+    return this.request(`/dynamic-pricing/base/${rentalMachineId}`)
+  }
+
+  async setBasePricing(rentalMachineId: string, pricingData: any) {
+    return this.request(`/dynamic-pricing/base/${rentalMachineId}`, {
+      method: 'PUT',
+      body: JSON.stringify(pricingData)
+    })
+  }
+
+  async getPricingRules() {
+    return this.request('/dynamic-pricing/rules')
+  }
+
+  async createPricingRule(ruleData: any) {
+    return this.request('/dynamic-pricing/rules', {
+      method: 'POST',
+      body: JSON.stringify(ruleData)
+    })
+  }
+
+  async updatePricingRule(ruleId: string, ruleData: any) {
+    return this.request(`/dynamic-pricing/rules/${ruleId}`, {
+      method: 'PUT',
+      body: JSON.stringify(ruleData)
+    })
+  }
+
+  async deletePricingRule(ruleId: string) {
+    return this.request(`/dynamic-pricing/rules/${ruleId}`, {
+      method: 'DELETE'
+    })
+  }
+
+  async getCustomerTiers() {
+    return this.request('/dynamic-pricing/customer-tiers')
+  }
+
+  async createCustomerTier(tierData: any) {
+    return this.request('/dynamic-pricing/customer-tiers', {
+      method: 'POST',
+      body: JSON.stringify(tierData)
+    })
+  }
+
+  async updateCustomerTier(tierId: string, tierData: any) {
+    return this.request(`/dynamic-pricing/customer-tiers/${tierId}`, {
+      method: 'PUT',
+      body: JSON.stringify(tierData)
+    })
+  }
+
+  async deleteCustomerTier(tierId: string) {
+    return this.request(`/dynamic-pricing/customer-tiers/${tierId}`, {
+      method: 'DELETE'
+    })
+  }
+
+  async assignCustomerTier(customerId: string, tierId: string, expiresAt?: string) {
+    return this.request('/dynamic-pricing/customer-tiers/assign', {
+      method: 'POST',
+      body: JSON.stringify({
+        customer_id: customerId,
+        tier_id: tierId,
+        expires_at: expiresAt
+      })
+    })
+  }
+
+  async getCustomerTier(customerId: string) {
+    return this.request(`/dynamic-pricing/customer-tiers/${customerId}`)
+  }
+
+  async updateDemandTracking(demandData: any) {
+    return this.request('/dynamic-pricing/demand-tracking', {
+      method: 'POST',
+      body: JSON.stringify(demandData)
+    })
+  }
+
+  async getDemandAnalytics(dateRange = '30d') {
+    return this.request(`/dynamic-pricing/demand-analytics?dateRange=${dateRange}`)
+  }
+
+  async getPricingHistory(rentalMachineId: string, limit = 50) {
+    return this.request(`/dynamic-pricing/history/${rentalMachineId}?limit=${limit}`)
+  }
+
+  async runPricingSimulation(rentalMachineId: string, scenarios: any[]) {
+    return this.request('/dynamic-pricing/simulation', {
+      method: 'POST',
+      body: JSON.stringify({
+        rental_machine_id: rentalMachineId,
+        scenarios: scenarios
+      })
+    })
+  }
+
+  async autoAssignCustomerTiers() {
+    return this.request('/dynamic-pricing/auto-assign-tiers', {
+      method: 'POST'
+    })
+  }
 }
 
 export const apiService = new ApiService()
