@@ -8,6 +8,8 @@ const DynamicPricingService = require('../services/dynamicPricingService');
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.log('Dynamic pricing validation errors:', errors.array());
+    console.log('Request body:', req.body);
     return res.status(400).json({ 
       message: 'Validation failed', 
       errors: errors.array() 
@@ -20,7 +22,7 @@ const handleValidationErrors = (req, res, next) => {
 router.post('/calculate', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), [
   body('rental_machine_id').isInt().withMessage('Valid rental machine ID is required'),
   body('start_date').isISO8601().withMessage('Valid start date is required'),
-  body('end_date').isISO8601().withMessage('Valid end date is required'),
+  body('end_date').optional({ nullable: true, checkFalsy: true }).isISO8601().withMessage('Valid end date is required'),
   body('customer_id').optional().isInt().withMessage('Valid customer ID is required')
 ], handleValidationErrors, async (req, res) => {
   try {
