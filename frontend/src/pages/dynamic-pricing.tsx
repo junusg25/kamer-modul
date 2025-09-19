@@ -224,8 +224,17 @@ export default function DynamicPricing() {
     }
     
     try {
-      console.log('Sending pricing data:', pricingForm)
-      await apiService.setBasePricing(pricingForm.rental_machine_id, pricingForm)
+      // Convert empty strings to null for optional fields
+      const cleanedData = {
+        ...pricingForm,
+        base_price_weekly: pricingForm.base_price_weekly || null,
+        base_price_monthly: pricingForm.base_price_monthly || null,
+        minimum_rental_days: pricingForm.minimum_rental_days || null,
+        maximum_rental_days: pricingForm.maximum_rental_days || null,
+        currency: pricingForm.currency || 'KM'
+      }
+      
+      await apiService.setBasePricing(cleanedData.rental_machine_id, cleanedData)
       setIsPricingDialogOpen(false)
       resetPricingForm()
       fetchData()
@@ -254,7 +263,17 @@ export default function DynamicPricing() {
     if (!editingPricing) return
     
     try {
-      await apiService.setBasePricing(editingPricing.rental_machine_id.toString(), pricingForm)
+      // Convert empty strings to null for optional fields
+      const cleanedData = {
+        ...pricingForm,
+        base_price_weekly: pricingForm.base_price_weekly || null,
+        base_price_monthly: pricingForm.base_price_monthly || null,
+        minimum_rental_days: pricingForm.minimum_rental_days || null,
+        maximum_rental_days: pricingForm.maximum_rental_days || null,
+        currency: pricingForm.currency || 'KM'
+      }
+      
+      await apiService.setBasePricing(editingPricing.rental_machine_id.toString(), cleanedData)
       setIsPricingDialogOpen(false)
       setEditingPricing(null)
       resetPricingForm()
