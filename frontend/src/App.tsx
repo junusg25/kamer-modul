@@ -39,6 +39,9 @@ import DashboardAdmin from './pages/dashboard-admin'
 import AdminFeedback from './pages/admin-feedback'
 import Settings from './pages/settings'
 import Notifications from './pages/notifications'
+import RentalMachines from './pages/rental-machines'
+import MachineRentals from './pages/machine-rentals'
+import RentalDetail from './pages/rental-detail'
 
 function App() {
   return (
@@ -189,6 +192,21 @@ function App() {
                 <PermissionProtectedRoute requiredPermissions={['work_orders:read']}>
                   <WarrantyWorkOrderDetail />
                 </PermissionProtectedRoute>
+              } />
+              <Route path="/rental-machines" element={
+                <ProtectedRoute>
+                  <RentalMachines />
+                </ProtectedRoute>
+              } />
+              <Route path="/machine-rentals" element={
+                <ProtectedRoute>
+                  <MachineRentals />
+                </ProtectedRoute>
+              } />
+              <Route path="/machine-rentals/:id" element={
+                <ProtectedRoute>
+                  <RentalDetail />
+                </ProtectedRoute>
               } />
               <Route path="/notifications" element={
                 <ProtectedRoute>

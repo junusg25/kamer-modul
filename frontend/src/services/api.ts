@@ -1130,6 +1130,122 @@ class ApiService {
     const queryString = queryParams.toString()
     return this.request(`/sales/lead-sources${queryString ? `?${queryString}` : ''}`)
   }
+
+  // Rental Machines API
+  async getRentalMachines(params?: { 
+    page?: number; 
+    limit?: number; 
+    search?: string;
+    status?: string;
+    condition?: string;
+    model_id?: string;
+    manufacturer?: string;
+  }) {
+    const queryParams = new URLSearchParams()
+    if (params?.page) queryParams.append('page', params.page.toString())
+    if (params?.limit) queryParams.append('limit', params.limit.toString())
+    if (params?.search) queryParams.append('search', params.search)
+    if (params?.status) queryParams.append('status', params.status)
+    if (params?.condition) queryParams.append('condition', params.condition)
+    if (params?.model_id) queryParams.append('model_id', params.model_id)
+    if (params?.manufacturer) queryParams.append('manufacturer', params.manufacturer)
+    
+    const queryString = queryParams.toString()
+    return this.request(`/rental-machines${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async getRentalMachine(id: string) {
+    return this.request(`/rental-machines/${id}`)
+  }
+
+  async createRentalMachine(machine: any) {
+    return this.request('/rental-machines', {
+      method: 'POST',
+      body: JSON.stringify(machine)
+    })
+  }
+
+  async updateRentalMachine(id: string, machine: any) {
+    return this.request(`/rental-machines/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(machine)
+    })
+  }
+
+  async deleteRentalMachine(id: string) {
+    return this.request(`/rental-machines/${id}`, {
+      method: 'DELETE'
+    })
+  }
+
+  async getAvailableRentalMachines(modelId?: string) {
+    const queryParams = new URLSearchParams()
+    if (modelId) queryParams.append('model_id', modelId)
+    
+    const queryString = queryParams.toString()
+    return this.request(`/rental-machines/available/list${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async getRentalMachineStats() {
+    return this.request('/rental-machines/stats/overview')
+  }
+
+  // Machine Rentals API
+  async getMachineRentals(params?: { 
+    page?: number; 
+    limit?: number; 
+    search?: string;
+    status?: string;
+    customer_id?: string;
+    rental_machine_id?: string;
+    start_date?: string;
+    end_date?: string;
+  }) {
+    const queryParams = new URLSearchParams()
+    if (params?.page) queryParams.append('page', params.page.toString())
+    if (params?.limit) queryParams.append('limit', params.limit.toString())
+    if (params?.search) queryParams.append('search', params.search)
+    if (params?.status) queryParams.append('status', params.status)
+    if (params?.customer_id) queryParams.append('customer_id', params.customer_id)
+    if (params?.rental_machine_id) queryParams.append('rental_machine_id', params.rental_machine_id)
+    if (params?.start_date) queryParams.append('start_date', params.start_date)
+    if (params?.end_date) queryParams.append('end_date', params.end_date)
+    
+    const queryString = queryParams.toString()
+    return this.request(`/machine-rentals${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async getMachineRental(id: string) {
+    return this.request(`/machine-rentals/${id}`)
+  }
+
+  async createMachineRental(rental: any) {
+    return this.request('/machine-rentals', {
+      method: 'POST',
+      body: JSON.stringify(rental)
+    })
+  }
+
+  async updateMachineRental(id: string, rental: any) {
+    return this.request(`/machine-rentals/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(rental)
+    })
+  }
+
+  async deleteMachineRental(id: string) {
+    return this.request(`/machine-rentals/${id}`, {
+      method: 'DELETE'
+    })
+  }
+
+  async getMachineRentalStats() {
+    return this.request('/machine-rentals/stats/overview')
+  }
+
+  async getOverdueRentals() {
+    return this.request('/machine-rentals/overdue/list')
+  }
 }
 
 export const apiService = new ApiService()

@@ -46,6 +46,7 @@ import {
   Truck
 } from 'lucide-react'
 import apiService from '../services/api'
+import { useAuth } from '../contexts/auth-context'
 import { toast } from 'sonner'
 import { formatDate, formatDateTime } from '../lib/dateTime'
 import { formatStatus, getStatusBadgeVariant, getStatusBadgeColor } from '../lib/status'
@@ -114,6 +115,7 @@ interface User {
 export default function WorkOrderDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
   
   // State
   const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null)
@@ -601,7 +603,7 @@ export default function WorkOrderDetail() {
     })
   }
 
-  const canEdit = true // All authenticated users can edit
+  const canEdit = user?.role !== 'sales' // Sales users cannot edit
 
   if (isLoading) {
     return (
@@ -655,14 +657,16 @@ export default function WorkOrderDetail() {
           <div className="flex items-center gap-2">
             {!isEditing ? (
               <>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsEditing(true)}
-                  disabled={!canEdit}
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit
-                </Button>
+                {user?.role !== 'sales' && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditing(true)}
+                    disabled={!canEdit}
+                  >
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -677,20 +681,22 @@ export default function WorkOrderDetail() {
                 >
                   <FileText className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => {
-                    // Check if work order is completed
-                    if (workOrder?.status === 'completed') {
-                      setCompletedAlertOpen(true)
-                      return
-                    }
-                    setDeleteDialogOpen(true)
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {user?.role !== 'sales' && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      // Check if work order is completed
+                      if (workOrder?.status === 'completed') {
+                        setCompletedAlertOpen(true)
+                        return
+                      }
+                      setDeleteDialogOpen(true)
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </>
             ) : (
               <>

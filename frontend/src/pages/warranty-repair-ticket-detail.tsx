@@ -121,6 +121,7 @@ interface WarrantyRepairTicket {
 export default function WarrantyRepairTicketDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [warrantyRepairTicket, setWarrantyRepairTicket] = useState<WarrantyRepairTicket | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -393,13 +394,15 @@ export default function WarrantyRepairTicketDetail() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => console.log('Edit Warranty Repair Ticket')}
-            >
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Button>
+            {user?.role !== 'sales' && (
+              <Button
+                variant="outline"
+                onClick={() => console.log('Edit Warranty Repair Ticket')}
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -414,20 +417,24 @@ export default function WarrantyRepairTicketDetail() {
             >
               <FileText className="h-4 w-4" />
             </Button>
-            <Button 
-              onClick={handleConvertToWorkOrder}
-              disabled={warrantyRepairTicket.status === 'converted' || warrantyRepairTicket.status === 'cancelled'}
-            >
-              <Wrench className="mr-2 h-4 w-4" />
-              Convert to Work Order
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDeleteTicket}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {user?.role !== 'sales' && (
+              <Button 
+                onClick={handleConvertToWorkOrder}
+                disabled={warrantyRepairTicket.status === 'converted' || warrantyRepairTicket.status === 'cancelled'}
+              >
+                <Wrench className="mr-2 h-4 w-4" />
+                Convert to Work Order
+              </Button>
+            )}
+            {user?.role !== 'sales' && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeleteTicket}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
 

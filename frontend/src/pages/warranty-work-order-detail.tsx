@@ -618,7 +618,7 @@ export default function WarrantyWorkOrderDetail() {
     }
   }
 
-  const canEdit = true // All authenticated users can edit
+  const canEdit = user?.role !== 'sales' // Sales users cannot edit
 
   if (isLoading) {
     return (
@@ -672,14 +672,16 @@ export default function WarrantyWorkOrderDetail() {
           <div className="flex items-center gap-2">
             {!isEditing ? (
               <>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsEditing(true)}
-                  disabled={!canEdit}
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit
-                </Button>
+                {user?.role !== 'sales' && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditing(true)}
+                    disabled={!canEdit}
+                  >
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -694,13 +696,15 @@ export default function WarrantyWorkOrderDetail() {
                 >
                   <FileText className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleDelete}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {user?.role !== 'sales' && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDelete}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </>
             ) : (
               <>

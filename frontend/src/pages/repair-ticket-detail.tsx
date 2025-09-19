@@ -413,13 +413,15 @@ export default function RepairTicketDetail() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => console.log('Edit Repair Ticket')}
-            >
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Button>
+            {user?.role !== 'sales' && (
+              <Button
+                variant="outline"
+                onClick={() => console.log('Edit Repair Ticket')}
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -434,19 +436,21 @@ export default function RepairTicketDetail() {
             >
               <FileText className="h-4 w-4" />
             </Button>
-            {repairTicket.status === 'intake' && (
+            {repairTicket.status === 'intake' && user?.role !== 'sales' && (
               <Button variant="default" onClick={handleConvertToWorkOrder}>
                 <Wrench className="mr-2 h-4 w-4" />
                 Convert to Work Order
               </Button>
             )}
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDeleteTicket}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {user?.role !== 'sales' && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeleteTicket}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
 

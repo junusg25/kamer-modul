@@ -21,7 +21,9 @@ import {
   AlertTriangle,
   Award,
   TrendingUp,
-  MessageSquare
+  MessageSquare,
+  Truck,
+  Calendar
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -130,6 +132,23 @@ const getNavigationItems = (counts: SidebarCounts | null, userRole?: string, unr
     name: 'Sales Reports', 
     href: '/sales-reports', 
     icon: BarChart3, 
+    badge: null, 
+    type: 'single' 
+  },
+  
+  // Rental Management Section
+  { name: 'Rental Management', href: '#', icon: null, badge: null, type: 'label' },
+  { 
+    name: 'Rental Fleet', 
+    href: '/rental-machines', 
+    icon: Truck, 
+    badge: null, 
+    type: 'single' 
+  },
+  { 
+    name: 'Active Rentals', 
+    href: '/machine-rentals', 
+    icon: Calendar, 
     badge: null, 
     type: 'single' 
   },

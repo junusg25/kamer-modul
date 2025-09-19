@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 const logger = require('./utils/logger');
 const cacheService = require('./services/cacheService');
 const websocketService = require('./services/websocketService');
+const schedulerService = require('./services/scheduler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -110,6 +111,9 @@ app.use('/api/machines', require('./routes/machines'));
 app.use('/api/machine-models', require('./routes/machineModels'));
 app.use('/api/machine-serials', require('./routes/machineSerials'));
 app.use('/api/assigned-machines', require('./routes/assignedMachines'));
+app.use('/api/rental-machines', require('./routes/rentalMachines'));
+app.use('/api/machine-rentals', require('./routes/machineRentals'));
+app.use('/api/scheduler', require('./routes/scheduler'));
 app.use('/api/workOrders', require('./routes/workOrders'));
 app.use('/api/warrantyWorkOrders', require('./routes/warrantyWorkOrders'));
 app.use('/api/repairTickets', require('./routes/repairTickets'));
@@ -188,6 +192,9 @@ if (process.env.NODE_ENV !== 'test') {
     const wsInstance = websocketService.getInstance();
     wsInstance.initialize(server);
     
+    // Start rental status scheduler
+    schedulerService.start();
+    
     // Log cache status after server starts
     setTimeout(() => {
       const cacheStats = cacheService.getStats();
@@ -203,6 +210,9 @@ if (process.env.NODE_ENV !== 'test') {
 // Graceful shutdown
 const gracefulShutdown = async (signal) => {
   logger.info(`${signal} received, shutting down gracefully`);
+  
+  // Stop scheduler
+  schedulerService.stop();
   
   // Close cache connections
   await cacheService.disconnect();
