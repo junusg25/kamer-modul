@@ -152,6 +152,13 @@ const getNavigationItems = (counts: SidebarCounts | null, userRole?: string, unr
     badge: null, 
     type: 'single' 
   },
+  { 
+    name: 'Rental Analytics', 
+    href: '/rental-analytics', 
+    icon: BarChart3, 
+    badge: null, 
+    type: 'single' 
+  },
   
   // Admin Section
   ...(userRole === 'admin' ? [

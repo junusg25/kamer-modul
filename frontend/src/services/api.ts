@@ -1280,6 +1280,55 @@ class ApiService {
       method: 'POST'
     })
   }
+
+  // Rental Analytics API
+  async getRentalAnalyticsOverview(dateRange = '30d') {
+    return this.request(`/rental-analytics/overview?dateRange=${dateRange}`)
+  }
+
+  async getRentalFleetStats() {
+    return this.request('/rental-analytics/fleet')
+  }
+
+  async getRentalRevenueStats(dateRange = '30d') {
+    return this.request(`/rental-analytics/revenue?dateRange=${dateRange}`)
+  }
+
+  async getRentalUtilizationStats(dateRange = '30d') {
+    return this.request(`/rental-analytics/utilization?dateRange=${dateRange}`)
+  }
+
+  async getRentalCustomerStats(dateRange = '30d') {
+    return this.request(`/rental-analytics/customers?dateRange=${dateRange}`)
+  }
+
+  async getRentalStatusStats() {
+    return this.request('/rental-analytics/status')
+  }
+
+  async getRentalOverdueStats() {
+    return this.request('/rental-analytics/overdue')
+  }
+
+  async getRentalTrends(dateRange = '30d', groupBy = 'day') {
+    return this.request(`/rental-analytics/trends?dateRange=${dateRange}&groupBy=${groupBy}`)
+  }
+
+  async getRentalMachinePerformance(dateRange = '30d') {
+    return this.request(`/rental-analytics/machine-performance?dateRange=${dateRange}`)
+  }
+
+  async getRentalDurationAnalytics(dateRange = '30d') {
+    return this.request(`/rental-analytics/duration?dateRange=${dateRange}`)
+  }
+
+  async getRentalBillingAnalytics(dateRange = '30d') {
+    return this.request(`/rental-analytics/billing?dateRange=${dateRange}`)
+  }
+
+  async getRentalRealTimeDashboard() {
+    return this.request('/rental-analytics/realtime')
+  }
 }
 
 export const apiService = new ApiService()

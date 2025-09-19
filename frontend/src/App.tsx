@@ -42,6 +42,7 @@ import Notifications from './pages/notifications'
 import RentalMachines from './pages/rental-machines'
 import MachineRentals from './pages/machine-rentals'
 import RentalDetail from './pages/rental-detail'
+import RentalAnalytics from './pages/rental-analytics'
 
 function App() {
   return (
@@ -206,6 +207,11 @@ function App() {
               <Route path="/machine-rentals/:id" element={
                 <ProtectedRoute>
                   <RentalDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="/rental-analytics" element={
+                <ProtectedRoute>
+                  <RentalAnalytics />
                 </ProtectedRoute>
               } />
               <Route path="/notifications" element={
