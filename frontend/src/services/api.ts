@@ -1246,6 +1246,40 @@ class ApiService {
   async getOverdueRentals() {
     return this.request('/machine-rentals/overdue/list')
   }
+
+  // Enhanced Status Management API
+  async getRentalMachineStatuses() {
+    return this.request('/rental-machines/statuses')
+  }
+
+  async getRentalMachineTransitionRules() {
+    return this.request('/rental-machines/transition-rules')
+  }
+
+  async updateRentalMachineStatus(id: string, status: string, reason?: string, notes?: string) {
+    return this.request(`/rental-machines/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status, reason, notes })
+    })
+  }
+
+  async getRentalMachineStatusHistory(id: string, limit?: number) {
+    const queryParams = new URLSearchParams()
+    if (limit) queryParams.append('limit', limit.toString())
+    
+    const queryString = queryParams.toString()
+    return this.request(`/rental-machines/${id}/status-history${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async getRentalMachineStatusStatistics() {
+    return this.request('/rental-machines/status-statistics')
+  }
+
+  async processAutoTransitions() {
+    return this.request('/rental-machines/process-auto-transitions', {
+      method: 'POST'
+    })
+  }
 }
 
 export const apiService = new ApiService()

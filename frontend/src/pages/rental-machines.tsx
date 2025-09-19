@@ -218,7 +218,11 @@ export default function RentalMachines() {
       available: { variant: 'default' as const, label: 'Available' },
       rented: { variant: 'secondary' as const, label: 'Rented' },
       reserved: { variant: 'secondary' as const, label: 'Reserved' },
+      cleaning: { variant: 'outline' as const, label: 'Cleaning' },
+      inspection: { variant: 'outline' as const, label: 'Inspection' },
       maintenance: { variant: 'destructive' as const, label: 'Maintenance' },
+      repair: { variant: 'destructive' as const, label: 'Repair' },
+      quarantine: { variant: 'destructive' as const, label: 'Quarantine' },
       retired: { variant: 'outline' as const, label: 'Retired' }
     }
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.available
@@ -378,7 +382,11 @@ export default function RentalMachines() {
                     <SelectItem value="available">Available</SelectItem>
                     <SelectItem value="rented">Rented</SelectItem>
                     <SelectItem value="reserved">Reserved</SelectItem>
+                    <SelectItem value="cleaning">Cleaning</SelectItem>
+                    <SelectItem value="inspection">Inspection</SelectItem>
                     <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="repair">Repair</SelectItem>
+                    <SelectItem value="quarantine">Quarantine</SelectItem>
                     <SelectItem value="retired">Retired</SelectItem>
                   </SelectContent>
                 </Select>
@@ -525,7 +533,11 @@ export default function RentalMachines() {
                     <SelectItem value="available">Available</SelectItem>
                     <SelectItem value="rented">Rented</SelectItem>
                     <SelectItem value="reserved">Reserved</SelectItem>
+                    <SelectItem value="cleaning">Cleaning</SelectItem>
+                    <SelectItem value="inspection">Inspection</SelectItem>
                     <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="repair">Repair</SelectItem>
+                    <SelectItem value="quarantine">Quarantine</SelectItem>
                     <SelectItem value="retired">Retired</SelectItem>
                   </SelectContent>
                 </Select>

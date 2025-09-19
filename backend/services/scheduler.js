@@ -1,5 +1,6 @@
 const cron = require('node-cron');
 const { updateReservedRentalsToActive, updateOverdueRentals } = require('../utils/rentalStatusUpdater');
+const StatusManager = require('./statusManager');
 const logger = require('../utils/logger');
 
 class SchedulerService {
@@ -47,8 +48,26 @@ class SchedulerService {
       timezone: 'Europe/Belgrade' // Adjust timezone as needed
     });
 
+    // Run every hour to process automatic status transitions
+    const autoTransitionJob = cron.schedule('0 * * * *', async () => {
+      try {
+        logger.info('Running hourly auto-transition check');
+        const results = await StatusManager.processAutoTransitions();
+        if (results.length > 0) {
+          const successful = results.filter(r => r.success).length;
+          const failed = results.filter(r => !r.success).length;
+          logger.info(`Auto-transition completed: ${successful} successful, ${failed} failed`);
+        }
+      } catch (error) {
+        logger.error('Error in auto-transition job:', error);
+      }
+    }, {
+      scheduled: false,
+      timezone: 'Europe/Belgrade'
+    });
+
     // Store job references
-    this.jobs.push(reservedToActiveJob, overdueJob);
+    this.jobs.push(reservedToActiveJob, overdueJob, autoTransitionJob);
 
     // Start all jobs
     this.jobs.forEach(job => job.start());
@@ -58,6 +77,7 @@ class SchedulerService {
     logger.info('Jobs scheduled:');
     logger.info('- Reserved to Active: Daily at 8:00 AM');
     logger.info('- Overdue Check: Daily at 8:30 AM');
+    logger.info('- Auto-transitions: Every hour');
   }
 
   /**

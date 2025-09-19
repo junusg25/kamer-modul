@@ -5,12 +5,13 @@ const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
 const { handleValidationErrors } = require('../middleware/validators');
 const { createNotification } = require('../utils/notificationHelpers');
+const StatusManager = require('../services/statusManager');
 
 // Validation rules
 const rentalMachineValidation = [
   body('model_id').isInt({ min: 1 }).withMessage('Valid model ID is required'),
   body('serial_number').isLength({ min: 1, max: 255 }).withMessage('Serial number is required and must be less than 255 characters'),
-  body('rental_status').optional().isIn(['available', 'rented', 'reserved', 'maintenance', 'retired']).withMessage('Invalid rental status'),
+  body('rental_status').optional().isIn(['available', 'rented', 'reserved', 'cleaning', 'inspection', 'maintenance', 'repair', 'quarantine', 'retired']).withMessage('Invalid rental status'),
   body('condition').optional().isIn(['excellent', 'good', 'fair', 'poor']).withMessage('Invalid condition'),
   body('location').optional().isString().withMessage('Location must be a string'),
   body('notes').optional().isString().withMessage('Notes must be a string')
@@ -427,6 +428,89 @@ router.get('/stats/overview', authenticateToken, async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching rental machine stats:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// GET /api/rental-machines/statuses - Get all available statuses
+router.get('/statuses', authenticateToken, async (req, res) => {
+  try {
+    const statuses = StatusManager.getAvailableStatuses();
+    res.json(statuses);
+  } catch (error) {
+    console.error('Error fetching statuses:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// GET /api/rental-machines/transition-rules - Get status transition rules
+router.get('/transition-rules', authenticateToken, async (req, res) => {
+  try {
+    const rules = await StatusManager.getTransitionRules();
+    res.json(rules);
+  } catch (error) {
+    console.error('Error fetching transition rules:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// PUT /api/rental-machines/:id/status - Update machine status with validation
+router.put('/:id/status', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, reason, notes } = req.body;
+    const userId = req.user.id;
+
+    if (!status) {
+      return res.status(400).json({ message: 'Status is required' });
+    }
+
+    const result = await StatusManager.updateMachineStatus(id, status, userId, reason, notes);
+    res.json(result);
+  } catch (error) {
+    console.error('Error updating machine status:', error);
+    res.status(500).json({ message: error.message || 'Internal server error' });
+  }
+});
+
+// GET /api/rental-machines/:id/status-history - Get status history for a machine
+router.get('/:id/status-history', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { limit = 50 } = req.query;
+
+    const history = await StatusManager.getMachineStatusHistory(id, parseInt(limit));
+    res.json(history);
+  } catch (error) {
+    console.error('Error fetching status history:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// GET /api/rental-machines/status-statistics - Get status statistics
+router.get('/status-statistics', authenticateToken, async (req, res) => {
+  try {
+    const statistics = await StatusManager.getStatusStatistics();
+    res.json(statistics);
+  } catch (error) {
+    console.error('Error fetching status statistics:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// POST /api/rental-machines/process-auto-transitions - Process automatic status transitions
+router.post('/process-auto-transitions', authenticateToken, authorizeRoles('admin', 'manager'), async (req, res) => {
+  try {
+    const results = await StatusManager.processAutoTransitions();
+    res.json({ 
+      message: 'Auto transitions processed', 
+      results,
+      processed: results.length,
+      successful: results.filter(r => r.success).length,
+      failed: results.filter(r => !r.success).length
+    });
+  } catch (error) {
+    console.error('Error processing auto transitions:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
