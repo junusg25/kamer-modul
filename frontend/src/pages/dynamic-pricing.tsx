@@ -158,7 +158,6 @@ export default function DynamicPricing() {
   const fetchRentalMachines = async () => {
     try {
       const response = await apiService.getRentalMachines()
-      console.log('Rental machines API response:', response) // Debug log
       
       // Handle different response formats
       if (Array.isArray(response)) {
@@ -167,6 +166,8 @@ export default function DynamicPricing() {
         return response.data
       } else if (response && Array.isArray(response.rental_machines)) {
         return response.rental_machines
+      } else if (response && Array.isArray(response.machines)) {
+        return response.machines
       } else {
         console.warn('Unexpected response format for rental machines:', response)
         return []
@@ -829,7 +830,7 @@ export default function DynamicPricing() {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="" disabled>
+                        <SelectItem value="no-machines" disabled>
                           No rental machines available
                         </SelectItem>
                       )}
