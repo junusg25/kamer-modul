@@ -224,6 +224,7 @@ export default function DynamicPricing() {
     }
     
     try {
+      console.log('Sending pricing data:', pricingForm)
       await apiService.setBasePricing(pricingForm.rental_machine_id, pricingForm)
       setIsPricingDialogOpen(false)
       resetPricingForm()
@@ -231,7 +232,18 @@ export default function DynamicPricing() {
     } catch (error) {
       console.error('Error creating base pricing:', error)
       if (error.message && error.message.includes('Validation failed')) {
-        setError('Please check all required fields are filled correctly')
+        // Try to get specific validation errors from the response
+        try {
+          const errorData = JSON.parse(error.message)
+          if (errorData.errors && errorData.errors.length > 0) {
+            const errorMessages = errorData.errors.map((err: any) => err.msg).join(', ')
+            setError(`Validation failed: ${errorMessages}`)
+          } else {
+            setError('Please check all required fields are filled correctly')
+          }
+        } catch {
+          setError('Please check all required fields are filled correctly')
+        }
       } else {
         setError('Failed to create base pricing')
       }

@@ -8,6 +8,8 @@ const DynamicPricingService = require('../services/dynamicPricingService');
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.log('Validation errors:', errors.array());
+    console.log('Request body:', req.body);
     return res.status(400).json({ 
       message: 'Validation failed', 
       errors: errors.array() 
@@ -72,13 +74,13 @@ router.get('/base/:id', authenticateToken, authorizeRoles('admin', 'manager', 't
 
 // PUT /api/dynamic-pricing/base/:id - Set base pricing for a machine
 router.put('/base/:id', authenticateToken, authorizeRoles('admin', 'manager'), [
-  param('id').isInt().withMessage('Valid machine ID is required'),
+  param('id').isInt({ min: 1 }).withMessage('Valid machine ID is required'),
   body('base_price_daily').isNumeric().withMessage('Valid daily price is required'),
-  body('base_price_weekly').optional().isNumeric().withMessage('Valid weekly price is required'),
-  body('base_price_monthly').optional().isNumeric().withMessage('Valid monthly price is required'),
-  body('minimum_rental_days').optional().isInt().withMessage('Valid minimum rental days is required'),
-  body('maximum_rental_days').optional().isInt().withMessage('Valid maximum rental days is required'),
-  body('currency').optional().isLength({ min: 3, max: 3 }).withMessage('Valid currency code is required')
+  body('base_price_weekly').optional({ nullable: true, checkFalsy: true }).isNumeric().withMessage('Valid weekly price is required'),
+  body('base_price_monthly').optional({ nullable: true, checkFalsy: true }).isNumeric().withMessage('Valid monthly price is required'),
+  body('minimum_rental_days').optional({ nullable: true, checkFalsy: true }).isInt({ min: 1 }).withMessage('Valid minimum rental days is required'),
+  body('maximum_rental_days').optional({ nullable: true, checkFalsy: true }).isInt({ min: 1 }).withMessage('Valid maximum rental days is required'),
+  body('currency').optional({ nullable: true, checkFalsy: true }).isLength({ min: 3, max: 3 }).withMessage('Valid currency code is required')
 ], handleValidationErrors, async (req, res) => {
   try {
     const { id } = req.params;
