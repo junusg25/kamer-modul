@@ -53,10 +53,10 @@ BEGIN
     END;
     
     -- Get demand level for the date (simplified - in real implementation, this would be more sophisticated)
-    SELECT COALESCE(demand_level, 'medium') INTO demand_level
-    FROM demand_tracking
-    WHERE rental_machine_id = p_rental_machine_id 
-      AND date = p_rental_start_date;
+    SELECT COALESCE(dt.demand_level, 'medium') INTO demand_level
+    FROM demand_tracking dt
+    WHERE dt.rental_machine_id = p_rental_machine_id 
+      AND dt.date = p_rental_start_date;
     
     -- Calculate availability percentage
     SELECT 
