@@ -224,16 +224,18 @@ export default function DynamicPricing() {
     }
     
     try {
-      // Convert empty strings to null for optional fields
+      // Convert empty strings to null and strings to numbers for optional fields
       const cleanedData = {
         ...pricingForm,
-        base_price_weekly: pricingForm.base_price_weekly || null,
-        base_price_monthly: pricingForm.base_price_monthly || null,
-        minimum_rental_days: pricingForm.minimum_rental_days || null,
-        maximum_rental_days: pricingForm.maximum_rental_days || null,
+        base_price_daily: parseFloat(pricingForm.base_price_daily),
+        base_price_weekly: pricingForm.base_price_weekly ? parseFloat(pricingForm.base_price_weekly) : null,
+        base_price_monthly: pricingForm.base_price_monthly ? parseFloat(pricingForm.base_price_monthly) : null,
+        minimum_rental_days: pricingForm.minimum_rental_days ? parseInt(pricingForm.minimum_rental_days) : null,
+        maximum_rental_days: pricingForm.maximum_rental_days ? parseInt(pricingForm.maximum_rental_days) : null,
         currency: pricingForm.currency || 'KM'
       }
       
+      console.log('Cleaned data being sent:', cleanedData)
       await apiService.setBasePricing(cleanedData.rental_machine_id, cleanedData)
       setIsPricingDialogOpen(false)
       resetPricingForm()
@@ -263,13 +265,14 @@ export default function DynamicPricing() {
     if (!editingPricing) return
     
     try {
-      // Convert empty strings to null for optional fields
+      // Convert empty strings to null and strings to numbers for optional fields
       const cleanedData = {
         ...pricingForm,
-        base_price_weekly: pricingForm.base_price_weekly || null,
-        base_price_monthly: pricingForm.base_price_monthly || null,
-        minimum_rental_days: pricingForm.minimum_rental_days || null,
-        maximum_rental_days: pricingForm.maximum_rental_days || null,
+        base_price_daily: parseFloat(pricingForm.base_price_daily),
+        base_price_weekly: pricingForm.base_price_weekly ? parseFloat(pricingForm.base_price_weekly) : null,
+        base_price_monthly: pricingForm.base_price_monthly ? parseFloat(pricingForm.base_price_monthly) : null,
+        minimum_rental_days: pricingForm.minimum_rental_days ? parseInt(pricingForm.minimum_rental_days) : null,
+        maximum_rental_days: pricingForm.maximum_rental_days ? parseInt(pricingForm.maximum_rental_days) : null,
         currency: pricingForm.currency || 'KM'
       }
       
