@@ -133,10 +133,10 @@ export default function DynamicPricing() {
         fetchRentalMachines()
       ])
       
-      setPricingRules(rules)
-      setCustomerTiers(tiers)
-      setBasePricing(pricing)
-      setRentalMachines(machines)
+      setPricingRules(rules || [])
+      setCustomerTiers(tiers || [])
+      setBasePricing(pricing || [])
+      setRentalMachines(Array.isArray(machines) ? machines : [])
     } catch (error) {
       console.error('Error fetching data:', error)
       setError('Failed to load pricing data')
@@ -158,7 +158,19 @@ export default function DynamicPricing() {
   const fetchRentalMachines = async () => {
     try {
       const response = await apiService.getRentalMachines()
-      return response?.data || response || []
+      console.log('Rental machines API response:', response) // Debug log
+      
+      // Handle different response formats
+      if (Array.isArray(response)) {
+        return response
+      } else if (response && Array.isArray(response.data)) {
+        return response.data
+      } else if (response && Array.isArray(response.rental_machines)) {
+        return response.rental_machines
+      } else {
+        console.warn('Unexpected response format for rental machines:', response)
+        return []
+      }
     } catch (error) {
       console.error('Error fetching rental machines:', error)
       return []
@@ -810,11 +822,17 @@ export default function DynamicPricing() {
                       <SelectValue placeholder="Select a rental machine" />
                     </SelectTrigger>
                     <SelectContent>
-                      {rentalMachines.map((machine) => (
-                        <SelectItem key={machine.id} value={machine.id.toString()}>
-                          {machine.manufacturer} {machine.model_name} - {machine.serial_number}
+                      {Array.isArray(rentalMachines) && rentalMachines.length > 0 ? (
+                        rentalMachines.map((machine) => (
+                          <SelectItem key={machine.id} value={machine.id.toString()}>
+                            {machine.manufacturer} {machine.model_name} - {machine.serial_number}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="" disabled>
+                          No rental machines available
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
