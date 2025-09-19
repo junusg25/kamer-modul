@@ -380,7 +380,12 @@ export default function MachineRentals() {
       }
       
       console.log('Sending pricing calculation data:', pricingData)
-      const pricing = await apiService.calculateDynamicPricing(pricingData)
+      const pricing = await apiService.calculateDynamicPricing(
+        pricingData.rental_machine_id.toString(),
+        pricingData.start_date,
+        pricingData.end_date || '',
+        pricingData.customer_id.toString()
+      )
 
       // Apply the calculated pricing to the form
       setFormData(prev => ({
