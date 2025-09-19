@@ -125,6 +125,43 @@ export default function MachineRentals() {
     }
   }, [isCreateDialogOpen])
 
+  // Auto-calculate total amount when dates or pricing change
+  useEffect(() => {
+    if (formData.rental_start_date && formData.rental_end_date && formData.price_per_day) {
+      const startDate = new Date(formData.rental_start_date)
+      const endDate = new Date(formData.rental_end_date)
+      const rentalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      
+      const dailyPrice = parseFloat(formData.price_per_day) || 0
+      const weeklyPrice = parseFloat(formData.price_per_week) || 0
+      const monthlyPrice = parseFloat(formData.price_per_month) || 0
+      
+      let totalAmount = 0
+      
+      // Determine the best pricing based on duration
+      if (rentalDays >= 30 && monthlyPrice > 0) {
+        // Use monthly pricing for rentals 30+ days
+        const months = Math.ceil(rentalDays / 30)
+        totalAmount = monthlyPrice * months
+      } else if (rentalDays >= 7 && weeklyPrice > 0) {
+        // Use weekly pricing for rentals 7+ days
+        const weeks = Math.ceil(rentalDays / 7)
+        totalAmount = weeklyPrice * weeks
+      } else if (dailyPrice > 0) {
+        // Use daily pricing for shorter rentals
+        totalAmount = dailyPrice * rentalDays
+      }
+      
+      // Only update if the calculated amount is different from current total
+      if (totalAmount > 0 && totalAmount.toFixed(2) !== formData.total_amount) {
+        setFormData(prev => ({
+          ...prev,
+          total_amount: totalAmount.toFixed(2)
+        }))
+      }
+    }
+  }, [formData.rental_start_date, formData.rental_end_date, formData.price_per_day, formData.price_per_week, formData.price_per_month])
+
   const fetchMachineRentals = async () => {
     try {
       setLoading(true)
@@ -386,12 +423,36 @@ export default function MachineRentals() {
         pricingData.customer_id.toString()
       )
 
+      // Calculate total amount based on rental duration and billing period
+      let totalAmount = 0
+      const startDate = new Date(pricingData.start_date)
+      const endDate = pricingData.end_date ? new Date(pricingData.end_date) : null
+      
+      if (endDate) {
+        const rentalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+        
+        // Determine the best pricing based on duration
+        if (rentalDays >= 30 && pricing.monthly_price) {
+          // Use monthly pricing for rentals 30+ days
+          const months = Math.ceil(rentalDays / 30)
+          totalAmount = pricing.monthly_price * months
+        } else if (rentalDays >= 7 && pricing.weekly_price) {
+          // Use weekly pricing for rentals 7+ days
+          const weeks = Math.ceil(rentalDays / 7)
+          totalAmount = pricing.weekly_price * weeks
+        } else if (pricing.daily_price) {
+          // Use daily pricing for shorter rentals
+          totalAmount = pricing.daily_price * rentalDays
+        }
+      }
+
       // Apply the calculated pricing to the form
       setFormData(prev => ({
         ...prev,
         price_per_day: pricing.daily_price?.toString() || '',
         price_per_week: pricing.weekly_price?.toString() || '',
-        price_per_month: pricing.monthly_price?.toString() || ''
+        price_per_month: pricing.monthly_price?.toString() || '',
+        total_amount: totalAmount.toFixed(2)
       }))
 
       // Show success message
