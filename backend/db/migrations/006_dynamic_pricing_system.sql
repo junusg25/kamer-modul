@@ -195,7 +195,7 @@ BEGIN
     END IF;
     
     -- Calculate rental duration
-    rental_days := EXTRACT(DAYS FROM p_rental_end_date - p_rental_start_date) + 1;
+    rental_days := (p_rental_end_date - p_rental_start_date) + 1;
     
     -- Determine season
     season := CASE 
