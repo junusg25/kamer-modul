@@ -425,11 +425,11 @@ export default function MachineRentals() {
 
       // Calculate total amount based on rental duration and billing period
       let totalAmount = 0
-      const startDate = new Date(pricingData.start_date)
-      const endDate = pricingData.end_date ? new Date(pricingData.end_date) : null
+      const pricingStartDate = new Date(pricingData.start_date)
+      const pricingEndDate = pricingData.end_date ? new Date(pricingData.end_date) : null
       
-      if (endDate) {
-        const rentalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      if (pricingEndDate) {
+        const rentalDays = Math.ceil((pricingEndDate.getTime() - pricingStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
         
         // Determine the best pricing based on duration
         if (rentalDays >= 30 && pricing.monthly_price) {
