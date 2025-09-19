@@ -40,6 +40,17 @@ router.post('/calculate', authenticateToken, authorizeRoles('admin', 'manager', 
   }
 });
 
+// GET /api/dynamic-pricing/base - Get all base pricing
+router.get('/base', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), async (req, res) => {
+  try {
+    const pricing = await DynamicPricingService.getAllBasePricing();
+    res.json(pricing);
+  } catch (error) {
+    console.error('Error fetching base pricing:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // GET /api/dynamic-pricing/base/:id - Get base pricing for a machine
 router.get('/base/:id', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), [
   param('id').isInt().withMessage('Valid machine ID is required')

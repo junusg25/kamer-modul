@@ -1343,6 +1343,10 @@ class ApiService {
     })
   }
 
+  async getAllBasePricing() {
+    return this.request('/dynamic-pricing/base')
+  }
+
   async getBasePricing(rentalMachineId: string) {
     return this.request(`/dynamic-pricing/base/${rentalMachineId}`)
   }

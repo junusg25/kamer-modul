@@ -23,6 +23,31 @@ class DynamicPricingService {
   }
 
   /**
+   * Get all base pricing
+   */
+  static async getAllBasePricing() {
+    try {
+      const result = await db.query(`
+        SELECT 
+          mp.*,
+          rm.serial_number,
+          mm.name as machine_name,
+          mm.manufacturer
+        FROM machine_pricing mp
+        JOIN rental_machines rm ON mp.rental_machine_id = rm.id
+        JOIN machine_models mm ON rm.model_id = mm.id
+        WHERE mp.is_active = TRUE
+        ORDER BY mm.manufacturer, mm.name, rm.serial_number
+      `);
+
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching all base pricing:', error);
+      return [];
+    }
+  }
+
+  /**
    * Get base pricing for a machine
    */
   static async getBasePricing(rentalMachineId) {

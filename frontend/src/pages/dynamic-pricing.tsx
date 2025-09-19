@@ -68,6 +68,7 @@ export default function DynamicPricing() {
   const [pricingRules, setPricingRules] = useState<PricingRule[]>([])
   const [customerTiers, setCustomerTiers] = useState<CustomerTier[]>([])
   const [basePricing, setBasePricing] = useState<BasePricing[]>([])
+  const [rentalMachines, setRentalMachines] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -92,6 +93,7 @@ export default function DynamicPricing() {
   })
 
   const [pricingForm, setPricingForm] = useState({
+    rental_machine_id: '',
     base_price_daily: '',
     base_price_weekly: '',
     base_price_monthly: '',
@@ -124,15 +126,17 @@ export default function DynamicPricing() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      const [rules, tiers, pricing] = await Promise.all([
+      const [rules, tiers, pricing, machines] = await Promise.all([
         apiService.getPricingRules(),
         apiService.getCustomerTiers(),
-        fetchBasePricing()
+        fetchBasePricing(),
+        fetchRentalMachines()
       ])
       
       setPricingRules(rules)
       setCustomerTiers(tiers)
       setBasePricing(pricing)
+      setRentalMachines(machines)
     } catch (error) {
       console.error('Error fetching data:', error)
       setError('Failed to load pricing data')
@@ -143,11 +147,20 @@ export default function DynamicPricing() {
 
   const fetchBasePricing = async () => {
     try {
-      // This would need to be implemented to fetch all machine pricing
-      // For now, return empty array
-      return []
+      const response = await apiService.getAllBasePricing()
+      return response || []
     } catch (error) {
       console.error('Error fetching base pricing:', error)
+      return []
+    }
+  }
+
+  const fetchRentalMachines = async () => {
+    try {
+      const response = await apiService.getRentalMachines()
+      return response?.data || response || []
+    } catch (error) {
+      console.error('Error fetching rental machines:', error)
       return []
     }
   }
@@ -188,6 +201,23 @@ export default function DynamicPricing() {
     } catch (error) {
       console.error('Error deleting pricing rule:', error)
       setError('Failed to delete pricing rule')
+    }
+  }
+
+  const handleCreatePricing = async () => {
+    if (!pricingForm.rental_machine_id || !pricingForm.base_price_daily) {
+      setError('Please select a machine and enter a daily price')
+      return
+    }
+    
+    try {
+      await apiService.setBasePricing(pricingForm.rental_machine_id, pricingForm)
+      setIsPricingDialogOpen(false)
+      resetPricingForm()
+      fetchData()
+    } catch (error) {
+      console.error('Error creating base pricing:', error)
+      setError('Failed to create base pricing')
     }
   }
 
@@ -259,6 +289,19 @@ export default function DynamicPricing() {
     }
   }
 
+  const handleDeletePricing = async (pricingId: number) => {
+    if (!confirm('Are you sure you want to delete this base pricing?')) return
+    
+    try {
+      // Note: We'll need to add a delete endpoint for base pricing
+      // For now, we'll just show an error message
+      setError('Delete functionality for base pricing not yet implemented')
+    } catch (error) {
+      console.error('Error deleting base pricing:', error)
+      setError('Failed to delete base pricing')
+    }
+  }
+
   const resetRuleForm = () => {
     setRuleForm({
       name: '',
@@ -273,6 +316,7 @@ export default function DynamicPricing() {
 
   const resetPricingForm = () => {
     setPricingForm({
+      rental_machine_id: '',
       base_price_daily: '',
       base_price_weekly: '',
       base_price_monthly: '',
@@ -310,6 +354,7 @@ export default function DynamicPricing() {
   const openEditPricing = (pricing: BasePricing) => {
     setEditingPricing(pricing)
     setPricingForm({
+      rental_machine_id: pricing.rental_machine_id.toString(),
       base_price_daily: pricing.base_price_daily.toString(),
       base_price_weekly: pricing.base_price_weekly?.toString() || '',
       base_price_monthly: pricing.base_price_monthly?.toString() || '',
@@ -533,45 +578,82 @@ export default function DynamicPricing() {
           {/* Base Pricing Tab */}
           <TabsContent value="pricing" className="space-y-6">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Machine Base Pricing</CardTitle>
+                <Button onClick={() => setIsPricingDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Base Pricing
+                </Button>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Machine</TableHead>
-                      <TableHead>Daily Price</TableHead>
-                      <TableHead>Weekly Price</TableHead>
-                      <TableHead>Monthly Price</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {basePricing.map((pricing) => (
-                      <TableRow key={pricing.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{pricing.manufacturer} {pricing.machine_name}</div>
-                            <div className="text-sm text-gray-500">{pricing.serial_number}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{formatCurrency(pricing.base_price_daily)}</TableCell>
-                        <TableCell>{formatCurrency(pricing.base_price_weekly || 0)}</TableCell>
-                        <TableCell>{formatCurrency(pricing.base_price_monthly || 0)}</TableCell>
-                        <TableCell>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openEditPricing(pricing)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
+                {basePricing.length === 0 ? (
+                  <div className="text-center py-8">
+                    <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Base Pricing Set</h3>
+                    <p className="text-gray-600 mb-4">
+                      Base pricing is the foundation of the dynamic pricing system. Set base prices for each rental machine.
+                    </p>
+                    <Button onClick={() => setIsPricingDialogOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add First Base Pricing
+                    </Button>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Machine</TableHead>
+                        <TableHead>Daily Price</TableHead>
+                        <TableHead>Weekly Price</TableHead>
+                        <TableHead>Monthly Price</TableHead>
+                        <TableHead>Min Days</TableHead>
+                        <TableHead>Max Days</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {basePricing.map((pricing) => (
+                        <TableRow key={pricing.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{pricing.manufacturer} {pricing.machine_name}</div>
+                              <div className="text-sm text-gray-500">{pricing.serial_number}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-semibold">{formatCurrency(pricing.base_price_daily)}</span>
+                          </TableCell>
+                          <TableCell>
+                            {pricing.base_price_weekly ? formatCurrency(pricing.base_price_weekly) : '-'}
+                          </TableCell>
+                          <TableCell>
+                            {pricing.base_price_monthly ? formatCurrency(pricing.base_price_monthly) : '-'}
+                          </TableCell>
+                          <TableCell>{pricing.minimum_rental_days}</TableCell>
+                          <TableCell>{pricing.maximum_rental_days || '∞'}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openEditPricing(pricing)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDeletePricing(pricing.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -706,22 +788,49 @@ export default function DynamicPricing() {
         <Dialog open={isPricingDialogOpen} onOpenChange={setIsPricingDialogOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Set Base Pricing</DialogTitle>
+              <DialogTitle>
+                {editingPricing ? 'Edit Base Pricing' : 'Add Base Pricing'}
+              </DialogTitle>
               <DialogDescription>
-                Configure base pricing for {editingPricing?.manufacturer} {editingPricing?.machine_name}
+                {editingPricing 
+                  ? `Configure base pricing for ${editingPricing.manufacturer} ${editingPricing.machine_name}`
+                  : 'Set base pricing for a rental machine. This is the foundation price before any dynamic adjustments.'
+                }
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              {!editingPricing && (
+                <div>
+                  <Label htmlFor="rental_machine_id">Rental Machine</Label>
+                  <Select 
+                    value={pricingForm.rental_machine_id} 
+                    onValueChange={(value) => setPricingForm(prev => ({ ...prev, rental_machine_id: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a rental machine" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {rentalMachines.map((machine) => (
+                        <SelectItem key={machine.id} value={machine.id.toString()}>
+                          {machine.manufacturer} {machine.model_name} - {machine.serial_number}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="base_price_daily">Daily Price</Label>
+                  <Label htmlFor="base_price_daily">Daily Price *</Label>
                   <Input
                     id="base_price_daily"
                     type="number"
                     step="0.01"
+                    min="0"
                     value={pricingForm.base_price_daily}
                     onChange={(e) => setPricingForm(prev => ({ ...prev, base_price_daily: e.target.value }))}
                     placeholder="0.00"
+                    required
                   />
                 </div>
                 <div>
@@ -730,6 +839,7 @@ export default function DynamicPricing() {
                     id="base_price_weekly"
                     type="number"
                     step="0.01"
+                    min="0"
                     value={pricingForm.base_price_weekly}
                     onChange={(e) => setPricingForm(prev => ({ ...prev, base_price_weekly: e.target.value }))}
                     placeholder="0.00"
@@ -743,6 +853,7 @@ export default function DynamicPricing() {
                     id="base_price_monthly"
                     type="number"
                     step="0.01"
+                    min="0"
                     value={pricingForm.base_price_monthly}
                     onChange={(e) => setPricingForm(prev => ({ ...prev, base_price_monthly: e.target.value }))}
                     placeholder="0.00"
@@ -768,9 +879,10 @@ export default function DynamicPricing() {
                   <Input
                     id="minimum_rental_days"
                     type="number"
+                    min="1"
                     value={pricingForm.minimum_rental_days}
                     onChange={(e) => setPricingForm(prev => ({ ...prev, minimum_rental_days: e.target.value }))}
-                    min="1"
+                    placeholder="1"
                   />
                 </div>
                 <div>
@@ -778,18 +890,32 @@ export default function DynamicPricing() {
                   <Input
                     id="maximum_rental_days"
                     type="number"
+                    min="1"
                     value={pricingForm.maximum_rental_days}
                     onChange={(e) => setPricingForm(prev => ({ ...prev, maximum_rental_days: e.target.value }))}
-                    min="1"
+                    placeholder="Leave empty for no limit"
                   />
                 </div>
               </div>
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium text-blue-900 mb-2">How Base Pricing Works:</h4>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li>• Base pricing is the foundation for all dynamic pricing calculations</li>
+                  <li>• Pricing rules (demand, seasonal, etc.) are applied as multipliers to base prices</li>
+                  <li>• Customer tier discounts are applied as percentage reductions</li>
+                  <li>• Final price = Base Price × Rule Multipliers × (1 - Customer Discount)</li>
+                </ul>
+              </div>
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsPricingDialogOpen(false)}>
+                <Button variant="outline" onClick={() => {
+                  setIsPricingDialogOpen(false)
+                  setEditingPricing(null)
+                  resetPricingForm()
+                }}>
                   Cancel
                 </Button>
-                <Button onClick={handleUpdatePricing}>
-                  Update Pricing
+                <Button onClick={editingPricing ? handleUpdatePricing : handleCreatePricing}>
+                  {editingPricing ? 'Update' : 'Create'} Pricing
                 </Button>
               </div>
             </div>
