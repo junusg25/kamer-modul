@@ -816,10 +816,7 @@ export default function MachineRentals() {
                       <TableCell>{getStatusBadge(rental.rental_status)}</TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          <div>{rental.billing_period}</div>
-                          {rental.price_per_day && <div>${rental.price_per_day}/day</div>}
-                          {rental.price_per_week && <div>${rental.price_per_week}/week</div>}
-                          {rental.price_per_month && <div>${rental.price_per_month}/month</div>}
+                          <div className="capitalize">{rental.billing_period}</div>
                         </div>
                       </TableCell>
                       <TableCell>{rental.total_amount ? formatCurrency(rental.total_amount) : '-'}</TableCell>
