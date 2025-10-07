@@ -856,8 +856,8 @@ class ApiService {
     return this.request(`/sales/opportunities${query ? `?${query}` : ''}`)
   }
 
-  async getSalesTeam() {
-    return this.request('/sales/team')
+  async getSalesTeam(targetType: 'monthly' | 'quarterly' | 'yearly' = 'monthly') {
+    return this.request(`/sales/team?target_type=${targetType}`)
   }
 
   async getRecentSales(params?: { limit?: number }) {
@@ -1061,12 +1061,13 @@ class ApiService {
     return this.request(`/sales/reports${query ? `?${query}` : ''}`)
   }
 
-  async getSalesTrends(params?: { time_period?: string; sales_person?: string; start_date?: string; end_date?: string }) {
+  async getSalesTrends(params?: { time_period?: string; sales_person?: string; start_date?: string; end_date?: string; group_by?: string }) {
     const queryParams = new URLSearchParams()
     if (params?.time_period) queryParams.append('time_period', params.time_period)
     if (params?.sales_person) queryParams.append('sales_person', params.sales_person)
     if (params?.start_date) queryParams.append('start_date', params.start_date)
     if (params?.end_date) queryParams.append('end_date', params.end_date)
+    if (params?.group_by) queryParams.append('group_by', params.group_by)
     
     const query = queryParams.toString()
     return this.request(`/sales/trends${query ? `?${query}` : ''}`)
@@ -1450,6 +1451,75 @@ class ApiService {
     return this.request('/dynamic-pricing/auto-assign-tiers', {
       method: 'POST'
     })
+  }
+
+  // ==================== SALES TARGETS MANAGEMENT ====================
+
+  async getSalesTargets(params?: {
+    user_id?: string
+    target_type?: string
+    is_active?: boolean
+  }) {
+    const queryParams = new URLSearchParams()
+    if (params?.user_id) queryParams.append('user_id', params.user_id)
+    if (params?.target_type) queryParams.append('target_type', params.target_type)
+    if (params?.is_active !== undefined) queryParams.append('is_active', params.is_active.toString())
+    
+    const queryString = queryParams.toString()
+    return this.request(`/sales/targets${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async getUserTargets(userId: string, params?: {
+    target_type?: string
+    is_active?: boolean
+  }) {
+    const queryParams = new URLSearchParams()
+    if (params?.target_type) queryParams.append('target_type', params.target_type)
+    if (params?.is_active !== undefined) queryParams.append('is_active', params.is_active.toString())
+    
+    const queryString = queryParams.toString()
+    return this.request(`/sales/targets/user/${userId}${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async createSalesTarget(targetData: {
+    user_id: number
+    target_type: 'monthly' | 'quarterly' | 'yearly'
+    target_amount: number
+    target_period_start: string
+    target_period_end: string
+    description?: string
+  }) {
+    return this.request('/sales/targets', {
+      method: 'POST',
+      body: JSON.stringify(targetData)
+    })
+  }
+
+  async updateSalesTarget(targetId: string, updates: {
+    target_amount?: number
+    target_period_start?: string
+    target_period_end?: string
+    description?: string
+    is_active?: boolean
+  }) {
+    return this.request(`/sales/targets/${targetId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates)
+    })
+  }
+
+  async deleteSalesTarget(targetId: string) {
+    return this.request(`/sales/targets/${targetId}`, {
+      method: 'DELETE'
+    })
+  }
+
+  async getCurrentTargets(userId?: string) {
+    const queryParams = new URLSearchParams()
+    if (userId) queryParams.append('user_id', userId)
+    
+    const queryString = queryParams.toString()
+    return this.request(`/sales/targets/current${queryString ? `?${queryString}` : ''}`)
   }
 }
 

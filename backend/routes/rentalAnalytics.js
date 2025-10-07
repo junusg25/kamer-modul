@@ -4,7 +4,7 @@ const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const RentalAnalyticsService = require('../services/rentalAnalyticsService');
 
 // GET /api/rental-analytics/overview - Get comprehensive rental analytics overview
-router.get('/overview', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), async (req, res) => {
+router.get('/overview', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), async (req, res) => {
   try {
     const { dateRange = '30d' } = req.query;
     const overview = await RentalAnalyticsService.getRentalOverview(dateRange);
@@ -16,7 +16,7 @@ router.get('/overview', authenticateToken, authorizeRoles('admin', 'manager', 't
 });
 
 // GET /api/rental-analytics/fleet - Get fleet statistics
-router.get('/fleet', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), async (req, res) => {
+router.get('/fleet', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), async (req, res) => {
   try {
     const fleetStats = await RentalAnalyticsService.getFleetStatistics();
     res.json(fleetStats);
@@ -27,7 +27,7 @@ router.get('/fleet', authenticateToken, authorizeRoles('admin', 'manager', 'tech
 });
 
 // GET /api/rental-analytics/revenue - Get revenue statistics
-router.get('/revenue', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), async (req, res) => {
+router.get('/revenue', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), async (req, res) => {
   try {
     const { dateRange = '30d' } = req.query;
     const dateFilter = RentalAnalyticsService.getDateFilter(dateRange);
@@ -40,7 +40,7 @@ router.get('/revenue', authenticateToken, authorizeRoles('admin', 'manager', 'te
 });
 
 // GET /api/rental-analytics/utilization - Get utilization statistics
-router.get('/utilization', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), async (req, res) => {
+router.get('/utilization', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), async (req, res) => {
   try {
     const { dateRange = '30d' } = req.query;
     const dateFilter = RentalAnalyticsService.getDateFilter(dateRange);
@@ -53,7 +53,7 @@ router.get('/utilization', authenticateToken, authorizeRoles('admin', 'manager',
 });
 
 // GET /api/rental-analytics/customers - Get customer statistics
-router.get('/customers', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), async (req, res) => {
+router.get('/customers', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), async (req, res) => {
   try {
     const { dateRange = '30d' } = req.query;
     const dateFilter = RentalAnalyticsService.getDateFilter(dateRange);
@@ -66,7 +66,7 @@ router.get('/customers', authenticateToken, authorizeRoles('admin', 'manager', '
 });
 
 // GET /api/rental-analytics/status - Get status distribution
-router.get('/status', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), async (req, res) => {
+router.get('/status', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), async (req, res) => {
   try {
     const statusStats = await RentalAnalyticsService.getStatusStatistics();
     res.json(statusStats);
@@ -77,7 +77,7 @@ router.get('/status', authenticateToken, authorizeRoles('admin', 'manager', 'tec
 });
 
 // GET /api/rental-analytics/overdue - Get overdue rental statistics
-router.get('/overdue', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), async (req, res) => {
+router.get('/overdue', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), async (req, res) => {
   try {
     const overdueStats = await RentalAnalyticsService.getOverdueStatistics();
     res.json(overdueStats);
@@ -88,7 +88,7 @@ router.get('/overdue', authenticateToken, authorizeRoles('admin', 'manager', 'te
 });
 
 // GET /api/rental-analytics/trends - Get rental trends over time
-router.get('/trends', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), async (req, res) => {
+router.get('/trends', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), async (req, res) => {
   try {
     const { dateRange = '30d', groupBy = 'day' } = req.query;
     const trends = await RentalAnalyticsService.getRentalTrends(dateRange, groupBy);
@@ -100,7 +100,7 @@ router.get('/trends', authenticateToken, authorizeRoles('admin', 'manager', 'tec
 });
 
 // GET /api/rental-analytics/machine-performance - Get machine performance analytics
-router.get('/machine-performance', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), async (req, res) => {
+router.get('/machine-performance', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), async (req, res) => {
   try {
     const { dateRange = '30d' } = req.query;
     const performance = await RentalAnalyticsService.getMachinePerformance(dateRange);
@@ -112,7 +112,7 @@ router.get('/machine-performance', authenticateToken, authorizeRoles('admin', 'm
 });
 
 // GET /api/rental-analytics/duration - Get rental duration analytics
-router.get('/duration', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), async (req, res) => {
+router.get('/duration', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), async (req, res) => {
   try {
     const { dateRange = '30d' } = req.query;
     const durationAnalytics = await RentalAnalyticsService.getRentalDurationAnalytics(dateRange);
@@ -124,7 +124,7 @@ router.get('/duration', authenticateToken, authorizeRoles('admin', 'manager', 't
 });
 
 // GET /api/rental-analytics/billing - Get billing period analytics
-router.get('/billing', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), async (req, res) => {
+router.get('/billing', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), async (req, res) => {
   try {
     const { dateRange = '30d' } = req.query;
     const billingAnalytics = await RentalAnalyticsService.getBillingPeriodAnalytics(dateRange);
@@ -136,7 +136,7 @@ router.get('/billing', authenticateToken, authorizeRoles('admin', 'manager', 'te
 });
 
 // GET /api/rental-analytics/realtime - Get real-time dashboard data
-router.get('/realtime', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), async (req, res) => {
+router.get('/realtime', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), async (req, res) => {
   try {
     const realTimeData = await RentalAnalyticsService.getRealTimeDashboard();
     res.json(realTimeData);

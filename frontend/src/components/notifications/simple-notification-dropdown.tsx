@@ -35,11 +35,11 @@ const getNotificationIcon = (type: string) => {
     case 'inventory':
       return <AlertTriangle className="h-4 w-4 text-red-500" />
     case 'system':
-      return <Info className="h-4 w-4 text-gray-500" />
+      return <Info className="h-4 w-4 text-muted-foreground" />
     case 'feedback':
       return <Bell className="h-4 w-4 text-blue-500" />
     default:
-      return <Bell className="h-4 w-4 text-gray-500" />
+      return <Bell className="h-4 w-4 text-muted-foreground" />
   }
 }
 
@@ -47,22 +47,22 @@ const getNotificationColor = (type: string) => {
   switch (type) {
     case 'work_order':
     case 'warranty_work_order':
-      return 'border-l-blue-500 bg-blue-50'
+      return 'border-l-blue-500 bg-blue-50 dark:bg-blue-950 dark:border-l-blue-400'
     case 'repair_ticket':
     case 'warranty_repair_ticket':
-      return 'border-l-orange-500 bg-orange-50'
+      return 'border-l-orange-500 bg-orange-50 dark:bg-orange-950 dark:border-l-orange-400'
     case 'customer':
-      return 'border-l-green-500 bg-green-50'
+      return 'border-l-green-500 bg-green-50 dark:bg-green-950 dark:border-l-green-400'
     case 'machine':
-      return 'border-l-purple-500 bg-purple-50'
+      return 'border-l-purple-500 bg-purple-50 dark:bg-purple-950 dark:border-l-purple-400'
     case 'inventory':
-      return 'border-l-red-500 bg-red-50'
+      return 'border-l-red-500 bg-red-50 dark:bg-red-950 dark:border-l-red-400'
     case 'system':
-      return 'border-l-gray-500 bg-gray-50'
+      return 'border-l-muted-foreground bg-muted/50 dark:bg-muted/20'
     case 'feedback':
-      return 'border-l-blue-500 bg-blue-50'
+      return 'border-l-blue-500 bg-blue-50 dark:bg-blue-950 dark:border-l-blue-400'
     default:
-      return 'border-l-gray-300 bg-gray-50'
+      return 'border-l-muted-foreground bg-muted/50 dark:bg-muted/20'
   }
 }
 
@@ -186,12 +186,12 @@ export function SimpleNotificationDropdown() {
       </Button>
       
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-96 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-in slide-in-from-top-2 duration-200">
+        <div className="absolute right-0 top-full mt-2 w-96 bg-background border border-border rounded-xl shadow-xl z-50 animate-in slide-in-from-top-2 duration-200">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-100">
+          <div className="flex items-center justify-between p-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <Bell className="h-5 w-5 text-gray-600" />
-              <h3 className="font-semibold text-sm text-gray-900">Notifications</h3>
+              <Bell className="h-5 w-5 text-muted-foreground" />
+              <h3 className="font-semibold text-sm text-foreground">Notifications</h3>
             </div>
             {unreadCount > 0 && (
               <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
@@ -204,28 +204,28 @@ export function SimpleNotificationDropdown() {
           <div className="max-h-96 overflow-y-auto">
             {isLoading ? (
               <div className="flex items-center justify-center p-8">
-                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                <span className="ml-2 text-sm text-gray-500">Loading notifications...</span>
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-sm text-muted-foreground">Loading notifications...</span>
               </div>
             ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center p-8 text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <Bell className="h-8 w-8 text-gray-400" />
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                  <Bell className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <p className="text-sm font-medium text-gray-900 mb-1">No notifications yet</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm font-medium text-foreground mb-1">No notifications yet</p>
+                <p className="text-xs text-muted-foreground">
                   You'll see updates about your work here
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-border">
                 {notifications.slice(0, 5).map((notification: any) => (
                   <div 
                     key={notification.id} 
                     className={cn(
-                      "p-4 hover:bg-gray-50 cursor-pointer transition-all duration-150 border-l-4",
+                      "p-4 hover:bg-muted/50 cursor-pointer transition-all duration-150 border-l-4",
                       getNotificationColor(notification.type),
-                      !notification.is_read && "bg-blue-50/50"
+                      !notification.is_read && "bg-blue-50/50 dark:bg-blue-950/50"
                     )}
                     onClick={() => handleNotificationClick(notification)}
                   >
@@ -239,16 +239,16 @@ export function SimpleNotificationDropdown() {
                           <div className="flex-1">
                             <p className={cn(
                               "text-sm font-medium",
-                              !notification.is_read ? "text-gray-900" : "text-gray-700"
+                              !notification.is_read ? "text-foreground" : "text-muted-foreground"
                             )}>
                               {notification.title}
                             </p>
-                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                               {notification.message}
                             </p>
                             <div className="flex items-center gap-2 mt-2">
-                              <Clock className="h-3 w-3 text-gray-400" />
-                              <span className="text-xs text-gray-500">
+                              <Clock className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">
                                 {formatTimeAgo(notification.created_at)}
                               </span>
                               {!notification.is_read && (
@@ -289,11 +289,11 @@ export function SimpleNotificationDropdown() {
           </div>
           
           {/* Footer */}
-          <div className="border-t border-gray-100 p-3 bg-gray-50/50 space-y-1">
+          <div className="border-t border-border p-3 bg-muted/30 space-y-1">
             <Button
               variant="ghost"
               size="sm"
-              className="w-full justify-center text-xs hover:bg-gray-100"
+              className="w-full justify-center text-xs"
               onClick={handleViewAll}
             >
               <ExternalLink className="h-3 w-3 mr-2" />

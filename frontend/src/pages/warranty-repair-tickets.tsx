@@ -672,21 +672,27 @@ export default function WarrantyRepairTickets() {
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Details
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit Ticket
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <User className="mr-2 h-4 w-4" />
-                                Assign Technician
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => handleConvertToWorkOrder(ticket)}
-                                disabled={ticket.status === 'converted' || ticket.status === 'cancelled'}
-                              >
-                                <Wrench className="mr-2 h-4 w-4" />
-                                Convert to Work Order
-                              </DropdownMenuItem>
+                              {hasPermission('repair_tickets:write') && (
+                                <DropdownMenuItem>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit Ticket
+                                </DropdownMenuItem>
+                              )}
+                              {hasPermission('repair_tickets:write') && (
+                                <DropdownMenuItem>
+                                  <User className="mr-2 h-4 w-4" />
+                                  Assign Technician
+                                </DropdownMenuItem>
+                              )}
+                              {hasPermission('repair_tickets:write') && (
+                                <DropdownMenuItem 
+                                  onClick={() => handleConvertToWorkOrder(ticket)}
+                                  disabled={ticket.status === 'converted' || ticket.status === 'cancelled'}
+                                >
+                                  <Wrench className="mr-2 h-4 w-4" />
+                                  Convert to Work Order
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem onClick={() => handlePrintTicket(ticket)}>
                                 <Printer className="mr-2 h-4 w-4" />
                                 Print
@@ -695,17 +701,21 @@ export default function WarrantyRepairTickets() {
                                 <FileText className="mr-2 h-4 w-4" />
                                 Download PDF
                               </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                className="text-red-600"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleDeleteTicket(ticket)
-                                }}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
+                              {hasPermission('repair_tickets:delete') && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    className="text-red-600"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleDeleteTicket(ticket)
+                                    }}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>

@@ -118,38 +118,79 @@ export default function SalesReports() {
   const [selectedPeriod, setSelectedPeriod] = useState('30d')
   const [selectedReport, setSelectedReport] = useState('overview')
 
+  // Helper function to convert frontend time period to backend format
+  const getBackendTimePeriod = (period: string) => {
+    switch (period) {
+      case '7d': return 'week'
+      case '30d': return 'month'
+      case '90d': return 'quarter'
+      case '1y': return 'year'
+      case 'ytd': return 'year'
+      default: return 'month'
+    }
+  }
+
+  // Helper function to convert time period to target type
+  const getTargetType = (period: string): 'monthly' | 'quarterly' | 'yearly' => {
+    switch (period) {
+      case '7d':
+      case '30d': return 'monthly'
+      case '90d': return 'quarterly'
+      case '1y':
+      case 'ytd': return 'yearly'
+      default: return 'monthly'
+    }
+  }
+
   // Fetch sales metrics from API
   const { data: salesMetricsData, isLoading: metricsLoading } = useQuery({
     queryKey: ['sales-metrics', selectedPeriod],
-    queryFn: () => apiService.getSalesMetrics({ time_period: selectedPeriod }),
+    queryFn: () => apiService.getSalesMetrics({ time_period: getBackendTimePeriod(selectedPeriod) }),
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
   // Fetch sales team data
   const { data: salesTeamData, isLoading: teamLoading } = useQuery({
-    queryKey: ['sales-team'],
-    queryFn: () => apiService.getSalesTeam(),
+    queryKey: ['sales-team', selectedPeriod],
+    queryFn: () => apiService.getSalesTeam(getTargetType(selectedPeriod)),
     staleTime: 10 * 60 * 1000, // 10 minutes
+  })
+
+  // Fetch sales trends data
+  const { data: salesTrendsData, isLoading: trendsLoading } = useQuery({
+    queryKey: ['sales-trends', selectedPeriod],
+    queryFn: () => apiService.getSalesTrends({ 
+      time_period: getBackendTimePeriod(selectedPeriod),
+      group_by: 'month' // Always group by month for trends view
+    }),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  })
+
+  // Fetch sales forecast data
+  const { data: salesForecastData, isLoading: forecastLoading } = useQuery({
+    queryKey: ['sales-forecast'],
+    queryFn: () => apiService.getSalesForecast({ months: 6 }),
+    staleTime: 30 * 60 * 1000, // 30 minutes (forecasts don't change as frequently)
   })
 
   // Fetch recent sales
   const { data: recentSalesData, isLoading: recentSalesLoading } = useQuery({
     queryKey: ['recent-sales', selectedPeriod],
-    queryFn: () => apiService.getRecentSales({ limit: 10 }),
+    queryFn: () => apiService.getRecentSales({ limit: 10, time_period: getBackendTimePeriod(selectedPeriod) }),
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
   // Fetch top customers
   const { data: topCustomersData, isLoading: topCustomersLoading } = useQuery({
     queryKey: ['top-customers', selectedPeriod],
-    queryFn: () => apiService.getTopCustomers({ limit: 10, time_period: selectedPeriod }),
+    queryFn: () => apiService.getTopCustomers({ limit: 10, time_period: getBackendTimePeriod(selectedPeriod) }),
     staleTime: 10 * 60 * 1000, // 10 minutes
   })
 
   // Fetch lead sources
   const { data: leadSourcesData, isLoading: leadSourcesLoading } = useQuery({
     queryKey: ['lead-sources', selectedPeriod],
-    queryFn: () => apiService.getLeadSources({ time_period: selectedPeriod }),
+    queryFn: () => apiService.getLeadSources({ time_period: getBackendTimePeriod(selectedPeriod) }),
     staleTime: 10 * 60 * 1000, // 10 minutes
   })
 
@@ -158,14 +199,14 @@ export default function SalesReports() {
 
   // Process sales metrics data
   const salesMetrics: SalesMetrics = salesMetricsData?.data ? {
-    totalRevenue: salesMetricsData.data.total_revenue || 0,
-    totalLeads: salesMetricsData.data.total_sales || 0,
+    totalRevenue: salesMetricsData.data.totalRevenue || 0,
+    totalLeads: salesMetricsData.data.totalSales || 0,
     totalQuotes: 0, // Not available in current API
-    conversionRate: 0, // Not available in current API
-    averageDealSize: salesMetricsData.data.avg_sale_price || 0,
+    conversionRate: salesMetricsData.data.totalSales > 0 ? Math.round((salesMetricsData.data.customersServed / salesMetricsData.data.totalSales) * 100) : 0, // Calculate conversion rate
+    averageDealSize: salesMetricsData.data.avgSalePrice || 0,
     salesCycle: 0, // Not available in current API
-    winRate: 0, // Not available in current API
-    monthlyGrowth: 0 // Not available in current API
+    winRate: salesMetricsData.data.totalSales > 0 ? Math.round((salesMetricsData.data.customersServed / salesMetricsData.data.totalSales) * 100) : 0, // Use same as conversion for now
+    monthlyGrowth: salesMetricsData.data.revenueChange || 0 // Use revenue change as growth indicator
   } : {
     totalRevenue: 0,
     totalLeads: 0,
@@ -186,11 +227,11 @@ export default function SalesReports() {
     totalRevenue: member.totalRevenue || 0,
     totalLeads: member.totalSales || 0,
     totalQuotes: 0, // Not available in current API
-    conversionRate: 0, // Not available in current API
+    conversionRate: member.totalSales > 0 ? Math.round((member.customersServed / member.totalSales) * 100) : 0, // Calculate conversion rate
     averageDealSize: member.avgSalePrice || 0,
     salesCycle: 0, // Not available in current API
-    winRate: 0, // Not available in current API
-    monthlyTarget: member.target || 0,
+    winRate: member.totalSales > 0 ? Math.round((member.customersServed / member.totalSales) * 100) : 0, // Use same as conversion for now
+    monthlyTarget: member.target || 0, // This is now dynamic based on target_type parameter
     monthlyActual: member.totalRevenue || 0,
     performance: member.completionRate >= 100 ? 'excellent' : 
                  member.completionRate >= 80 ? 'good' : 
@@ -213,10 +254,10 @@ export default function SalesReports() {
   const topCustomers: TopCustomer[] = topCustomersData?.data?.customers ? topCustomersData.data.customers.map((customer: any) => ({
     id: customer.id,
     name: customer.name || 'Unknown Customer',
-    company: customer.company_name || customer.name,
-    totalRevenue: customer.total_revenue || 0,
-    totalDeals: customer.total_deals || 0,
-    lastDeal: customer.last_deal || new Date().toISOString(),
+    company: customer.company || customer.name,
+    totalRevenue: customer.totalRevenue || 0,
+    totalDeals: customer.totalDeals || 0,
+    lastDeal: customer.lastDeal || new Date().toISOString(),
     status: customer.status || 'active'
   })) : []
 
@@ -232,30 +273,23 @@ export default function SalesReports() {
   // Check if we have any lead sources data
   const hasLeadSourcesData = leadSources.length > 0
 
-  const salesTrends: SalesTrend[] = [
-    { month: 'Jan', revenue: 45000, leads: 12, quotes: 8, deals: 5 },
-    { month: 'Feb', revenue: 52000, leads: 15, quotes: 10, deals: 6 },
-    { month: 'Mar', revenue: 48000, leads: 14, quotes: 9, deals: 5 },
-    { month: 'Apr', revenue: 61000, leads: 18, quotes: 12, deals: 7 },
-    { month: 'May', revenue: 55000, leads: 16, quotes: 11, deals: 6 },
-    { month: 'Jun', revenue: 68000, leads: 20, quotes: 14, deals: 8 },
-    { month: 'Jul', revenue: 72000, leads: 22, quotes: 15, deals: 9 },
-    { month: 'Aug', revenue: 65000, leads: 19, quotes: 13, deals: 7 },
-    { month: 'Sep', revenue: 58000, leads: 17, quotes: 12, deals: 6 },
-    { month: 'Oct', revenue: 62000, leads: 18, quotes: 13, deals: 7 },
-    { month: 'Nov', revenue: 59000, leads: 16, quotes: 11, deals: 6 },
-    { month: 'Dec', revenue: 71000, leads: 21, quotes: 14, deals: 8 }
-  ]
+  // Process sales trends data from backend
+  const salesTrends: SalesTrend[] = salesTrendsData?.data ? salesTrendsData.data.map((trend: any) => ({
+    month: trend.month || new Date(trend.date).toLocaleDateString('en-US', { month: 'short' }),
+    revenue: trend.revenue || 0,
+    leads: trend.leads || 0,
+    quotes: trend.quotes || 0,
+    deals: trend.deals || trend.sales || 0
+  })) : []
 
 
-  const salesForecast: SalesForecast[] = [
-    { month: 'Jan 2025', forecasted: 75000, actual: 72000, confidence: 85 },
-    { month: 'Feb 2025', forecasted: 82000, actual: 0, confidence: 78 },
-    { month: 'Mar 2025', forecasted: 78000, actual: 0, confidence: 72 },
-    { month: 'Apr 2025', forecasted: 85000, actual: 0, confidence: 68 },
-    { month: 'May 2025', forecasted: 90000, actual: 0, confidence: 65 },
-    { month: 'Jun 2025', forecasted: 95000, actual: 0, confidence: 62 }
-  ]
+  // Process sales forecast data from backend
+  const salesForecast: SalesForecast[] = salesForecastData?.data ? salesForecastData.data.map((forecast: any) => ({
+    month: forecast.month,
+    forecasted: forecast.forecasted || 0,
+    actual: forecast.actual || 0,
+    confidence: forecast.confidence || 0
+  })) : []
 
   // formatCurrency is now imported from lib/currency
 
@@ -529,17 +563,14 @@ export default function SalesReports() {
                           {formatCurrency(person.totalRevenue)}
                         </TableCell>
                         <TableCell>
-                          <div className="space-y-1">
-                            <div className="text-sm">{formatCurrency(person.monthlyTarget)}</div>
-                            <div className="flex items-center space-x-2">
-                              <Progress 
-                                value={(person.monthlyActual / person.monthlyTarget) * 100} 
-                                className="w-16" 
-                              />
-                              <span className="text-xs text-muted-foreground">
-                                {formatPercentage((person.monthlyActual / person.monthlyTarget) * 100)}
-                              </span>
-                            </div>
+                          <div className="flex items-center space-x-2">
+                            <Progress 
+                              value={person.monthlyTarget > 0 ? (person.monthlyActual / person.monthlyTarget) * 100 : 0} 
+                              className="w-16" 
+                            />
+                            <span className="text-xs text-muted-foreground">
+                              {person.monthlyTarget > 0 ? formatPercentage((person.monthlyActual / person.monthlyTarget) * 100) : '0%'}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>{person.totalLeads}</TableCell>
@@ -568,46 +599,56 @@ export default function SalesReports() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Month</TableHead>
-                      <TableHead>Revenue</TableHead>
-                      <TableHead>Leads</TableHead>
-                      <TableHead>Quotes</TableHead>
-                      <TableHead>Deals</TableHead>
-                      <TableHead>Trend</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {salesTrends.map((trend, index) => {
-                      const previousRevenue = index > 0 ? salesTrends[index - 1].revenue : trend.revenue
-                      const growth = ((trend.revenue - previousRevenue) / previousRevenue) * 100
-                      
-                      return (
-                        <TableRow key={trend.month}>
-                          <TableCell className="font-medium">{trend.month}</TableCell>
-                          <TableCell>{formatCurrency(trend.revenue)}</TableCell>
-                          <TableCell>{trend.leads}</TableCell>
-                          <TableCell>{trend.quotes}</TableCell>
-                          <TableCell>{trend.deals}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-1">
-                              {growth >= 0 ? (
-                                <TrendingUp className="h-4 w-4 text-green-600" />
-                              ) : (
-                                <TrendingDown className="h-4 w-4 text-red-600" />
-                              )}
-                              <span className={`text-sm ${growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {formatPercentage(Math.abs(growth))}
-                              </span>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
+                {trendsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-muted-foreground">Loading trends data...</div>
+                  </div>
+                ) : salesTrends.length === 0 ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-muted-foreground">No trends data available for the selected period.</div>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Month</TableHead>
+                        <TableHead>Revenue</TableHead>
+                        <TableHead>Leads</TableHead>
+                        <TableHead>Quotes</TableHead>
+                        <TableHead>Deals</TableHead>
+                        <TableHead>Trend</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {salesTrends.map((trend, index) => {
+                        const previousRevenue = index > 0 ? salesTrends[index - 1].revenue : trend.revenue
+                        const growth = previousRevenue > 0 ? ((trend.revenue - previousRevenue) / previousRevenue) * 100 : 0
+                        
+                        return (
+                          <TableRow key={trend.month}>
+                            <TableCell className="font-medium">{trend.month}</TableCell>
+                            <TableCell>{formatCurrency(trend.revenue)}</TableCell>
+                            <TableCell>{trend.leads}</TableCell>
+                            <TableCell>{trend.quotes}</TableCell>
+                            <TableCell>{trend.deals}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-1">
+                                {growth >= 0 ? (
+                                  <TrendingUp className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <TrendingDown className="h-4 w-4 text-red-600" />
+                                )}
+                                <span className={`text-sm ${growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  {formatPercentage(Math.abs(growth))}
+                                </span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -618,60 +659,70 @@ export default function SalesReports() {
               <CardHeader>
                 <CardTitle>Sales Forecast</CardTitle>
                 <CardDescription>
-                  Revenue forecast and confidence levels
+                  Revenue forecast and confidence levels based on historical data
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Month</TableHead>
-                      <TableHead>Forecasted</TableHead>
-                      <TableHead>Actual</TableHead>
-                      <TableHead>Variance</TableHead>
-                      <TableHead>Confidence</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {salesForecast.map((forecast) => {
-                      const variance = forecast.actual > 0 
-                        ? ((forecast.actual - forecast.forecasted) / forecast.forecasted) * 100 
-                        : 0
-                      
-                      return (
-                        <TableRow key={forecast.month}>
-                          <TableCell className="font-medium">{forecast.month}</TableCell>
-                          <TableCell>{formatCurrency(forecast.forecasted)}</TableCell>
-                          <TableCell>
-                            {forecast.actual > 0 ? formatCurrency(forecast.actual) : '-'}
-                          </TableCell>
-                          <TableCell>
-                            {forecast.actual > 0 && (
-                              <div className="flex items-center space-x-1">
-                                {variance >= 0 ? (
-                                  <TrendingUp className="h-4 w-4 text-green-600" />
-                                ) : (
-                                  <TrendingDown className="h-4 w-4 text-red-600" />
-                                )}
-                                <span className={`text-sm ${variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                  {formatPercentage(Math.abs(variance))}
+                {forecastLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-muted-foreground">Loading forecast data...</div>
+                  </div>
+                ) : salesForecast.length === 0 ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-muted-foreground">No forecast data available. Need more historical data to generate forecasts.</div>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Month</TableHead>
+                        <TableHead>Forecasted</TableHead>
+                        <TableHead>Actual</TableHead>
+                        <TableHead>Variance</TableHead>
+                        <TableHead>Confidence</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {salesForecast.map((forecast) => {
+                        const variance = forecast.actual > 0 
+                          ? ((forecast.actual - forecast.forecasted) / forecast.forecasted) * 100 
+                          : 0
+                        
+                        return (
+                          <TableRow key={forecast.month}>
+                            <TableCell className="font-medium">{forecast.month}</TableCell>
+                            <TableCell>{formatCurrency(forecast.forecasted)}</TableCell>
+                            <TableCell>
+                              {forecast.actual > 0 ? formatCurrency(forecast.actual) : '-'}
+                            </TableCell>
+                            <TableCell>
+                              {forecast.actual > 0 && (
+                                <div className="flex items-center space-x-1">
+                                  {variance >= 0 ? (
+                                    <TrendingUp className="h-4 w-4 text-green-600" />
+                                  ) : (
+                                    <TrendingDown className="h-4 w-4 text-red-600" />
+                                  )}
+                                  <span className={`text-sm ${variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {formatPercentage(Math.abs(variance))}
+                                  </span>
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <Progress value={forecast.confidence} className="w-16" />
+                                <span className="text-sm text-muted-foreground">
+                                  {forecast.confidence}%
                                 </span>
                               </div>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <Progress value={forecast.confidence} className="w-16" />
-                              <span className="text-sm text-muted-foreground">
-                                {forecast.confidence}%
-                              </span>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

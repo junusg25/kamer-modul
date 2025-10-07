@@ -140,7 +140,7 @@ export default function RentalDetail() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
-          <p className="text-gray-600 mb-4">{error || 'Rental not found'}</p>
+          <p className="text-muted-foreground mb-4">{error || 'Rental not found'}</p>
           <Button onClick={() => navigate('/machine-rentals')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Rentals
@@ -162,7 +162,7 @@ export default function RentalDetail() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold">Rental Details</h1>
-            <p className="text-gray-600">Rental ID: #{rental.id}</p>
+            <p className="text-muted-foreground">Rental ID: #{rental.id}</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
@@ -190,35 +190,35 @@ export default function RentalDetail() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Start Date</label>
+                  <label className="text-sm font-medium text-muted-foreground">Start Date</label>
                   <p className="text-lg">{formatDate(rental.rental_start_date)}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">End Date</label>
+                  <label className="text-sm font-medium text-muted-foreground">End Date</label>
                   <p className="text-lg">{rental.rental_end_date ? formatDate(rental.rental_end_date) : 'Not specified'}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Planned Return</label>
+                  <label className="text-sm font-medium text-muted-foreground">Planned Return</label>
                   <p className="text-lg">{rental.planned_return_date ? formatDate(rental.planned_return_date) : 'Not specified'}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Actual Return</label>
+                  <label className="text-sm font-medium text-muted-foreground">Actual Return</label>
                   <p className="text-lg">{rental.actual_return_date ? formatDate(rental.actual_return_date) : 'Not returned'}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Duration</label>
+                  <label className="text-sm font-medium text-muted-foreground">Duration</label>
                   <p className="text-lg">{calculateRentalDuration()} days</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Billing Period</label>
+                  <label className="text-sm font-medium text-muted-foreground">Billing Period</label>
                   <p className="text-lg capitalize">{rental.billing_period}</p>
                 </div>
               </div>
               
               {rental.rental_notes && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Notes</label>
-                  <p className="text-sm bg-gray-50 p-3 rounded-md">{rental.rental_notes}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Notes</label>
+                  <p className="text-sm bg-muted p-3 rounded-md">{rental.rental_notes}</p>
                 </div>
               )}
             </CardContent>
@@ -235,24 +235,24 @@ export default function RentalDetail() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Machine</label>
+                  <label className="text-sm font-medium text-muted-foreground">Machine</label>
                   <p className="text-lg font-medium">{rental.machine_manufacturer} {rental.machine_model_name}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Serial Number</label>
+                  <label className="text-sm font-medium text-muted-foreground">Serial Number</label>
                   <p className="text-lg">{rental.machine_serial}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Condition</label>
+                  <label className="text-sm font-medium text-muted-foreground">Condition</label>
                   <div className="mt-1">{getConditionBadge(rental.machine_condition)}</div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Location</label>
+                  <label className="text-sm font-medium text-muted-foreground">Location</label>
                   <p className="text-lg">{rental.machine_location || 'Not specified'}</p>
                 </div>
                 {rental.machine_catalogue_number && (
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Catalogue Number</label>
+                    <label className="text-sm font-medium text-muted-foreground">Catalogue Number</label>
                     <p className="text-lg">{rental.machine_catalogue_number}</p>
                   </div>
                 )}
@@ -260,15 +260,15 @@ export default function RentalDetail() {
               
               {rental.machine_model_description && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Description</label>
-                  <p className="text-sm bg-gray-50 p-3 rounded-md">{rental.machine_model_description}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Description</label>
+                  <p className="text-sm bg-muted p-3 rounded-md">{rental.machine_model_description}</p>
                 </div>
               )}
               
               {rental.machine_notes && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Machine Notes</label>
-                  <p className="text-sm bg-gray-50 p-3 rounded-md">{rental.machine_notes}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Machine Notes</label>
+                  <p className="text-sm bg-muted p-3 rounded-md">{rental.machine_notes}</p>
                 </div>
               )}
             </CardContent>
@@ -285,30 +285,30 @@ export default function RentalDetail() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Name</label>
+                  <label className="text-sm font-medium text-muted-foreground">Name</label>
                   <p className="text-lg font-medium">{rental.customer_name}</p>
                 </div>
                 {rental.customer_company && (
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Company</label>
+                    <label className="text-sm font-medium text-muted-foreground">Company</label>
                     <p className="text-lg">{rental.customer_company}</p>
                   </div>
                 )}
                 {rental.customer_email && (
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Email</label>
+                    <label className="text-sm font-medium text-muted-foreground">Email</label>
                     <p className="text-lg">{rental.customer_email}</p>
                   </div>
                 )}
                 {rental.customer_phone && (
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Phone</label>
+                    <label className="text-sm font-medium text-muted-foreground">Phone</label>
                     <p className="text-lg">{rental.customer_phone}</p>
                   </div>
                 )}
                 {rental.customer_address && (
                   <div className="col-span-2">
-                    <label className="text-sm font-medium text-gray-500">Address</label>
+                    <label className="text-sm font-medium text-muted-foreground">Address</label>
                     <p className="text-lg">{rental.customer_address}</p>
                     {rental.customer_city && (
                       <p className="text-lg">{rental.customer_city} {rental.customer_postal_code}</p>
@@ -333,19 +333,19 @@ export default function RentalDetail() {
             <CardContent className="space-y-4">
               {rental.price_per_day && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Price per Day</label>
+                  <label className="text-sm font-medium text-muted-foreground">Price per Day</label>
                   <p className="text-lg font-medium">{formatCurrency(rental.price_per_day)}</p>
                 </div>
               )}
               {rental.price_per_week && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Price per Week</label>
+                  <label className="text-sm font-medium text-muted-foreground">Price per Week</label>
                   <p className="text-lg font-medium">{formatCurrency(rental.price_per_week)}</p>
                 </div>
               )}
               {rental.price_per_month && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Price per Month</label>
+                  <label className="text-sm font-medium text-muted-foreground">Price per Month</label>
                   <p className="text-lg font-medium">{formatCurrency(rental.price_per_month)}</p>
                 </div>
               )}
@@ -353,7 +353,7 @@ export default function RentalDetail() {
                 <div>
                   <Separator />
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Total Amount</label>
+                    <label className="text-sm font-medium text-muted-foreground">Total Amount</label>
                     <p className="text-xl font-bold text-primary">{formatCurrency(rental.total_amount)}</p>
                   </div>
                 </div>
@@ -372,7 +372,7 @@ export default function RentalDetail() {
               </CardHeader>
               <CardContent>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Reminder Date</label>
+                  <label className="text-sm font-medium text-muted-foreground">Reminder Date</label>
                   <p className="text-lg">{formatDate(rental.maintenance_reminder_date)}</p>
                 </div>
               </CardContent>
@@ -386,16 +386,16 @@ export default function RentalDetail() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-500">Created</label>
+                <label className="text-sm font-medium text-muted-foreground">Created</label>
                 <p className="text-sm">{formatDateTime(rental.created_at)}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-500">Last Updated</label>
+                <label className="text-sm font-medium text-muted-foreground">Last Updated</label>
                 <p className="text-sm">{formatDateTime(rental.updated_at)}</p>
               </div>
               {rental.created_by_name && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Created By</label>
+                  <label className="text-sm font-medium text-muted-foreground">Created By</label>
                   <p className="text-sm">{rental.created_by_name}</p>
                 </div>
               )}

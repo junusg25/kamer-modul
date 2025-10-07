@@ -71,7 +71,7 @@ router.get('/base/:id', authenticateToken, authorizeRoles('admin', 'manager', 't
 });
 
 // PUT /api/dynamic-pricing/base/:id - Set base pricing for a machine
-router.put('/base/:id', authenticateToken, authorizeRoles('admin', 'manager'), [
+router.put('/base/:id', authenticateToken, authorizeRoles('admin', 'manager', 'sales'), [
   param('id').isInt({ min: 1 }).withMessage('Valid machine ID is required'),
   body('base_price_daily').isNumeric().withMessage('Valid daily price is required'),
   body('base_price_weekly').optional({ nullable: true, checkFalsy: true }).isNumeric().withMessage('Valid weekly price is required'),
@@ -94,7 +94,7 @@ router.put('/base/:id', authenticateToken, authorizeRoles('admin', 'manager'), [
 });
 
 // GET /api/dynamic-pricing/rules - Get all pricing rules
-router.get('/rules', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), async (req, res) => {
+router.get('/rules', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), async (req, res) => {
   try {
     const rules = await DynamicPricingService.getPricingRules();
     res.json(rules);
@@ -105,7 +105,7 @@ router.get('/rules', authenticateToken, authorizeRoles('admin', 'manager', 'tech
 });
 
 // POST /api/dynamic-pricing/rules - Create a new pricing rule
-router.post('/rules', authenticateToken, authorizeRoles('admin', 'manager'), [
+router.post('/rules', authenticateToken, authorizeRoles('admin', 'manager', 'sales'), [
   body('name').notEmpty().withMessage('Rule name is required'),
   body('description').optional().isString(),
   body('rule_type').isIn(['demand', 'seasonal', 'availability', 'customer_tier', 'duration']).withMessage('Valid rule type is required'),
@@ -127,7 +127,7 @@ router.post('/rules', authenticateToken, authorizeRoles('admin', 'manager'), [
 });
 
 // PUT /api/dynamic-pricing/rules/:id - Update a pricing rule
-router.put('/rules/:id', authenticateToken, authorizeRoles('admin', 'manager'), [
+router.put('/rules/:id', authenticateToken, authorizeRoles('admin', 'manager', 'sales'), [
   param('id').isInt().withMessage('Valid rule ID is required'),
   body('name').notEmpty().withMessage('Rule name is required'),
   body('description').optional().isString(),
@@ -151,7 +151,7 @@ router.put('/rules/:id', authenticateToken, authorizeRoles('admin', 'manager'), 
 });
 
 // DELETE /api/dynamic-pricing/rules/:id - Delete a pricing rule
-router.delete('/rules/:id', authenticateToken, authorizeRoles('admin', 'manager'), [
+router.delete('/rules/:id', authenticateToken, authorizeRoles('admin', 'manager', 'sales'), [
   param('id').isInt().withMessage('Valid rule ID is required')
 ], handleValidationErrors, async (req, res) => {
   try {
@@ -165,7 +165,7 @@ router.delete('/rules/:id', authenticateToken, authorizeRoles('admin', 'manager'
 });
 
 // GET /api/dynamic-pricing/customer-tiers - Get customer pricing tiers
-router.get('/customer-tiers', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), async (req, res) => {
+router.get('/customer-tiers', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), async (req, res) => {
   try {
     const tiers = await DynamicPricingService.getCustomerTiers();
     res.json(tiers);
@@ -176,7 +176,7 @@ router.get('/customer-tiers', authenticateToken, authorizeRoles('admin', 'manage
 });
 
 // POST /api/dynamic-pricing/customer-tiers - Create a new customer tier
-router.post('/customer-tiers', authenticateToken, authorizeRoles('admin', 'manager'), [
+router.post('/customer-tiers', authenticateToken, authorizeRoles('admin', 'manager', 'sales'), [
   body('name').notEmpty().withMessage('Tier name is required'),
   body('description').optional().isString(),
   body('discount_percentage').isDecimal().withMessage('Valid discount percentage is required'),
@@ -195,7 +195,7 @@ router.post('/customer-tiers', authenticateToken, authorizeRoles('admin', 'manag
 });
 
 // PUT /api/dynamic-pricing/customer-tiers/:id - Update a customer tier
-router.put('/customer-tiers/:id', authenticateToken, authorizeRoles('admin', 'manager'), [
+router.put('/customer-tiers/:id', authenticateToken, authorizeRoles('admin', 'manager', 'sales'), [
   param('id').isInt().withMessage('Valid tier ID is required'),
   body('name').notEmpty().withMessage('Tier name is required'),
   body('description').optional().isString(),
@@ -216,7 +216,7 @@ router.put('/customer-tiers/:id', authenticateToken, authorizeRoles('admin', 'ma
 });
 
 // DELETE /api/dynamic-pricing/customer-tiers/:id - Delete a customer tier
-router.delete('/customer-tiers/:id', authenticateToken, authorizeRoles('admin', 'manager'), [
+router.delete('/customer-tiers/:id', authenticateToken, authorizeRoles('admin', 'manager', 'sales'), [
   param('id').isInt().withMessage('Valid tier ID is required')
 ], handleValidationErrors, async (req, res) => {
   try {
@@ -230,7 +230,7 @@ router.delete('/customer-tiers/:id', authenticateToken, authorizeRoles('admin', 
 });
 
 // POST /api/dynamic-pricing/customer-tiers/assign - Assign customer to tier
-router.post('/customer-tiers/assign', authenticateToken, authorizeRoles('admin', 'manager'), [
+router.post('/customer-tiers/assign', authenticateToken, authorizeRoles('admin', 'manager', 'sales'), [
   body('customer_id').isInt().withMessage('Valid customer ID is required'),
   body('tier_id').isInt().withMessage('Valid tier ID is required'),
   body('expires_at').optional().isISO8601().withMessage('Valid expiration date is required')
@@ -248,7 +248,7 @@ router.post('/customer-tiers/assign', authenticateToken, authorizeRoles('admin',
 });
 
 // GET /api/dynamic-pricing/customer-tiers/:customerId - Get customer's current tier
-router.get('/customer-tiers/:customerId', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), [
+router.get('/customer-tiers/:customerId', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), [
   param('customerId').isInt().withMessage('Valid customer ID is required')
 ], handleValidationErrors, async (req, res) => {
   try {
@@ -262,7 +262,7 @@ router.get('/customer-tiers/:customerId', authenticateToken, authorizeRoles('adm
 });
 
 // POST /api/dynamic-pricing/demand-tracking - Update demand tracking
-router.post('/demand-tracking', authenticateToken, authorizeRoles('admin', 'manager'), [
+router.post('/demand-tracking', authenticateToken, authorizeRoles('admin', 'manager', 'sales'), [
   body('rental_machine_id').isInt().withMessage('Valid rental machine ID is required'),
   body('date').isISO8601().withMessage('Valid date is required'),
   body('demand_level').isIn(['low', 'medium', 'high', 'peak']).withMessage('Valid demand level is required'),
@@ -287,7 +287,7 @@ router.post('/demand-tracking', authenticateToken, authorizeRoles('admin', 'mana
 });
 
 // GET /api/dynamic-pricing/demand-analytics - Get demand analytics
-router.get('/demand-analytics', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), [
+router.get('/demand-analytics', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), [
   query('dateRange').optional().isIn(['7d', '30d', '90d', '1y']).withMessage('Valid date range is required')
 ], handleValidationErrors, async (req, res) => {
   try {
@@ -301,7 +301,7 @@ router.get('/demand-analytics', authenticateToken, authorizeRoles('admin', 'mana
 });
 
 // GET /api/dynamic-pricing/history/:machineId - Get pricing history for a machine
-router.get('/history/:machineId', authenticateToken, authorizeRoles('admin', 'manager', 'technician'), [
+router.get('/history/:machineId', authenticateToken, authorizeRoles('admin', 'manager', 'technician', 'sales'), [
   param('machineId').isInt().withMessage('Valid machine ID is required'),
   query('limit').optional().isInt().withMessage('Valid limit is required')
 ], handleValidationErrors, async (req, res) => {
@@ -317,7 +317,7 @@ router.get('/history/:machineId', authenticateToken, authorizeRoles('admin', 'ma
 });
 
 // POST /api/dynamic-pricing/simulation - Run pricing simulation
-router.post('/simulation', authenticateToken, authorizeRoles('admin', 'manager'), [
+router.post('/simulation', authenticateToken, authorizeRoles('admin', 'manager', 'sales'), [
   body('rental_machine_id').isInt().withMessage('Valid rental machine ID is required'),
   body('scenarios').isArray().withMessage('Valid scenarios array is required'),
   body('scenarios.*.start_date').isISO8601().withMessage('Valid start date is required'),
@@ -335,7 +335,7 @@ router.post('/simulation', authenticateToken, authorizeRoles('admin', 'manager')
 });
 
 // POST /api/dynamic-pricing/auto-assign-tiers - Auto-assign customer tiers
-router.post('/auto-assign-tiers', authenticateToken, authorizeRoles('admin', 'manager'), async (req, res) => {
+router.post('/auto-assign-tiers', authenticateToken, authorizeRoles('admin', 'manager', 'sales'), async (req, res) => {
   try {
     const result = await DynamicPricingService.autoAssignCustomerTiers();
     res.json(result);

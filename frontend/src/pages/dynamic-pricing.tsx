@@ -446,11 +446,11 @@ export default function DynamicPricing() {
   if (loading) {
     return (
       <MainLayout>
-        <div className="container mx-auto px-4 py-8">
+        <div className="space-y-6">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading pricing data...</p>
+              <p className="text-muted-foreground">Loading pricing data...</p>
             </div>
           </div>
         </div>
@@ -460,12 +460,14 @@ export default function DynamicPricing() {
 
   return (
     <MainLayout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dynamic Pricing</h1>
-            <p className="text-gray-600 mt-1">Manage pricing rules, customer tiers, and base pricing</p>
+            <h1 className="text-3xl font-bold tracking-tight">Dynamic Pricing</h1>
+            <p className="text-muted-foreground">
+              Manage pricing rules, customer tiers, and base pricing
+            </p>
           </div>
           <div className="flex items-center space-x-4">
             <Button onClick={() => setIsSimulationDialogOpen(true)} variant="outline">

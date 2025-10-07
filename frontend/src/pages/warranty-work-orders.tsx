@@ -45,6 +45,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { DeleteConfirmationDialog } from '../components/ui/delete-confirmation-dialog'
 import { CompletedItemAlertDialog } from '../components/ui/completed-item-alert-dialog'
 import apiService from '../services/api'
+import { useAuth } from '@/contexts/auth-context'
 import { toast } from 'sonner'
 import { formatStatus, getStatusBadgeVariant, getStatusBadgeColor } from '@/lib/status'
 
@@ -92,6 +93,7 @@ interface WarrantyWorkOrder {
 
 export default function WarrantyWorkOrders() {
   const navigate = useNavigate()
+  const { hasPermission } = useAuth()
   const [searchParams] = useSearchParams()
   const [warrantyWorkOrders, setWarrantyWorkOrders] = useState<WarrantyWorkOrder[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -641,27 +643,33 @@ export default function WarrantyWorkOrders() {
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Details
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation()
-                                handleEditWorkOrder(workOrder.id)
-                              }}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit Work Order
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation()
-                                handleAssignTechnician(workOrder.id)
-                              }}>
-                                <User className="mr-2 h-4 w-4" />
-                                Assign Technician
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation()
-                                handleLogTime(workOrder.id)
-                              }}>
-                                <Clock className="mr-2 h-4 w-4" />
-                                Log Time
-                              </DropdownMenuItem>
+                              {hasPermission('work_orders:write') && (
+                                <DropdownMenuItem onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleEditWorkOrder(workOrder.id)
+                                }}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit Work Order
+                                </DropdownMenuItem>
+                              )}
+                              {hasPermission('work_orders:write') && (
+                                <DropdownMenuItem onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleAssignTechnician(workOrder.id)
+                                }}>
+                                  <User className="mr-2 h-4 w-4" />
+                                  Assign Technician
+                                </DropdownMenuItem>
+                              )}
+                              {hasPermission('work_orders:write') && (
+                                <DropdownMenuItem onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleLogTime(workOrder.id)
+                                }}>
+                                  <Clock className="mr-2 h-4 w-4" />
+                                  Log Time
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem onClick={(e) => {
                                 e.stopPropagation()
                                 handlePrintWorkOrder(workOrder)
@@ -676,17 +684,21 @@ export default function WarrantyWorkOrders() {
                                 <FileText className="mr-2 h-4 w-4" />
                                 Download PDF
                               </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                className="text-red-600"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleDeleteWorkOrder(workOrder)
-                                }}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
+                              {hasPermission('work_orders:delete') && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    className="text-red-600"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleDeleteWorkOrder(workOrder)
+                                    }}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>

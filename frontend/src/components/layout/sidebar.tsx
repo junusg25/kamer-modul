@@ -24,7 +24,8 @@ import {
   TrendingUp,
   MessageSquare,
   Truck,
-  Calendar
+  Calendar,
+  Target
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -136,6 +137,13 @@ const getNavigationItems = (counts: SidebarCounts | null, userRole?: string, unr
     badge: null, 
     type: 'single' 
   },
+  { 
+    name: 'Sales Targets', 
+    href: '/sales-targets', 
+    icon: Target, 
+    badge: null, 
+    type: 'single' 
+  },
   
   // Rental Management Section
   { name: 'Rental Management', href: '#', icon: null, badge: null, type: 'label' },
@@ -183,11 +191,17 @@ const getNavigationItems = (counts: SidebarCounts | null, userRole?: string, unr
   ]
 
   // Filter out sales management items for technicians
-  if (userRole === 'technician') {
-    return baseItems.filter(item => 
-      !['Pipeline & Leads', 'Quote Management', 'Sales Reports', 'Sales Management'].includes(item.name)
-    )
-  }
+      if (userRole === 'technician') {
+        return baseItems.filter(item => 
+          !['Pipeline & Leads', 'Quote Management', 'Sales Reports', 'Sales Targets', 'Sales Management'].includes(item.name)
+        )
+      }
+      
+      if (userRole === 'sales') {
+        return baseItems.filter(item => 
+          !['Sales Targets'].includes(item.name)
+        )
+      }
 
   return baseItems
 }

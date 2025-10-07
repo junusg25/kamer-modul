@@ -50,25 +50,25 @@ const getNotificationIcon = (type: string) => {
 const getNotificationColor = (type: string) => {
   switch (type) {
     case 'success':
-      return 'text-green-600'
+      return 'text-green-600 dark:text-green-400'
     case 'warning':
-      return 'text-yellow-600'
+      return 'text-yellow-600 dark:text-yellow-400'
     case 'error':
-      return 'text-red-600'
+      return 'text-red-600 dark:text-red-400'
     case 'work_order':
     case 'warranty_work_order':
-      return 'text-blue-600'
+      return 'text-blue-600 dark:text-blue-400'
     case 'repair_ticket':
     case 'warranty_repair_ticket':
-      return 'text-purple-600'
+      return 'text-purple-600 dark:text-purple-400'
     case 'customer':
-      return 'text-indigo-600'
+      return 'text-indigo-600 dark:text-indigo-400'
     case 'machine':
-      return 'text-gray-600'
+      return 'text-muted-foreground'
     case 'inventory':
-      return 'text-orange-600'
+      return 'text-orange-600 dark:text-orange-400'
     default:
-      return 'text-gray-600'
+      return 'text-muted-foreground'
   }
 }
 

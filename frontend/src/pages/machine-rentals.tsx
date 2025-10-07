@@ -796,7 +796,11 @@ export default function MachineRentals() {
                 </TableHeader>
                 <TableBody>
                   {rentals.map((rental) => (
-                    <TableRow key={rental.id}>
+                    <TableRow 
+                      key={rental.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate(`/machine-rentals/${rental.id}`)}
+                    >
                       <TableCell>
                         <div>
                           <div className="font-medium">{rental.customer_name}</div>
@@ -822,7 +826,7 @@ export default function MachineRentals() {
                       <TableCell>{rental.total_amount ? formatCurrency(rental.total_amount) : '-'}</TableCell>
                       <TableCell>{formatDateTime(rental.created_at)}</TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="outline"
                             size="sm"

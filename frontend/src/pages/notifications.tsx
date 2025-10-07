@@ -96,11 +96,11 @@ const getNotificationTypeColor = (type: string) => {
     case 'customer':
       return 'bg-indigo-100 text-indigo-800 border-indigo-200'
     case 'machine':
-      return 'bg-gray-100 text-gray-800 border-gray-200'
+      return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700'
     case 'inventory':
-      return 'bg-orange-100 text-orange-800 border-orange-200'
+      return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:text-orange-200 dark:border-orange-800'
     default:
-      return 'bg-gray-100 text-gray-800 border-gray-200'
+      return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700'
   }
 }
 
@@ -168,7 +168,7 @@ function NotificationItem({
             <div className="flex items-center gap-2 mb-1">
               <p className={cn(
                 "text-sm font-semibold",
-                !notification.is_read ? "text-gray-900" : "text-gray-700"
+                !notification.is_read ? "text-foreground" : "text-muted-foreground"
               )}>
                 {notification.title}
               </p>
@@ -176,17 +176,17 @@ function NotificationItem({
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
               )}
             </div>
-            <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
               {notification.message}
             </p>
-            <div className="flex items-center gap-4 text-xs text-gray-500">
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 <span>{formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}</span>
               </div>
               <Badge 
                 variant="outline" 
-                className={cn("text-xs bg-gray-100", getNotificationTypeColor(notification.type))}
+                className={cn("text-xs", getNotificationTypeColor(notification.type))}
               >
                 {notification.type.replace('_', ' ')}
               </Badge>
@@ -213,7 +213,7 @@ function NotificationItem({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 hover:bg-gray-100"
+                  className="h-8 w-8 p-0"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <MoreHorizontal className="h-4 w-4" />

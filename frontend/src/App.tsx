@@ -32,6 +32,7 @@ import WorkOrders from './pages/work-orders'
 import PipelineLeads from './pages/pipeline-leads'
 import QuoteManagement from './pages/quote-management'
 import SalesReports from './pages/sales-reports'
+import SalesTargets from './pages/sales-targets'
 import DashboardRouter from './pages/dashboard-router'
 import DashboardOverview from './pages/dashboard-overview'
 import DashboardMyWork from './pages/dashboard-my-work'
@@ -40,6 +41,7 @@ import AdminFeedback from './pages/admin-feedback'
 import Settings from './pages/settings'
 import Notifications from './pages/notifications'
 import RentalMachines from './pages/rental-machines'
+import RentalMachineDetail from './pages/rental-machine-detail'
 import MachineRentals from './pages/machine-rentals'
 import RentalDetail from './pages/rental-detail'
 import RentalAnalytics from './pages/rental-analytics'
@@ -175,6 +177,11 @@ function App() {
                   <SalesReports />
                 </PermissionProtectedRoute>
               } />
+              <Route path="/sales-targets" element={
+                <RoleProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <SalesTargets />
+                </RoleProtectedRoute>
+              } />
               <Route path="/warranty-repair-tickets" element={
                 <PermissionProtectedRoute requiredPermissions={['repair_tickets:read']}>
                   <WarrantyRepairTickets />
@@ -198,6 +205,11 @@ function App() {
               <Route path="/rental-machines" element={
                 <ProtectedRoute>
                   <RentalMachines />
+                </ProtectedRoute>
+              } />
+              <Route path="/rental-machines/:id" element={
+                <ProtectedRoute>
+                  <RentalMachineDetail />
                 </ProtectedRoute>
               } />
               <Route path="/machine-rentals" element={

@@ -456,7 +456,11 @@ export default function RentalMachines() {
                 </TableHeader>
                 <TableBody>
                   {machines.map((machine) => (
-                    <TableRow key={machine.id}>
+                    <TableRow 
+                      key={machine.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate(`/rental-machines/${machine.id}`)}
+                    >
                       <TableCell className="font-medium">{machine.serial_number}</TableCell>
                       <TableCell>{machine.model_name}</TableCell>
                       <TableCell>{machine.manufacturer}</TableCell>
@@ -466,7 +470,7 @@ export default function RentalMachines() {
                       <TableCell>{machine.rental_count}</TableCell>
                       <TableCell>{formatDateTime(machine.created_at)}</TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="outline"
                             size="sm"

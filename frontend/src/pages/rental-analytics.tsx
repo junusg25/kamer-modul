@@ -104,11 +104,11 @@ export default function RentalAnalytics() {
   if (loading) {
     return (
       <MainLayout>
-        <div className="container mx-auto px-4 py-8">
+        <div className="space-y-6">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading analytics data...</p>
+              <p className="text-muted-foreground">Loading analytics data...</p>
             </div>
           </div>
         </div>
@@ -119,11 +119,11 @@ export default function RentalAnalytics() {
   if (error) {
     return (
       <MainLayout>
-        <div className="container mx-auto px-4 py-8">
+        <div className="space-y-6">
           <div className="text-center">
             <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Analytics</h2>
-            <p className="text-gray-600 mb-4">{error}</p>
+            <h2 className="text-xl font-semibold mb-2">Error Loading Analytics</h2>
+            <p className="text-muted-foreground mb-4">{error}</p>
             <Button onClick={fetchAnalyticsData}>Try Again</Button>
           </div>
         </div>
@@ -133,12 +133,14 @@ export default function RentalAnalytics() {
 
   return (
     <MainLayout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Rental Analytics</h1>
-            <p className="text-gray-600 mt-1">Comprehensive insights into your rental business</p>
+            <h1 className="text-3xl font-bold tracking-tight">Rental Analytics</h1>
+            <p className="text-muted-foreground">
+              Comprehensive insights into your rental business
+            </p>
           </div>
           <div className="flex items-center space-x-4">
             <Select value={dateRange} onValueChange={setDateRange}>
@@ -169,7 +171,7 @@ export default function RentalAnalytics() {
                   {getAlertIcon(alert.type)}
                   <div className="ml-3">
                     <h4 className="font-medium">{alert.title}</h4>
-                    <p className="text-sm text-gray-600">{alert.message}</p>
+                    <p className="text-sm text-muted-foreground">{alert.message}</p>
                   </div>
                 </div>
               ))}
@@ -212,7 +214,7 @@ export default function RentalAnalytics() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {analyticsData?.fleet?.utilization_percentage || 0}%
+                    {Number(analyticsData?.fleet?.utilization_percentage || 0).toFixed(1)}%
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {analyticsData?.fleet?.rented_machines || 0} of {analyticsData?.fleet?.total_machines || 0} machines
@@ -261,8 +263,8 @@ export default function RentalAnalytics() {
                   {analyticsData?.status?.map((status) => (
                     <div key={status.rental_status} className="text-center">
                       <div className="text-2xl font-bold">{status.count}</div>
-                      <div className="text-sm text-gray-600 capitalize">{status.rental_status}</div>
-                      <div className="text-xs text-gray-500">{status.percentage}%</div>
+                      <div className="text-sm text-muted-foreground capitalize">{status.rental_status}</div>
+                      <div className="text-xs text-muted-foreground">{status.percentage}%</div>
                     </div>
                   ))}
                 </div>
@@ -290,7 +292,7 @@ export default function RentalAnalytics() {
                           <div>
                             <div className="font-medium">{customer.name}</div>
                             {customer.company_name && (
-                              <div className="text-sm text-gray-500">{customer.company_name}</div>
+                              <div className="text-sm text-muted-foreground">{customer.company_name}</div>
                             )}
                           </div>
                         </TableCell>
@@ -361,15 +363,15 @@ export default function RentalAnalytics() {
                 <CardContent className="space-y-4">
                   <div className="flex justify-between">
                     <span>Utilization Rate</span>
-                    <span className="font-semibold">{analyticsData?.fleet?.utilization_percentage || 0}%</span>
+                    <span className="font-semibold">{Number(analyticsData?.fleet?.utilization_percentage || 0).toFixed(1)}%</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Avg Daily Rentals</span>
-                    <span className="font-semibold">{analyticsData?.utilization?.average_daily_rentals || 0}</span>
+                    <span className="font-semibold">{Number(analyticsData?.utilization?.average_daily_rentals || 0).toFixed(1)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Peak Daily Rentals</span>
-                    <span className="font-semibold">{analyticsData?.utilization?.peak_daily_rentals || 0}</span>
+                    <span className="font-semibold">{Number(analyticsData?.utilization?.peak_daily_rentals || 0).toFixed(1)}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -439,11 +441,11 @@ export default function RentalAnalytics() {
                   </div>
                   <div className="flex justify-between">
                     <span>Avg Rentals per Customer</span>
-                    <span className="font-semibold">{analyticsData?.customers?.average_rentals_per_customer || 0}</span>
+                    <span className="font-semibold">{Number(analyticsData?.customers?.average_rentals_per_customer || 0).toFixed(1)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Max Rentals per Customer</span>
-                    <span className="font-semibold">{analyticsData?.customers?.max_rentals_per_customer || 0}</span>
+                    <span className="font-semibold">{Number(analyticsData?.customers?.max_rentals_per_customer || 0).toFixed(1)}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -455,16 +457,16 @@ export default function RentalAnalytics() {
                 <CardContent>
                   <div className="space-y-3">
                     {analyticsData?.customers?.top_customers?.slice(0, 5).map((customer) => (
-                      <div key={customer.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <div key={customer.id} className="flex items-center justify-between p-2 bg-muted rounded">
                         <div>
-                          <div className="font-medium">{customer.name}</div>
+                          <div className="font-medium text-foreground">{customer.name}</div>
                           {customer.company_name && (
-                            <div className="text-sm text-gray-500">{customer.company_name}</div>
+                            <div className="text-sm text-muted-foreground">{customer.company_name}</div>
                           )}
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold">{formatCurrency(customer.total_spent)}</div>
-                          <div className="text-sm text-gray-500">{customer.rental_count} rentals</div>
+                          <div className="font-semibold text-foreground">{formatCurrency(customer.total_spent)}</div>
+                          <div className="text-sm text-muted-foreground">{customer.rental_count} rentals</div>
                         </div>
                       </div>
                     ))}
@@ -547,14 +549,14 @@ export default function RentalAnalytics() {
                           <div>
                             <div className="font-medium">{rental.customer_name}</div>
                             {rental.company_name && (
-                              <div className="text-sm text-gray-500">{rental.company_name}</div>
+                              <div className="text-sm text-muted-foreground">{rental.company_name}</div>
                             )}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div>
                             <div className="font-medium">{rental.manufacturer} {rental.machine_name}</div>
-                            <div className="text-sm text-gray-500">{rental.serial_number}</div>
+                            <div className="text-sm text-muted-foreground">{rental.serial_number}</div>
                           </div>
                         </TableCell>
                         <TableCell>{formatDate(rental.rental_start_date)}</TableCell>
