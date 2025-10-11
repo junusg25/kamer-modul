@@ -37,8 +37,11 @@ cd /var/www/kamerba
 # Clone repository
 git clone https://github.com/junusg25/kamer-modul.git .
 
+# Navigate to deployment folder
+cd deployment
+
 # Make setup script executable and run it
-chmod +x server-setup.sh
+chmod +x server-setup.sh deploy.sh backup-db.sh
 ./server-setup.sh
 ```
 
@@ -64,7 +67,7 @@ GRANT ALL PRIVILEGES ON DATABASE repairshop TO repairshop_user;
 ALTER DATABASE repairshop OWNER TO repairshop_user;
 \q
 
-# Load database schema
+# Load database schema (from project root)
 sudo -u postgres psql -d repairshop -f /var/www/kamerba/backend/schema.sql
 ```
 
@@ -198,7 +201,8 @@ sudo systemctl restart nginx
 ### **Step 7: Start Backend with PM2**
 
 ```bash
-cd /var/www/kamerba
+# Navigate to deployment folder
+cd /var/www/kamerba/deployment
 
 # Start backend
 pm2 start ecosystem.config.js
