@@ -65,6 +65,9 @@ TRUNCATE TABLE user_table_preferences CASCADE;
 -- TRUNCATE TABLE user_permissions CASCADE;  -- Commented out to keep permissions
 TRUNCATE TABLE user_permissions_audit CASCADE;
 
+-- Yearly Sequences (IMPORTANT: This controls formatted numbers like TK-01/25)
+TRUNCATE TABLE yearly_sequences CASCADE;
+
 -- ========================================
 -- RESET SEQUENCES (Auto-increment IDs)
 -- ========================================
@@ -120,6 +123,9 @@ ALTER SEQUENCE user_table_preferences_id_seq RESTART WITH 1;
 
 -- Permissions
 ALTER SEQUENCE user_permissions_audit_id_seq RESTART WITH 1;
+
+-- Yearly Sequences
+ALTER SEQUENCE yearly_sequences_id_seq RESTART WITH 1;
 
 -- Re-enable foreign key checks
 SET session_replication_role = 'origin';
