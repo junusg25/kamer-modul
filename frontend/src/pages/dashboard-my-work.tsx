@@ -99,20 +99,22 @@ const DashboardMyWork = () => {
     enabled: !!user?.id && user?.role === 'technician',
   })
 
-  // Fetch sales targets for sales users only
+  // Fetch sales targets for sales users only (optional - don't block login if it fails)
   const { data: salesTargetsData, isLoading: salesTargetsLoading, error: salesTargetsError } = useQuery({
     queryKey: ['my-sales-targets', user?.id],
     queryFn: () => apiService.getSalesTargets({ user_id: user?.id }),
     enabled: !!user?.id && user?.role === 'sales',
+    retry: false, // Don't retry on failure
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   })
 
   // Role-based loading and error states
   const isLoading = (user?.role === 'technician' && (repairsLoading || warrantyRepairsLoading || workOrdersLoading || warrantyWorkOrdersLoading || performanceLoading)) ||
-                   (user?.role === 'sales' && (salesLoading || leadsLoading || salesTrendsLoading || salesTargetsLoading)) ||
+                   (user?.role === 'sales' && (salesLoading || leadsLoading || salesTrendsLoading)) ||
                    ((user?.role === 'manager' || user?.role === 'admin') && (repairsLoading || warrantyRepairsLoading || workOrdersLoading || warrantyWorkOrdersLoading || salesLoading || leadsLoading || salesTrendsLoading))
   
   const hasError = (user?.role === 'technician' && (repairsError || warrantyRepairsError || workOrdersError || warrantyWorkOrdersError || performanceError)) ||
-                  (user?.role === 'sales' && (salesError || leadsError || salesTrendsError || salesTargetsError)) ||
+                  (user?.role === 'sales' && (salesError || leadsError || salesTrendsError)) ||
                   ((user?.role === 'manager' || user?.role === 'admin') && (repairsError || warrantyRepairsError || workOrdersError || warrantyWorkOrdersError || salesError || leadsError || salesTrendsError))
 
   if (isLoading) {
