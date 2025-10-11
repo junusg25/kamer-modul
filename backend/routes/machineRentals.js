@@ -5,6 +5,7 @@ const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
 const { handleValidationErrors } = require('../middleware/validators');
 const { createNotification } = require('../utils/notificationHelpers');
+const { logCustomAction } = require('../utils/actionLogger');
 
 // Validation rules
 const rentalValidation = [
@@ -306,7 +307,18 @@ router.post('/', authenticateToken, authorizeRoles('admin', 'manager', 'technici
       result.rows[0].id
     );
 
-    res.status(201).json(result.rows[0]);
+    const rental = result.rows[0];
+
+    // Log action
+    await logCustomAction(req, 'create', 'machine_rental', rental.id, `Rental for ${customerName}`, {
+      customer_id: customer_id,
+      customer_name: customerName,
+      rental_status: rental_status,
+      billing_period: billing_period,
+      total_amount: total_amount
+    });
+
+    res.status(201).json(rental);
 
   } catch (error) {
     await client.query('ROLLBACK');
@@ -450,7 +462,15 @@ router.put('/:id', authenticateToken, authorizeRoles('admin', 'manager', 'techni
 
     await client.query('COMMIT');
 
-    res.json(result.rows[0]);
+    const rental = result.rows[0];
+
+    // Log action
+    await logCustomAction(req, 'update', 'machine_rental', id, `Rental #${id}`, {
+      rental_status: rental_status,
+      status_change: rental_status !== oldRentalStatus ? { from: oldRentalStatus, to: rental_status } : null
+    });
+
+    res.json(rental);
 
   } catch (error) {
     await client.query('ROLLBACK');
@@ -482,6 +502,22 @@ router.delete('/:id', authenticateToken, authorizeRoles('admin', 'manager'), asy
     }
 
     const rentalMachineId = existingRental.rows[0].rental_machine_id;
+
+    // Get full rental details before deletion
+    const rentalDetails = await client.query(
+      `SELECT mr.*, c.name as customer_name 
+       FROM machine_rentals mr
+       LEFT JOIN customers c ON mr.customer_id = c.id
+       WHERE mr.id = $1`,
+      [id]
+    );
+    const rental = rentalDetails.rows[0];
+
+    // Log action before deletion
+    await logCustomAction(req, 'delete', 'machine_rental', id, `Rental #${id}`, {
+      customer_name: rental.customer_name,
+      rental_status: rental.rental_status
+    });
 
     // Delete rental
     await client.query('DELETE FROM machine_rentals WHERE id = $1', [id]);

@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const { authenticateToken } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
+const { logCustomAction } = require('../utils/actionLogger');
 
 // GET all leads with filtering and search
 router.get('/', authenticateToken, async (req, res, next) => {
@@ -414,9 +415,19 @@ router.post('/',
         req.user.id
       ]);
 
+      const lead = result.rows[0];
+
+      // Log action
+      await logCustomAction(req, 'create', 'lead', lead.id, customer_name, {
+        lead_quality: lead_quality,
+        sales_stage: sales_stage,
+        potential_value: potential_value,
+        source: source
+      });
+
       res.status(201).json({
         status: 'success',
-        data: result.rows[0]
+        data: lead
       });
     } catch (err) {
       next(err);
@@ -470,9 +481,18 @@ router.patch('/:id',
         });
       }
 
+      const lead = result.rows[0];
+
+      // Log action
+      await logCustomAction(req, 'update', 'lead', id, lead.customer_name, {
+        updated_fields: Object.keys(updateFields),
+        sales_stage: lead.sales_stage,
+        lead_quality: lead.lead_quality
+      });
+
       res.json({
         status: 'success',
-        data: result.rows[0]
+        data: lead
       });
     } catch (err) {
       next(err);
@@ -485,14 +505,24 @@ router.delete('/:id', authenticateToken, async (req, res, next) => {
   try {
     const { id } = req.params;
     
-    const result = await db.query('DELETE FROM leads WHERE id = $1 RETURNING id', [id]);
-    
-    if (result.rows.length === 0) {
+    // Get lead details before deletion
+    const leadResult = await db.query('SELECT * FROM leads WHERE id = $1', [id]);
+    if (leadResult.rows.length === 0) {
       return res.status(404).json({
         status: 'fail',
         message: 'Lead not found'
       });
     }
+    const lead = leadResult.rows[0];
+
+    // Log action before deletion
+    await logCustomAction(req, 'delete', 'lead', id, lead.customer_name, {
+      sales_stage: lead.sales_stage,
+      lead_quality: lead.lead_quality,
+      potential_value: lead.potential_value
+    });
+    
+    const result = await db.query('DELETE FROM leads WHERE id = $1 RETURNING id', [id]);
 
     res.json({
       status: 'success',

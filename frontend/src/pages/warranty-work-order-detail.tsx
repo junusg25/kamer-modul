@@ -449,8 +449,7 @@ export default function WarrantyWorkOrderDetail() {
     if (!warrantyWorkOrder) return
 
     try {
-      console.log('Starting PDF generation for warranty work order:', warrantyWorkOrder.id)
-      
+            
       const token = localStorage.getItem('token')
       const response = await fetch(`http://localhost:3000/api/print/warranty-work-order/${warrantyWorkOrder.id}`, {
         method: 'GET',
@@ -459,13 +458,10 @@ export default function WarrantyWorkOrderDetail() {
         }
       })
 
-      console.log('Response status:', response.status)
-      console.log('Response headers:', response.headers)
-
+            
       if (!response.ok) {
         const errorData = await response.json()
-        console.log('Response error:', errorData)
-        throw new Error(`Failed to generate PDF: ${response.status} ${response.statusText}`)
+                throw new Error(`Failed to generate PDF: ${response.status} ${response.statusText}`)
       }
 
       const blob = await response.blob()
@@ -493,8 +489,7 @@ export default function WarrantyWorkOrderDetail() {
     if (!warrantyWorkOrder) return
 
     try {
-      console.log('Starting PDF download for warranty work order:', warrantyWorkOrder.id)
-      
+            
       const token = localStorage.getItem('token')
       const response = await fetch(`http://localhost:3000/api/print/warranty-work-order/${warrantyWorkOrder.id}`, {
         method: 'GET',
@@ -503,13 +498,10 @@ export default function WarrantyWorkOrderDetail() {
         }
       })
 
-      console.log('Response status:', response.status)
-      console.log('Response headers:', response.headers)
-
+            
       if (!response.ok) {
         const errorData = await response.json()
-        console.log('Response error:', errorData)
-        throw new Error(`Failed to generate PDF: ${response.status} ${response.statusText}`)
+                throw new Error(`Failed to generate PDF: ${response.status} ${response.statusText}`)
       }
 
       const blob = await response.blob()

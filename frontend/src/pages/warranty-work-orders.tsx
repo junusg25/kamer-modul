@@ -48,6 +48,8 @@ import apiService from '../services/api'
 import { useAuth } from '@/contexts/auth-context'
 import { toast } from 'sonner'
 import { formatStatus, getStatusBadgeVariant, getStatusBadgeColor } from '@/lib/status'
+import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '@/hooks/useColumnVisibility'
+import { ColumnVisibilityDropdown } from '@/components/ui/column-visibility-dropdown'
 
 interface WarrantyWorkOrder {
   id: string
@@ -91,6 +93,18 @@ interface WarrantyWorkOrder {
   recommended_products?: string
 }
 
+// Define columns for Warranty Work Orders table
+const WARRANTY_WORK_ORDER_COLUMNS = defineColumns([
+  { key: 'work_order_number', label: 'Work Order #' },
+  { key: 'customer', label: 'Customer' },
+  { key: 'machine', label: 'Machine' },
+  { key: 'description', label: 'Description' },
+  { key: 'status', label: 'Status' },
+  { key: 'priority', label: 'Priority' },
+  { key: 'technician', label: 'Technician' },
+  { key: 'created_at', label: 'Created' },
+])
+
 export default function WarrantyWorkOrders() {
   const navigate = useNavigate()
   const { hasPermission } = useAuth()
@@ -115,6 +129,17 @@ export default function WarrantyWorkOrders() {
   const [workOrderToDelete, setWorkOrderToDelete] = useState<WarrantyWorkOrder | null>(null)
   const [completedAlertOpen, setCompletedAlertOpen] = useState(false)
   const [completedWorkOrder, setCompletedWorkOrder] = useState<WarrantyWorkOrder | null>(null)
+
+  // Column visibility hook
+  const {
+    visibleColumns,
+    toggleColumn,
+    isColumnVisible,
+    resetColumns,
+    showAllColumns,
+    hideAllColumns,
+    isSyncing
+  } = useColumnVisibility('warranty_work_orders', getDefaultColumnKeys(WARRANTY_WORK_ORDER_COLUMNS))
 
   // Initialize filters from URL parameters
   useEffect(() => {
@@ -153,10 +178,10 @@ export default function WarrantyWorkOrders() {
         searchParams.technician_id = filters.technician
       }
       
-      console.log('Fetching warranty work orders with params:', searchParams)
+      
       
       const response = await apiService.getWarrantyWorkOrders(searchParams) as any
-      console.log('Warranty work orders response:', response)
+      
       
       setWarrantyWorkOrders(response.data || [])
       setTotalPages(response.pagination?.pages || 1)
@@ -202,13 +227,15 @@ export default function WarrantyWorkOrders() {
   }
 
   const getUniqueTechnicians = () => {
-    const technicians = new Set<string>()
+    const techniciansMap = new Map<string, string>()
     warrantyWorkOrders.forEach(workOrder => {
-      if (workOrder.technician_name) {
-        technicians.add(workOrder.technician_name)
+      if (workOrder.technician_id && workOrder.technician_name) {
+        techniciansMap.set(workOrder.technician_id, workOrder.technician_name)
       }
     })
-    return Array.from(technicians).sort()
+    return Array.from(techniciansMap.entries())
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .map(([id, name]) => ({ id, name }))
   }
 
   const getActiveFiltersCount = () => {
@@ -243,13 +270,13 @@ export default function WarrantyWorkOrders() {
     if (!workOrderToDelete) return
 
     try {
-      await apiService.deleteWorkOrder(workOrderToDelete.id)
+      await apiService.deleteWarrantyWorkOrder(workOrderToDelete.id)
       toast.success('Warranty work order deleted successfully')
       setDeleteDialogOpen(false)
       setWorkOrderToDelete(null)
       fetchWarrantyWorkOrders()
     } catch (err: any) {
-      console.error('Error deleting work order:', err)
+      console.error('Error deleting warranty work order:', err)
       toast.error(err.response?.data?.message || 'Failed to delete warranty work order')
     }
   }
@@ -546,9 +573,9 @@ export default function WarrantyWorkOrders() {
                         <SelectContent>
                           <SelectItem value="all">All technicians</SelectItem>
                           <SelectItem value="unassigned">Unassigned</SelectItem>
-                          {getUniqueTechnicians().map(technician => (
-                            <SelectItem key={technician} value={technician}>
-                              {technician}
+                          {getUniqueTechnicians().map(tech => (
+                            <SelectItem key={tech.id} value={tech.id}>
+                              {tech.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -562,6 +589,17 @@ export default function WarrantyWorkOrders() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+
+                {/* Column Visibility */}
+                <ColumnVisibilityDropdown
+                  columns={WARRANTY_WORK_ORDER_COLUMNS}
+                  visibleColumns={visibleColumns}
+                  onToggleColumn={toggleColumn}
+                  onShowAll={showAllColumns}
+                  onHideAll={hideAllColumns}
+                  onReset={resetColumns}
+                  isSyncing={isSyncing}
+                />
               </div>
             </div>
           </CardHeader>
@@ -572,13 +610,13 @@ export default function WarrantyWorkOrders() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Work Order #</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Machine</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Technician</TableHead>
+                    {isColumnVisible('work_order_number') && <TableHead>Work Order #</TableHead>}
+                    {isColumnVisible('customer') && <TableHead>Customer</TableHead>}
+                    {isColumnVisible('machine') && <TableHead>Machine</TableHead>}
+                    {isColumnVisible('description') && <TableHead>Description</TableHead>}
+                    {isColumnVisible('status') && <TableHead>Status</TableHead>}
+                    {isColumnVisible('priority') && <TableHead>Priority</TableHead>}
+                    {isColumnVisible('technician') && <TableHead>Technician</TableHead>}
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -599,30 +637,44 @@ export default function WarrantyWorkOrders() {
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => navigate(`/warranty-work-orders/${workOrder.id}`)}
                       >
-                        <TableCell className="font-medium">
-                          {workOrder.formatted_number || `#${workOrder.id}`}
-                        </TableCell>
-                        <TableCell>{workOrder.customer_name || 'N/A'}</TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{workOrder.machine_name || 'N/A'}</div>
-                            {workOrder.serial_number && (
-                              <div className="text-sm text-muted-foreground">
-                                {workOrder.serial_number}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="max-w-xs">
-                          <div className="truncate">
-                            {workOrder.description || 'No description'}
-                          </div>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(workOrder.status)}</TableCell>
-                        <TableCell>{getPriorityBadge(workOrder.priority)}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {workOrder.technician_name || 'Unassigned'}
-                        </TableCell>
+                        {isColumnVisible('work_order_number') && (
+                          <TableCell className="font-medium">
+                            {workOrder.formatted_number || `#${workOrder.id}`}
+                          </TableCell>
+                        )}
+                        {isColumnVisible('customer') && (
+                          <TableCell>{workOrder.customer_name || 'N/A'}</TableCell>
+                        )}
+                        {isColumnVisible('machine') && (
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{workOrder.machine_name || 'N/A'}</div>
+                              {workOrder.serial_number && (
+                                <div className="text-sm text-muted-foreground">
+                                  {workOrder.serial_number}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                        )}
+                        {isColumnVisible('description') && (
+                          <TableCell className="max-w-xs">
+                            <div className="truncate">
+                              {workOrder.description || 'No description'}
+                            </div>
+                          </TableCell>
+                        )}
+                        {isColumnVisible('status') && (
+                          <TableCell>{getStatusBadge(workOrder.status)}</TableCell>
+                        )}
+                        {isColumnVisible('priority') && (
+                          <TableCell>{getPriorityBadge(workOrder.priority)}</TableCell>
+                        )}
+                        {isColumnVisible('technician') && (
+                          <TableCell className="text-sm text-muted-foreground">
+                            {workOrder.technician_name || 'Unassigned'}
+                          </TableCell>
+                        )}
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>

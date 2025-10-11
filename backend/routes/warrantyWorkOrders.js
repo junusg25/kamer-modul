@@ -7,6 +7,7 @@ const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const { createWorkOrderNotification } = require('../utils/notificationHelpers');
 const { createUserAssignmentNotification } = require('../utils/notificationHelpers');
 const websocketService = require('../services/websocketService');
+const { logCustomAction } = require('../utils/actionLogger');
 
 // Middleware to check warranty work order ownership
 const checkWarrantyWorkOrderOwnership = async (req, res, next) => {
@@ -349,6 +350,13 @@ router.patch('/:id', authenticateToken, checkWarrantyWorkOrderOwnership, async (
 
     const workOrder = result.rows[0];
 
+    // Log action
+    await logCustomAction(req, 'update', 'warranty_work_order', id, workOrder.formatted_number || `WWO-${id}`, {
+      updated_fields: Object.keys(req.body),
+      status_change: status !== undefined && status !== currentStatus ? { from: currentStatus, to: status } : null,
+      technician_assigned: technician_id !== undefined && technician_id !== currentTechnicianId
+    });
+
     // Create notifications for relevant changes
     try {
       const notifications = [];
@@ -459,6 +467,11 @@ router.delete('/:id', authenticateToken, async (req, res, next) => {
         });
       }
     }
+
+    // Log action before deletion
+    await logCustomAction(req, 'delete', 'warranty_work_order', id, workOrder.formatted_number || `WWO-${id}`, {
+      was_converted_from_ticket: !!workOrder.converted_from_ticket_id
+    });
 
     // Delete the warranty work order
     const result = await db.query(

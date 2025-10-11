@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback } from '../components/ui/avatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover'
 import { Calendar as CalendarComponent } from '../components/ui/calendar'
+import { DatePicker } from '../components/ui/date-picker'
 import { Label } from '../components/ui/label'
 import { 
   AreaChart,
@@ -51,7 +52,6 @@ import {
   Download,
   Eye,
   Shield,
-  CalendarDays,
   Settings,
   Package,
   AlertCircle,
@@ -90,11 +90,11 @@ const DashboardOverview = () => {
   const [activeTab, setActiveTab] = useState('overview')
   const [chartTimeFilter, setChartTimeFilter] = useState('month') // For chart only
   const [customDateRange, setCustomDateRange] = useState<{
-    from: Date | undefined
-    to: Date | undefined
+    from: string
+    to: string
   }>({
-    from: undefined,
-    to: undefined
+    from: '',
+    to: ''
   })
   const [useCustomRange, setUseCustomRange] = useState(false)
   const [selectedMetric, setSelectedMetric] = useState('revenue')
@@ -131,8 +131,8 @@ const DashboardOverview = () => {
       if (useCustomRange && customDateRange.from && customDateRange.to) {
         return apiService.getSalesTrends({ 
           time_period: 'custom',
-          start_date: customDateRange.from.toISOString().split('T')[0],
-          end_date: customDateRange.to.toISOString().split('T')[0]
+          start_date: customDateRange.from,
+          end_date: customDateRange.to
         })
       }
       return apiService.getSalesTrends({ time_period: chartTimeFilter })
@@ -508,45 +508,25 @@ const DashboardOverview = () => {
                   {/* Custom Date Range Picker */}
                   {useCustomRange && (
                     <div className="flex items-center gap-2">
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" size="sm" className="w-40 justify-start text-left font-normal">
-                            <CalendarDays className="mr-2 h-4 w-4" />
-                            {customDateRange.from ? (
-                              customDateRange.to ? (
-                                <>
-                                  {formatDateMedium(customDateRange.from)} -{" "}
-                                  {formatDateMedium(customDateRange.to)}
-                                </>
-                              ) : (
-                                formatDateMedium(customDateRange.from)
-                              )
-                            ) : (
-                              <span>Pick date range</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <CalendarComponent
-                            initialFocus
-                            mode="range"
-                            defaultMonth={customDateRange.from}
-                            selected={customDateRange}
-                            onSelect={(range) => {
-                              if (range) {
-                                setCustomDateRange(range)
-                              }
-                            }}
-                            numberOfMonths={2}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <div className="flex items-center gap-1">
+                        <DatePicker
+                          value={customDateRange.from}
+                          onChange={(value) => setCustomDateRange(prev => ({ ...prev, from: value }))}
+                          placeholder="From date"
+                        />
+                        <span className="text-sm text-muted-foreground">to</span>
+                        <DatePicker
+                          value={customDateRange.to}
+                          onChange={(value) => setCustomDateRange(prev => ({ ...prev, to: value }))}
+                          placeholder="To date"
+                        />
+                      </div>
                       
                       <Button 
                         variant="outline" 
                         size="sm"
                         onClick={() => {
-                          setCustomDateRange({ from: undefined, to: undefined })
+                          setCustomDateRange({ from: '', to: '' })
                           setUseCustomRange(false)
                           setChartTimeFilter('month')
                         }}

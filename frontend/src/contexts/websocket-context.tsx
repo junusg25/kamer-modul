@@ -29,7 +29,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       
       // Disconnect if not authenticated
       if (socket) {
-        console.log('Disconnecting WebSocket due to logout')
+        
         socket.disconnect()
         setSocket(null)
         setIsConnected(false)
@@ -47,7 +47,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     })
 
     newSocket.on('connect', () => {
-      console.log('WebSocket connected')
+      
       setIsConnected(true)
       
       // Clear any existing reconnect timeout
@@ -57,7 +57,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     })
 
     newSocket.on('disconnect', () => {
-      console.log('WebSocket disconnected')
+      
       setIsConnected(false)
       
       // Clear any existing reconnect timeout
@@ -84,12 +84,12 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for user status updates
     newSocket.on('user_online', (data: { userId: string, userName: string }) => {
-      console.log('User came online:', data)
+      
       setOnlineUsers(prev => new Set([...prev, data.userId]))
     })
 
     newSocket.on('user_offline', (data: { userId: string, userName: string }) => {
-      console.log('User went offline:', data)
+      
       setOnlineUsers(prev => {
         const newSet = new Set(prev)
         newSet.delete(data.userId)
@@ -99,7 +99,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for real-time user activity updates
     newSocket.on('user_activity_update', (data: { userId: string, status: string }) => {
-      console.log('User activity update:', data)
+      
       // This will be handled by the admin dashboard
     })
 
@@ -121,7 +121,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
   const forceDisconnect = () => {
     if (socket) {
-      console.log('Force disconnecting WebSocket on logout')
+      
       socket.disconnect()
       setSocket(null)
       setIsConnected(false)

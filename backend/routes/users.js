@@ -7,6 +7,7 @@ const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const { generateTokens, verifyRefreshToken } = require('../utils/generateTokens');
 const { createUserAssignmentNotification } = require('../utils/notificationHelpers');
 const websocketService = require('../services/websocketService');
+const { logCustomAction } = require('../utils/actionLogger');
 
 // Password reset
 router.post('/reset-password', async (req, res) => {
@@ -217,11 +218,12 @@ router.patch('/:id',
     body('phone').optional().isMobilePhone().withMessage('Invalid phone format'),
     body('department').optional(),
     body('status').optional().isIn(['active', 'inactive']).withMessage('Invalid status'),
-    body('role').optional().isIn(['admin', 'manager', 'technician']).withMessage('Invalid role')
+    body('role').optional().isIn(['admin', 'manager', 'technician', 'sales']).withMessage('Invalid role'),
+    body('password').optional().isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
   ],
   authenticateToken, async (req, res, next) => {
   const { id } = req.params;
-  const { name, email, role, phone, department, status } = req.body;
+  const { name, email, role, phone, department, status, password } = req.body;
   
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -232,22 +234,37 @@ router.patch('/:id',
   }
   
   try {
-          const result = await db.query(
-        `UPDATE users SET
-          name = COALESCE($1, name),
-          email = COALESCE($2, email),
-          role = COALESCE($3, role),
-          phone = COALESCE($4, phone),
-          department = COALESCE($5, department),
-          status = COALESCE($6, status),
-          updated_at = CURRENT_TIMESTAMP
-        WHERE id = $7
-        RETURNING id, name, email, role, phone, department, status, last_login, created_at, updated_at`,
-        [name, email, role, phone, department, status, id]
-      );
+    // If password is provided, hash it
+    let hashedPassword = null;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
+
+    const result = await db.query(
+      `UPDATE users SET
+        name = COALESCE($1, name),
+        email = COALESCE($2, email),
+        role = COALESCE($3, role),
+        phone = COALESCE($4, phone),
+        department = COALESCE($5, department),
+        status = COALESCE($6, status),
+        password = COALESCE($7, password),
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $8
+      RETURNING id, name, email, role, phone, department, status, last_login, created_at, updated_at`,
+      [name, email, role, phone, department, status, hashedPassword, id]
+    );
     if (!result.rows.length) return res.status(404).json({ status: 'fail', message: 'User not found' });
     
     const updatedUser = result.rows[0];
+
+    // Log action
+    await logCustomAction(req, 'update', 'user', id, updatedUser.name, {
+      updated_fields: Object.keys(req.body).filter(k => k !== 'password'),
+      password_changed: !!password,
+      role: updatedUser.role,
+      status: updatedUser.status
+    });
 
     // Create notification for user update
     try {
@@ -297,6 +314,13 @@ router.post('/register',
       );
       
       const newUser = result.rows[0];
+
+      // Log action
+      await logCustomAction(req, 'create', 'user', newUser.id, newUser.name, {
+        role: newUser.role,
+        email: newUser.email,
+        department: newUser.department
+      });
 
       // Create notification for new user
       try {

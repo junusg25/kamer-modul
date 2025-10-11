@@ -1,5 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { Toaster } from 'sonner'
 import { ThemeProvider } from './contexts/theme-context'
 import { AuthProvider } from './contexts/auth-context'
 import { NotificationsProvider } from './contexts/notifications-context'
@@ -30,15 +31,17 @@ import CreateWarrantyRepairTicket from './pages/create-warranty-repair-ticket'
 import RepairTickets from './pages/repair-tickets'
 import WorkOrders from './pages/work-orders'
 import PipelineLeads from './pages/pipeline-leads'
-import QuoteManagement from './pages/quote-management'
+import QuoteManagementEnhanced from './pages/quote-management-enhanced'
 import SalesReports from './pages/sales-reports'
 import SalesTargets from './pages/sales-targets'
 import DashboardRouter from './pages/dashboard-router'
 import DashboardOverview from './pages/dashboard-overview'
 import DashboardMyWork from './pages/dashboard-my-work'
 import DashboardAdmin from './pages/dashboard-admin'
+import DashboardManager from './pages/dashboard-manager'
+import UserActivityHistory from './pages/user-activity-history'
 import AdminFeedback from './pages/admin-feedback'
-import Settings from './pages/settings'
+import Settings from './pages/settings-enhanced'
 import Notifications from './pages/notifications'
 import RentalMachines from './pages/rental-machines'
 import RentalMachineDetail from './pages/rental-machine-detail'
@@ -54,6 +57,7 @@ function App() {
         <WebSocketProvider>
           <NotificationsProvider>
             <FeedbackProvider>
+              <Toaster position="top-right" expand={false} richColors closeButton />
               <Router>
             <Routes>
               <Route path="/login" element={<Login />} />
@@ -73,8 +77,18 @@ function App() {
                 </ProtectedRoute>
               } />
               <Route path="/dashboard/admin" element={
-                <RoleProtectedRoute allowedRoles={['admin', 'manager']}>
+                <RoleProtectedRoute allowedRoles={['admin']}>
                   <DashboardAdmin />
+                </RoleProtectedRoute>
+              } />
+              <Route path="/dashboard/manager" element={
+                <RoleProtectedRoute allowedRoles={['manager', 'admin']}>
+                  <DashboardManager />
+                </RoleProtectedRoute>
+              } />
+              <Route path="/admin/user-activity/:userId" element={
+                <RoleProtectedRoute allowedRoles={['admin']}>
+                  <UserActivityHistory />
                 </RoleProtectedRoute>
               } />
               <Route path="/admin-feedback" element={
@@ -169,7 +183,7 @@ function App() {
               } />
               <Route path="/quote-management" element={
                 <PermissionProtectedRoute requiredPermissions={['quotes:read']}>
-                  <QuoteManagement />
+                  <QuoteManagementEnhanced />
                 </PermissionProtectedRoute>
               } />
               <Route path="/sales-reports" element={
@@ -178,9 +192,9 @@ function App() {
                 </PermissionProtectedRoute>
               } />
               <Route path="/sales-targets" element={
-                <RoleProtectedRoute allowedRoles={['admin', 'manager']}>
+                <PermissionProtectedRoute requiredPermissions={['sales_targets:read']}>
                   <SalesTargets />
-                </RoleProtectedRoute>
+                </PermissionProtectedRoute>
               } />
               <Route path="/warranty-repair-tickets" element={
                 <PermissionProtectedRoute requiredPermissions={['repair_tickets:read']}>

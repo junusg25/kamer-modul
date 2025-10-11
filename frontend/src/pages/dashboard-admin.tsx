@@ -33,6 +33,14 @@ import { formatCurrency } from '../lib/currency'
 import { useAuth } from '../contexts/auth-context'
 import { useWebSocket } from '../contexts/websocket-context'
 import apiService from '../services/api'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog'
+import { Label } from '../components/ui/label'
+import { Input } from '../components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
+import { toast } from 'sonner'
+import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '@/hooks/useColumnVisibility'
+import { ColumnVisibilityDropdown } from '@/components/ui/column-visibility-dropdown'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
 
 // Types
 interface SystemHealth {
@@ -51,6 +59,7 @@ interface UserActivity {
   name: string
   email: string
   role: string
+  account_status?: 'active' | 'inactive'
   last_login: string
   status: 'online' | 'offline' | 'away'
   session_duration: string
@@ -79,6 +88,16 @@ interface RecentActivity {
   ip_address: string
 }
 
+// Define columns for User Management table
+const USER_MANAGEMENT_COLUMNS = defineColumns([
+  { key: 'user', label: 'User' },
+  { key: 'role', label: 'Role' },
+  { key: 'status', label: 'Status' },
+  { key: 'session', label: 'Session' },
+  { key: 'actions', label: 'Actions' },
+  { key: 'last_login', label: 'Last Login' },
+])
+
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -89,6 +108,30 @@ export default function AdminDashboard() {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
+  
+  // User management dialog state
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<UserActivity | null>(null)
+  const [userFormData, setUserFormData] = useState({
+    name: '',
+    email: '',
+    role: '',
+    status: '',
+    password: '',
+    confirmPassword: ''
+  })
+  const [isSavingUser, setIsSavingUser] = useState(false)
+
+  // Column visibility hook for User Management
+  const {
+    visibleColumns,
+    toggleColumn,
+    isColumnVisible,
+    resetColumns,
+    showAllColumns,
+    hideAllColumns,
+    isSyncing
+  } = useColumnVisibility('admin_user_management', getDefaultColumnKeys(USER_MANAGEMENT_COLUMNS))
 
   useEffect(() => {
     // Initial load - fetch all data including users
@@ -103,7 +146,7 @@ export default function AdminDashboard() {
     if (!socket || !isConnected) return
 
     const handleUserActivityUpdate = (data: { userId: string, userName: string, userRole: string, status: string, timestamp: string }) => {
-      console.log('Real-time user activity update:', data)
+      
       
       // Update user activity in real-time
       setUserActivity(prev => {
@@ -153,13 +196,13 @@ export default function AdminDashboard() {
       setIsLoading(true)
       
       // Debug: Log current user
-      console.log('Current user:', user)
-      console.log('User role:', user?.role)
+      
+      
       
       // Test the admin endpoint first
       try {
         const testData = await apiService.request('/admin/test')
-        console.log('Admin test endpoint response:', testData)
+        
       } catch (testError) {
         console.error('Admin test endpoint failed:', testError)
       }
@@ -265,6 +308,64 @@ export default function AdminDashboard() {
         return 'bg-blue-100 text-blue-800 border-blue-200'
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
+    }
+  }
+
+  const handleEditUser = (user: UserActivity) => {
+    setSelectedUser(user)
+    setUserFormData({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.account_status || 'active',
+      password: '',
+      confirmPassword: ''
+    })
+    setIsUserDialogOpen(true)
+  }
+
+  const handleSaveUser = async () => {
+    if (!selectedUser) return
+
+    // Validate password if provided
+    if (userFormData.password && userFormData.password !== userFormData.confirmPassword) {
+      toast.error('Passwords do not match')
+      return
+    }
+
+    if (userFormData.password && userFormData.password.length < 8) {
+      toast.error('Password must be at least 8 characters')
+      return
+    }
+
+    try {
+      setIsSavingUser(true)
+      
+      const updateData: any = {
+        name: userFormData.name,
+        email: userFormData.email,
+        role: userFormData.role,
+        status: userFormData.status
+      }
+
+      // Only include password if it was provided
+      if (userFormData.password) {
+        updateData.password = userFormData.password
+      }
+
+      await apiService.request(`/users/${selectedUser.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updateData)
+      })
+
+      toast.success('User updated successfully')
+      setIsUserDialogOpen(false)
+      fetchAdminData() // Refresh data
+    } catch (error: any) {
+      console.error('Error updating user:', error)
+      toast.error(error.message || 'Failed to update user')
+    } finally {
+      setIsSavingUser(false)
     }
   }
 
@@ -428,24 +529,30 @@ export default function AdminDashboard() {
                     <div className="space-y-4">
                       <div>
                         <div className="flex justify-between text-sm mb-1">
-                          <span>CPU Usage</span>
-                          <span>{systemHealth.cpu_usage}%</span>
-                        </div>
-                        <Progress value={systemHealth.cpu_usage} />
-                      </div>
-                      <div>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>Memory Usage</span>
+                          <span>Memory Usage (Heap)</span>
                           <span>{systemHealth.memory_usage}%</span>
                         </div>
                         <Progress value={systemHealth.memory_usage} />
                       </div>
                       <div>
                         <div className="flex justify-between text-sm mb-1">
-                          <span>Disk Usage</span>
-                          <span>{systemHealth.disk_usage}%</span>
+                          <span>Active DB Connections</span>
+                          <span>{systemHealth.active_connections}</span>
                         </div>
-                        <Progress value={systemHealth.disk_usage} />
+                        <Progress value={Math.min((systemHealth.active_connections / 20) * 100, 100)} />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Max pool size: 20
+                        </p>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>API Response Time</span>
+                          <span>{systemHealth.api_response_time}ms</span>
+                        </div>
+                        <Progress value={Math.min((systemHealth.api_response_time / 1000) * 100, 100)} />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Target: &lt; 1000ms
+                        </p>
                       </div>
                     </div>
                   )}
@@ -535,58 +642,241 @@ export default function AdminDashboard() {
           <TabsContent value="users" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Users className="h-5 w-5 mr-2" />
-                  User Activity & Management
-                </CardTitle>
-                <CardDescription>
-                  Monitor user sessions and activity
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center">
+                      <Users className="h-5 w-5 mr-2" />
+                      User Activity & Management
+                    </CardTitle>
+                    <CardDescription>
+                      Monitor user sessions and manage accounts
+                    </CardDescription>
+                  </div>
+                  {/* Column Visibility */}
+                  <ColumnVisibilityDropdown
+                    columns={USER_MANAGEMENT_COLUMNS}
+                    visibleColumns={visibleColumns}
+                    onToggleColumn={toggleColumn}
+                    onShowAll={showAllColumns}
+                    onHideAll={hideAllColumns}
+                    onReset={resetColumns}
+                    isSyncing={isSyncing}
+                  />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {userActivity.map((user) => (
-                    <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex-shrink-0">
-                          <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                            user.status === 'online' ? 'bg-green-100' : 'bg-gray-100'
-                          }`}>
-                            <Users className={`h-5 w-5 ${
-                              user.status === 'online' ? 'text-green-600' : 'text-gray-600'
-                            }`} />
-                          </div>
-                        </div>
-                        <div>
-                          <p className="font-medium">{user.name}</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Last login: {formatDateTime(user.last_login)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-4">
-                        <Badge variant={user.status === 'online' ? 'default' : 'secondary'}>
-                          {user.status}
-                        </Badge>
-                        <div className="text-right">
-                          <p className="text-sm font-medium">{user.actions_count} actions</p>
-                          <p className="text-xs text-muted-foreground">
-                            Session: {user.session_duration}
-                          </p>
-                        </div>
-                        <Button variant="outline" size="sm">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {isColumnVisible('user') && <TableHead>User</TableHead>}
+                      {isColumnVisible('role') && <TableHead>Role</TableHead>}
+                      {isColumnVisible('status') && <TableHead>Status</TableHead>}
+                      {isColumnVisible('session') && <TableHead>Session</TableHead>}
+                      {isColumnVisible('actions') && <TableHead>Actions</TableHead>}
+                      {isColumnVisible('last_login') && <TableHead>Last Login</TableHead>}
+                      <TableHead>Manage</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {userActivity.map((user) => (
+                      <TableRow 
+                        key={user.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => navigate(`/admin/user-activity/${user.id}`)}
+                      >
+                        {isColumnVisible('user') && (
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                                user.status === 'online' ? 'bg-green-100' : 'bg-gray-100'
+                              }`}>
+                                <Users className={`h-4 w-4 ${
+                                  user.status === 'online' ? 'text-green-600' : 'text-gray-600'
+                                }`} />
+                              </div>
+                              <div>
+                                <p className="font-medium">{user.name}</p>
+                                <p className="text-sm text-muted-foreground">{user.email}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                        )}
+                        {isColumnVisible('role') && (
+                          <TableCell>
+                            <Badge variant="outline">{user.role}</Badge>
+                          </TableCell>
+                        )}
+                        {isColumnVisible('status') && (
+                          <TableCell>
+                            <div className="flex flex-col gap-1">
+                              <Badge variant={user.status === 'online' ? 'default' : 'secondary'}>
+                                {user.status}
+                              </Badge>
+                              {user.account_status && (
+                                <Badge variant={user.account_status === 'active' ? 'outline' : 'destructive'} className="text-xs">
+                                  {user.account_status}
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                        )}
+                        {isColumnVisible('session') && (
+                          <TableCell>
+                            <p className="text-sm">{user.session_duration}</p>
+                          </TableCell>
+                        )}
+                        {isColumnVisible('actions') && (
+                          <TableCell>
+                            <p className="text-sm font-medium">{user.actions_count}</p>
+                          </TableCell>
+                        )}
+                        {isColumnVisible('last_login') && (
+                          <TableCell>
+                            <p className="text-sm">{formatDateTime(user.last_login)}</p>
+                          </TableCell>
+                        )}
+                        <TableCell>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation() // Prevent row click
+                              handleEditUser(user)
+                            }}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <p className="text-sm text-muted-foreground mt-4">
+                  💡 Click on any user row to view their detailed activity history
+                </p>
               </CardContent>
             </Card>
           </TabsContent>
 
         </Tabs>
+
+        {/* User Management Dialog */}
+        <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit User</DialogTitle>
+              <DialogDescription>
+                Update user information, role, and password
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {/* Name */}
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  value={userFormData.name}
+                  onChange={(e) => setUserFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter name"
+                />
+              </div>
+
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={userFormData.email}
+                  onChange={(e) => setUserFormData(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="Enter email"
+                />
+              </div>
+
+              {/* Role */}
+              <div className="space-y-2">
+                <Label htmlFor="role">Role</Label>
+                <Select
+                  value={userFormData.role}
+                  onValueChange={(value) => setUserFormData(prev => ({ ...prev, role: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="technician">Technician</SelectItem>
+                    <SelectItem value="sales">Sales</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Status */}
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={userFormData.status}
+                  onValueChange={(value) => setUserFormData(prev => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Password (Optional) */}
+              <div className="space-y-2">
+                <Label htmlFor="password">New Password (Optional)</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={userFormData.password}
+                  onChange={(e) => setUserFormData(prev => ({ ...prev, password: e.target.value }))}
+                  placeholder="Leave blank to keep current password"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Minimum 8 characters required
+                </p>
+              </div>
+
+              {/* Confirm Password */}
+              {userFormData.password && (
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={userFormData.confirmPassword}
+                    onChange={(e) => setUserFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    placeholder="Confirm new password"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-2 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setIsUserDialogOpen(false)}
+                disabled={isSavingUser}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveUser}
+                disabled={isSavingUser}
+              >
+                {isSavingUser ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   )

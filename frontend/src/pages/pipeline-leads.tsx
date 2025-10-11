@@ -54,6 +54,9 @@ import {
   Textarea 
 } from '../components/ui/textarea'
 import { 
+  DatePicker 
+} from '../components/ui/date-picker'
+import { 
   Tabs, 
   TabsContent, 
   TabsList, 
@@ -89,6 +92,8 @@ import { DeleteConfirmationDialog } from '../components/ui/delete-confirmation-d
 import { MainLayout } from '../components/layout/main-layout'
 import { formatCurrency } from '../lib/currency'
 import { formatDate, formatDateTime, isOverdue } from '../lib/dateTime'
+import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '@/hooks/useColumnVisibility'
+import { ColumnVisibilityDropdown } from '@/components/ui/column-visibility-dropdown'
 
 // Types
 interface Lead {
@@ -167,6 +172,28 @@ const LEAD_SOURCES = [
   'Other'
 ]
 
+// Define columns for Leads table
+const LEAD_COLUMNS = defineColumns([
+  { key: 'customer', label: 'Customer' },
+  { key: 'company', label: 'Company' },
+  { key: 'contact', label: 'Contact' },
+  { key: 'value', label: 'Potential Value' },
+  { key: 'quality', label: 'Quality' },
+  { key: 'stage', label: 'Stage' },
+  { key: 'assigned_to', label: 'Assigned To' },
+  { key: 'next_follow_up', label: 'Next Follow-up' },
+])
+
+// Define columns for Follow-ups table
+const FOLLOWUP_COLUMNS = defineColumns([
+  { key: 'lead', label: 'Lead' },
+  { key: 'date', label: 'Follow-up Date' },
+  { key: 'type', label: 'Type' },
+  { key: 'notes', label: 'Notes' },
+  { key: 'created_by', label: 'Created By' },
+  { key: 'status', label: 'Status' },
+])
+
 export default function PipelineLeads() {
   const { user: currentUser, hasPermission } = useAuth()
   const navigate = useNavigate()
@@ -181,6 +208,10 @@ export default function PipelineLeads() {
     assigned_to: '',
     created_by: ''
   })
+
+  // Column visibility hooks
+  const leadsColumnVisibility = useColumnVisibility('leads', getDefaultColumnKeys(LEAD_COLUMNS))
+  const followupsColumnVisibility = useColumnVisibility('followups', getDefaultColumnKeys(FOLLOWUP_COLUMNS))
 
   // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -839,6 +870,17 @@ export default function PipelineLeads() {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+
+                  {/* Column Visibility for Leads */}
+                  <ColumnVisibilityDropdown
+                    columns={LEAD_COLUMNS}
+                    visibleColumns={leadsColumnVisibility.visibleColumns}
+                    onToggleColumn={leadsColumnVisibility.toggleColumn}
+                    onShowAll={leadsColumnVisibility.showAllColumns}
+                    onHideAll={leadsColumnVisibility.hideAllColumns}
+                    onReset={leadsColumnVisibility.resetColumns}
+                    isSyncing={leadsColumnVisibility.isSyncing}
+                  />
                 </div>
               </div>
         
@@ -849,14 +891,13 @@ export default function PipelineLeads() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Value</TableHead>
-                    <TableHead>Quality</TableHead>
-                    <TableHead>Stage</TableHead>
-                    <TableHead>Assigned To</TableHead>
-                    <TableHead>Created By</TableHead>
-                    <TableHead>Next Follow-up</TableHead>
+                    {leadsColumnVisibility.isColumnVisible('customer') && <TableHead>Customer</TableHead>}
+                    {leadsColumnVisibility.isColumnVisible('company') && <TableHead>Company</TableHead>}
+                    {leadsColumnVisibility.isColumnVisible('value') && <TableHead>Value</TableHead>}
+                    {leadsColumnVisibility.isColumnVisible('quality') && <TableHead>Quality</TableHead>}
+                    {leadsColumnVisibility.isColumnVisible('stage') && <TableHead>Stage</TableHead>}
+                    {leadsColumnVisibility.isColumnVisible('assigned_to') && <TableHead>Assigned To</TableHead>}
+                    {leadsColumnVisibility.isColumnVisible('next_follow_up') && <TableHead>Next Follow-up</TableHead>}
                     <TableHead className="w-[50px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -883,51 +924,59 @@ export default function PipelineLeads() {
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => handleViewLead(lead)}
                       >
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <div>
-                              <div className="font-medium">{lead.customer_name}</div>
-                              {lead.email && (
-                                <div className="text-sm text-muted-foreground">{lead.email}</div>
-                              )}
+                        {leadsColumnVisibility.isColumnVisible('customer') && (
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <div>
+                                <div className="font-medium">{lead.customer_name}</div>
+                                {lead.email && (
+                                  <div className="text-sm text-muted-foreground">{lead.email}</div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{lead.company_name || '-'}</TableCell>
-                        <TableCell className="font-medium">
-                          {formatCurrency(
-                            (() => {
-                              const value = lead.potential_value;
-                              const numValue = typeof value === 'string' ? parseFloat(value) : value;
-                              return typeof numValue === 'number' && !isNaN(numValue) ? numValue : 0;
-                            })()
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getQualityColor(lead.lead_quality)}>
-                            {lead.lead_quality}
-                          </Badge>
-                        </TableCell>
-                      <TableCell>
-                        <Badge className={getStageColor(lead.sales_stage)}>
-                          {SALES_STAGES.find(s => s.value === lead.sales_stage)?.label || lead.sales_stage}
-                        </Badge>
-                      </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span>{lead.assigned_to_name || 'Unassigned'}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span>{lead.created_by_name || 'Unknown'}</span>
-                          </div>
-                        </TableCell>
-                      <TableCell>
-                        {lead.next_follow_up ? formatDate(lead.next_follow_up) : '-'}
-                      </TableCell>
+                          </TableCell>
+                        )}
+                        {leadsColumnVisibility.isColumnVisible('company') && (
+                          <TableCell>{lead.company_name || '-'}</TableCell>
+                        )}
+                        {leadsColumnVisibility.isColumnVisible('value') && (
+                          <TableCell className="font-medium">
+                            {formatCurrency(
+                              (() => {
+                                const value = lead.potential_value;
+                                const numValue = typeof value === 'string' ? parseFloat(value) : value;
+                                return typeof numValue === 'number' && !isNaN(numValue) ? numValue : 0;
+                              })()
+                            )}
+                          </TableCell>
+                        )}
+                        {leadsColumnVisibility.isColumnVisible('quality') && (
+                          <TableCell>
+                            <Badge className={getQualityColor(lead.lead_quality)}>
+                              {lead.lead_quality}
+                            </Badge>
+                          </TableCell>
+                        )}
+                        {leadsColumnVisibility.isColumnVisible('stage') && (
+                          <TableCell>
+                            <Badge className={getStageColor(lead.sales_stage)}>
+                              {SALES_STAGES.find(s => s.value === lead.sales_stage)?.label || lead.sales_stage}
+                            </Badge>
+                          </TableCell>
+                        )}
+                        {leadsColumnVisibility.isColumnVisible('assigned_to') && (
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <span>{lead.assigned_to_name || 'Unassigned'}</span>
+                            </div>
+                          </TableCell>
+                        )}
+                        {leadsColumnVisibility.isColumnVisible('next_follow_up') && (
+                          <TableCell>
+                            {lead.next_follow_up ? formatDate(lead.next_follow_up) : '-'}
+                          </TableCell>
+                        )}
                       <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -993,17 +1042,31 @@ export default function PipelineLeads() {
         <TabsContent value="follow-ups" className="space-y-4">
           {/* Follow-ups Table */}
           <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Follow-ups</CardTitle>
+                {/* Column Visibility for Follow-ups */}
+                <ColumnVisibilityDropdown
+                  columns={FOLLOWUP_COLUMNS}
+                  visibleColumns={followupsColumnVisibility.visibleColumns}
+                  onToggleColumn={followupsColumnVisibility.toggleColumn}
+                  onShowAll={followupsColumnVisibility.showAllColumns}
+                  onHideAll={followupsColumnVisibility.hideAllColumns}
+                  onReset={followupsColumnVisibility.resetColumns}
+                  isSyncing={followupsColumnVisibility.isSyncing}
+                />
+              </div>
+            </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Lead</TableHead>
-                    <TableHead>Follow-up Date</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Notes</TableHead>
-                    <TableHead>Created By</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
+                    {followupsColumnVisibility.isColumnVisible('lead') && <TableHead>Lead</TableHead>}
+                    {followupsColumnVisibility.isColumnVisible('date') && <TableHead>Follow-up Date</TableHead>}
+                    {followupsColumnVisibility.isColumnVisible('type') && <TableHead>Type</TableHead>}
+                    {followupsColumnVisibility.isColumnVisible('notes') && <TableHead>Notes</TableHead>}
+                    {followupsColumnVisibility.isColumnVisible('created_by') && <TableHead>Created By</TableHead>}
+                    {followupsColumnVisibility.isColumnVisible('status') && <TableHead>Status</TableHead>}
                     <TableHead className="w-[50px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1030,21 +1093,32 @@ export default function PipelineLeads() {
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => handleViewFollowUp(followUp)}
                       >
-                        <TableCell>
-                          <div className="font-medium">
-                            {leads.find(l => l.id === followUp.lead_id)?.customer_name || 'Unknown Lead'}
-                          </div>
-                        </TableCell>
-                        <TableCell>{formatDate(followUp.follow_up_date)}</TableCell>
-                        <TableCell>{followUp.follow_up_type || '-'}</TableCell>
-                        <TableCell className="max-w-[200px] truncate">{followUp.notes}</TableCell>
-                        <TableCell>{followUp.created_by_name}</TableCell>
-                        <TableCell>
-                          <Badge variant={followUp.completed ? "default" : "secondary"}>
-                            {followUp.completed ? "Completed" : "Pending"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{formatDate(followUp.created_at)}</TableCell>
+                        {followupsColumnVisibility.isColumnVisible('lead') && (
+                          <TableCell>
+                            <div className="font-medium">
+                              {leads.find(l => l.id === followUp.lead_id)?.customer_name || 'Unknown Lead'}
+                            </div>
+                          </TableCell>
+                        )}
+                        {followupsColumnVisibility.isColumnVisible('date') && (
+                          <TableCell>{formatDate(followUp.follow_up_date)}</TableCell>
+                        )}
+                        {followupsColumnVisibility.isColumnVisible('type') && (
+                          <TableCell>{followUp.follow_up_type || '-'}</TableCell>
+                        )}
+                        {followupsColumnVisibility.isColumnVisible('notes') && (
+                          <TableCell className="max-w-[200px] truncate">{followUp.notes}</TableCell>
+                        )}
+                        {followupsColumnVisibility.isColumnVisible('created_by') && (
+                          <TableCell>{followUp.created_by_name}</TableCell>
+                        )}
+                        {followupsColumnVisibility.isColumnVisible('status') && (
+                          <TableCell>
+                            <Badge variant={followUp.completed ? "default" : "secondary"}>
+                              {followUp.completed ? "Completed" : "Pending"}
+                            </Badge>
+                          </TableCell>
+                        )}
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -1213,11 +1287,10 @@ function FollowUpDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="follow_up_date">Follow-up Date *</Label>
-            <Input
-              id="follow_up_date"
-              type="date"
+            <DatePicker
               value={formData.follow_up_date}
-              onChange={(e) => setFormData({ ...formData, follow_up_date: e.target.value })}
+              onChange={(value) => setFormData({ ...formData, follow_up_date: value })}
+              placeholder="Select follow-up date"
             />
           </div>
           
@@ -1487,11 +1560,10 @@ function LeadDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="next_follow_up">Next Follow-up</Label>
-            <Input
-              id="next_follow_up"
-              type="date"
+            <DatePicker
               value={formData.next_follow_up}
-              onChange={(e) => setFormData({ ...formData, next_follow_up: e.target.value })}
+              onChange={(value) => setFormData({ ...formData, next_follow_up: value })}
+              placeholder="Select next follow-up date"
             />
           </div>
         </div>

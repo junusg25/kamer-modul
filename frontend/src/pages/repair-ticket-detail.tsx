@@ -163,16 +163,46 @@ export default function RepairTicketDetail() {
   const handleConvertToWorkOrder = async () => {
     if (!repairTicket) return
 
-    setConvertModalOpen(true)
-    
-    // Fetch users for technician selection
-    try {
-      const response = await apiService.getUsers()
-      const usersData = response.data || response
-      setUsers(Array.isArray(usersData) ? usersData : [])
-    } catch (err) {
-      console.error('Error fetching users:', err)
-      toast.error('Failed to load users')
+    // Auto-assign if user is a technician
+    if (user?.role === 'technician') {
+      setIsConverting(true)
+      try {
+        const convertData = {
+          technician_id: user.id,
+          priority: repairTicket.priority || 'medium',
+          estimated_hours: null,
+          notes: `Converted from repair ticket ${repairTicket.formatted_number || repairTicket.ticket_number}`
+        }
+
+        const response = await apiService.convertRepairTicketToWorkOrder(repairTicket.id, convertData)
+        
+        toast.success('Repair ticket converted and assigned to you')
+        
+        // Navigate to the created work order if available
+        if (response.data?.work_order?.id) {
+          navigate(`/work-orders/${response.data.work_order.id}`)
+        } else {
+          await fetchRepairTicketDetails()
+        }
+      } catch (err: any) {
+        console.error('Error converting ticket:', err)
+        toast.error(err.response?.data?.message || 'Failed to convert ticket to work order')
+      } finally {
+        setIsConverting(false)
+      }
+    } else {
+      // Show dialog for admin/manager to assign technician
+      setConvertModalOpen(true)
+      
+      // Fetch users for technician selection
+      try {
+        const response = await apiService.getUsers()
+        const usersData = response.data || response
+        setUsers(Array.isArray(usersData) ? usersData : [])
+      } catch (err) {
+        console.error('Error fetching users:', err)
+        toast.error('Failed to load users')
+      }
     }
   }
 
@@ -223,17 +253,14 @@ export default function RepairTicketDetail() {
 
   const handlePrint = async () => {
     try {
-      console.log('Starting PDF generation for ticket:', repairTicket.id)
-      const response = await fetch(`http://localhost:3000/api/print/repair-ticket/${repairTicket.id}`, {
+            const response = await fetch(`http://localhost:3000/api/print/repair-ticket/${repairTicket.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       })
 
-      console.log('Response status:', response.status)
-      console.log('Response headers:', response.headers)
-
+            
       if (!response.ok) {
         const errorText = await response.text()
         console.error('Response error:', errorText)
@@ -241,8 +268,7 @@ export default function RepairTicketDetail() {
       }
 
       const blob = await response.blob()
-      console.log('PDF blob size:', blob.size)
-      const url = window.URL.createObjectURL(blob)
+            const url = window.URL.createObjectURL(blob)
       window.open(url, '_blank')
       window.URL.revokeObjectURL(url)
     } catch (error) {
@@ -416,7 +442,7 @@ export default function RepairTicketDetail() {
             {user?.role !== 'sales' && (
               <Button
                 variant="outline"
-                onClick={() => console.log('Edit Repair Ticket')}
+                onClick={() => navigate(`/repair-tickets/${id}`)}
               >
                 <Edit className="mr-2 h-4 w-4" />
                 Edit

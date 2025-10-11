@@ -168,8 +168,37 @@ export default function WarrantyRepairTicketDetail() {
     }
   }
 
-  const handleConvertToWorkOrder = () => {
-    setConvertModalOpen(true)
+  const handleConvertToWorkOrder = async () => {
+    // Auto-assign if user is a technician
+    if (user?.role === 'technician') {
+      if (!warrantyRepairTicket) return
+      
+      try {
+        setIsConverting(true)
+        const result = await apiService.convertWarrantyRepairTicketToWorkOrder(warrantyRepairTicket.id, {
+          technician_id: user.id,
+          priority: warrantyRepairTicket.priority || 'medium'
+        })
+        
+        toast.success('Warranty repair ticket converted and assigned to you')
+        
+        // Redirect to the newly created warranty work order
+        const warrantyWorkOrderId = result.data?.warranty_work_order?.id
+        if (warrantyWorkOrderId) {
+          navigate(`/warranty-work-orders/${warrantyWorkOrderId}`)
+        } else {
+          fetchWarrantyRepairTicketDetails()
+        }
+      } catch (err: any) {
+        console.error('Error converting ticket:', err)
+        toast.error(err.response?.data?.message || 'Failed to convert warranty repair ticket')
+      } finally {
+        setIsConverting(false)
+      }
+    } else {
+      // Show dialog for admin/manager to assign technician
+      setConvertModalOpen(true)
+    }
   }
 
   const handleConvertSubmit = async () => {
@@ -177,7 +206,7 @@ export default function WarrantyRepairTicketDetail() {
 
     try {
       setIsConverting(true)
-      await apiService.convertWarrantyRepairTicketToWorkOrder(warrantyRepairTicket.id, {
+      const result = await apiService.convertWarrantyRepairTicketToWorkOrder(warrantyRepairTicket.id, {
         technician_id: selectedTechnician,
         priority: warrantyRepairTicket.priority || 'medium'
       })
@@ -185,7 +214,14 @@ export default function WarrantyRepairTicketDetail() {
       toast.success('Warranty repair ticket converted to work order successfully')
       setConvertModalOpen(false)
       setSelectedTechnician('')
-      fetchWarrantyRepairTicketDetails()
+      
+      // Redirect to the newly created warranty work order
+      const warrantyWorkOrderId = result.data?.warranty_work_order?.id
+      if (warrantyWorkOrderId) {
+        navigate(`/warranty-work-orders/${warrantyWorkOrderId}`)
+      } else {
+        fetchWarrantyRepairTicketDetails()
+      }
     } catch (err: any) {
       console.error('Error converting ticket:', err)
       toast.error(err.response?.data?.message || 'Failed to convert warranty repair ticket')
@@ -397,7 +433,7 @@ export default function WarrantyRepairTicketDetail() {
             {user?.role !== 'sales' && (
               <Button
                 variant="outline"
-                onClick={() => console.log('Edit Warranty Repair Ticket')}
+                onClick={() => navigate(`/warranty-repair-tickets/${id}`)}
               >
                 <Edit className="mr-2 h-4 w-4" />
                 Edit

@@ -792,7 +792,7 @@ export default function CustomerDetail() {
                                 <DropdownMenuItem onClick={() => navigate(`/machines/${machine.id}`)}>
                                   <Eye className="mr-2 h-4 w-4" /> View Machine Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => console.log('Edit Machine', machine.id)}>
+                                <DropdownMenuItem onClick={() => navigate(`/machines/${machine.id}`)}>
                                   <Edit className="mr-2 h-4 w-4" /> Edit Machine
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -880,7 +880,7 @@ export default function CustomerDetail() {
                                 <DropdownMenuItem onClick={() => navigate(`/work-orders/${workOrder.id}`)}>
                                   <Eye className="mr-2 h-4 w-4" /> View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => console.log('Edit Work Order', workOrder.id)}>
+                                <DropdownMenuItem onClick={() => navigate(`/work-orders/${workOrder.id}`)}>
                                   <Edit className="mr-2 h-4 w-4" /> Edit Work Order
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -968,7 +968,7 @@ export default function CustomerDetail() {
                                 <DropdownMenuItem onClick={() => navigate(`/warranty-work-orders/${workOrder.id}`)}>
                                   <Eye className="mr-2 h-4 w-4" /> View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => console.log('Edit Warranty Work Order', workOrder.id)}>
+                                <DropdownMenuItem onClick={() => navigate(`/warranty-work-orders/${workOrder.id}`)}>
                                   <Edit className="mr-2 h-4 w-4" /> Edit Work Order
                                 </DropdownMenuItem>
                               </DropdownMenuContent>

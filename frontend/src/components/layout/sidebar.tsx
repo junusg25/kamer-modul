@@ -60,8 +60,8 @@ const getNavigationItems = (counts: SidebarCounts | null, userRole?: string, unr
   // General Section
   { name: 'General', href: '#', icon: null, badge: null, type: 'label' },
   { 
-    name: userRole === 'admin' ? 'Admin Dashboard' : 'My Work', 
-    href: userRole === 'admin' ? '/dashboard/admin' : '/dashboard/my-work', 
+    name: userRole === 'admin' ? 'Admin Dashboard' : userRole === 'manager' ? 'Dashboard' : 'My Work', 
+    href: userRole === 'admin' ? '/dashboard/admin' : userRole === 'manager' ? '/dashboard/manager' : '/dashboard/my-work', 
     icon: Home, 
     badge: null, 
     type: 'single' 
@@ -190,16 +190,13 @@ const getNavigationItems = (counts: SidebarCounts | null, userRole?: string, unr
   
   ]
 
-  // Filter out sales management items for technicians
+  // Filter items based on permissions (no longer just based on role)
+      // Note: Sales Targets is now controlled by permissions, not role
+      // This allows individual users to have custom access
+      
       if (userRole === 'technician') {
         return baseItems.filter(item => 
-          !['Pipeline & Leads', 'Quote Management', 'Sales Reports', 'Sales Targets', 'Sales Management'].includes(item.name)
-        )
-      }
-      
-      if (userRole === 'sales') {
-        return baseItems.filter(item => 
-          !['Sales Targets'].includes(item.name)
+          !['Pipeline & Leads', 'Quote Management', 'Sales Reports', 'Sales Management'].includes(item.name)
         )
       }
 
@@ -210,7 +207,7 @@ const getNavigationItems = (counts: SidebarCounts | null, userRole?: string, unr
 export function Sidebar({ className }: SidebarProps) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user } = useAuth()
+  const { user, hasPermission } = useAuth()
   const { unreadFeedbackCount } = useFeedback()
   const [openDropdowns, setOpenDropdowns] = useState<string[]>([])
   const [sidebarCounts, setSidebarCounts] = useState<SidebarCounts | null>(null)
@@ -297,7 +294,17 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-2 py-1">
-        {getNavigationItems(sidebarCounts, user?.role, unreadFeedbackCount).map((item) => {
+        {getNavigationItems(sidebarCounts, user?.role, unreadFeedbackCount)
+          .filter((item) => {
+            // Filter Sales Targets based on permission
+            if (item.name === 'Sales Targets') {
+              const canAccess = hasPermission('sales_targets:read')
+              
+              return canAccess
+            }
+            return true
+          })
+          .map((item) => {
           if (item.type === 'label') {
             return (
               <div key={item.name} className="px-2 py-1">

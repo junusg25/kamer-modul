@@ -109,7 +109,11 @@ export function DatePicker({
 }: DatePickerProps) {
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(() => {
     if (!value) return undefined
-    const parsed = parse(value, "dd.MM.yyyy", new Date())
+    // Try parsing as ISO format (YYYY-MM-DD) first, then dd.MM.yyyy
+    let parsed = parse(value, "yyyy-MM-dd", new Date())
+    if (isNaN(parsed.getTime())) {
+      parsed = parse(value, "dd.MM.yyyy", new Date())
+    }
     return isNaN(parsed.getTime()) ? undefined : parsed
   })
 
@@ -118,14 +122,19 @@ export function DatePicker({
     if (!value) {
       setSelectedDate(undefined)
     } else {
-      const parsed = parse(value, "dd.MM.yyyy", new Date())
+      // Try parsing as ISO format (YYYY-MM-DD) first, then dd.MM.yyyy
+      let parsed = parse(value, "yyyy-MM-dd", new Date())
+      if (isNaN(parsed.getTime())) {
+        parsed = parse(value, "dd.MM.yyyy", new Date())
+      }
       setSelectedDate(isNaN(parsed.getTime()) ? undefined : parsed)
     }
   }, [value])
 
   const handleSelect = (date: Date) => {
     setSelectedDate(date)
-    onChange?.(format(date, "dd.MM.yyyy"))
+    // Return ISO format (YYYY-MM-DD) for backend compatibility
+    onChange?.(format(date, "yyyy-MM-dd"))
   }
 
   return (

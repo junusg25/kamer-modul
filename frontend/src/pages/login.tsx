@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -24,10 +25,17 @@ export default function Login() {
 
     try {
       await login(email, password)
+      toast.success('Welcome back!', {
+        description: 'You have successfully logged in.'
+      })
       // Redirect to root, DashboardRouter will handle the proper routing
       navigate('/', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      const errorMessage = err instanceof Error ? err.message : 'Login failed'
+      setError(errorMessage)
+      toast.error('Login Failed', {
+        description: errorMessage
+      })
     } finally {
       setIsLoading(false)
     }

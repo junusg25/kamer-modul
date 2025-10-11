@@ -50,6 +50,13 @@ import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
 import { formatDate } from '../lib/dateTime'
 import { formatStatus, getStatusBadgeVariant, getStatusBadgeColor } from '@/lib/status'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog'
+import { Label } from '../components/ui/label'
+import { Input } from '../components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
+import { DeleteConfirmationDialog } from '../components/ui/delete-confirmation-dialog'
+import { InventoryInUseAlertDialog } from '../components/ui/inventory-in-use-alert-dialog'
+import { toast } from 'sonner'
 
 interface InventoryItem {
   id: string
@@ -146,6 +153,29 @@ export default function InventoryDetail() {
   const [warrantyWorkOrders, setWarrantyWorkOrders] = useState<WarrantyWorkOrder[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Edit/Delete state
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [adjustStockDialogOpen, setAdjustStockDialogOpen] = useState(false)
+  const [inUseAlertOpen, setInUseAlertOpen] = useState(false)
+  const [workOrderCount, setWorkOrderCount] = useState(0)
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    description: '',
+    quantity: '',
+    unit_price: '',
+    category: '',
+    supplier: '',
+    sku: '',
+    location: '',
+    min_stock_level: ''
+  })
+  const [stockAdjustment, setStockAdjustment] = useState({
+    quantity: '',
+    reason: 'adjustment'
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -225,6 +255,113 @@ export default function InventoryDetail() {
     )
   }
 
+  const handleEditItem = () => {
+    if (!inventoryItem) return
+    
+    setEditFormData({
+      name: inventoryItem.name,
+      description: inventoryItem.description || '',
+      quantity: inventoryItem.quantity.toString(),
+      unit_price: inventoryItem.unit_price.toString(),
+      category: inventoryItem.category || '',
+      supplier: inventoryItem.supplier || '',
+      sku: inventoryItem.sku || '',
+      location: inventoryItem.location || '',
+      min_stock_level: inventoryItem.min_stock_level?.toString() || ''
+    })
+    setEditDialogOpen(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!inventoryItem) return
+
+    setIsSubmitting(true)
+    try {
+      await apiService.updateInventoryItem(inventoryItem.id, {
+        name: editFormData.name,
+        description: editFormData.description || null,
+        quantity: parseInt(editFormData.quantity),
+        unit_price: parseFloat(editFormData.unit_price),
+        category: editFormData.category || null,
+        supplier: editFormData.supplier || null,
+        sku: editFormData.sku || null,
+        location: editFormData.location || null,
+        min_stock_level: editFormData.min_stock_level ? parseInt(editFormData.min_stock_level) : null
+      })
+      
+      toast.success('Inventory item updated successfully')
+      setEditDialogOpen(false)
+      fetchInventoryDetails()
+    } catch (err: any) {
+      console.error('Error updating item:', err)
+      toast.error(err.response?.data?.message || 'Failed to update item')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleAdjustStock = () => {
+    if (!inventoryItem) return
+    
+    setStockAdjustment({
+      quantity: inventoryItem.quantity.toString(),
+      reason: 'adjustment'
+    })
+    setAdjustStockDialogOpen(true)
+  }
+
+  const handleSaveStockAdjustment = async () => {
+    if (!inventoryItem) return
+
+    setIsSubmitting(true)
+    try {
+      await apiService.updateInventoryItem(inventoryItem.id, {
+        quantity: parseInt(stockAdjustment.quantity)
+      })
+      
+      toast.success('Stock adjusted successfully')
+      setAdjustStockDialogOpen(false)
+      fetchInventoryDetails()
+    } catch (err: any) {
+      console.error('Error adjusting stock:', err)
+      toast.error(err.response?.data?.message || 'Failed to adjust stock')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDeleteItem = () => {
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDeleteItem = async () => {
+    if (!inventoryItem) return
+
+    setIsSubmitting(true)
+    try {
+      await apiService.deleteInventoryItem(inventoryItem.id)
+      toast.success('Inventory item deleted successfully')
+      navigate('/inventory')
+    } catch (err: any) {
+      console.error('Error deleting item:', err)
+      
+      // Check if it's a "item in use" error
+      if (err.response?.data?.message?.includes('currently used in') && err.response?.data?.message?.includes('work order')) {
+        // Extract the count from the error message
+        const message = err.response.data.message
+        const countMatch = message.match(/used in (\d+) work order/)
+        const count = countMatch ? parseInt(countMatch[1]) : 0
+        
+        setWorkOrderCount(count)
+        setInUseAlertOpen(true)
+        setDeleteDialogOpen(false)
+      } else {
+        toast.error(err.response?.data?.message || 'Failed to delete item')
+      }
+      setIsSubmitting(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <MainLayout>
@@ -289,11 +426,15 @@ export default function InventoryDetail() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" onClick={() => console.log('Edit Inventory Item')}>
+            <Button variant="outline" onClick={handleAdjustStock}>
+              <Package className="mr-2 h-4 w-4" />
+              Adjust Stock
+            </Button>
+            <Button variant="outline" onClick={handleEditItem}>
               <Edit className="mr-2 h-4 w-4" />
               Edit Item
             </Button>
-            <Button variant="destructive" onClick={() => console.log('Delete Inventory Item')}>
+            <Button variant="destructive" onClick={handleDeleteItem}>
               <Trash2 className="mr-2 h-4 w-4" />
               Delete Item
             </Button>
@@ -740,6 +881,199 @@ export default function InventoryDetail() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Edit Item Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Inventory Item</DialogTitle>
+              <DialogDescription>
+                Update the details for {inventoryItem?.name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Item Name *</Label>
+                <Input
+                  id="edit-name"
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-sku">SKU</Label>
+                <Input
+                  id="edit-sku"
+                  value={editFormData.sku}
+                  onChange={(e) => setEditFormData({ ...editFormData, sku: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Input
+                  id="edit-description"
+                  value={editFormData.description}
+                  onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-quantity">Quantity *</Label>
+                <Input
+                  id="edit-quantity"
+                  type="number"
+                  value={editFormData.quantity}
+                  onChange={(e) => setEditFormData({ ...editFormData, quantity: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-unit-price">Unit Price (KM) *</Label>
+                <Input
+                  id="edit-unit-price"
+                  type="number"
+                  step="0.01"
+                  value={editFormData.unit_price}
+                  onChange={(e) => setEditFormData({ ...editFormData, unit_price: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-category">Category</Label>
+                <Input
+                  id="edit-category"
+                  value={editFormData.category}
+                  onChange={(e) => setEditFormData({ ...editFormData, category: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-supplier">Supplier</Label>
+                <Input
+                  id="edit-supplier"
+                  value={editFormData.supplier}
+                  onChange={(e) => setEditFormData({ ...editFormData, supplier: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-location">Location</Label>
+                <Input
+                  id="edit-location"
+                  value={editFormData.location}
+                  onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-min-stock">Minimum Stock Level</Label>
+                <Input
+                  id="edit-min-stock"
+                  type="number"
+                  value={editFormData.min_stock_level}
+                  onChange={(e) => setEditFormData({ ...editFormData, min_stock_level: e.target.value })}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Adjust Stock Dialog */}
+        <Dialog open={adjustStockDialogOpen} onOpenChange={setAdjustStockDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adjust Stock</DialogTitle>
+              <DialogDescription>
+                Update stock level for {inventoryItem?.name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="current-stock">Current Stock</Label>
+                <Input
+                  id="current-stock"
+                  value={inventoryItem?.quantity || 0}
+                  disabled
+                  className="bg-muted"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-quantity">New Quantity *</Label>
+                <Input
+                  id="new-quantity"
+                  type="number"
+                  value={stockAdjustment.quantity}
+                  onChange={(e) => setStockAdjustment({ ...stockAdjustment, quantity: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="adjustment-reason">Reason</Label>
+                <Select 
+                  value={stockAdjustment.reason} 
+                  onValueChange={(value) => setStockAdjustment({ ...stockAdjustment, reason: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="adjustment">Stock Adjustment</SelectItem>
+                    <SelectItem value="restock">Restocking</SelectItem>
+                    <SelectItem value="damage">Damaged Items</SelectItem>
+                    <SelectItem value="lost">Lost Items</SelectItem>
+                    <SelectItem value="correction">Inventory Correction</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAdjustStockDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveStockAdjustment} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adjusting...
+                  </>
+                ) : (
+                  'Adjust Stock'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <DeleteConfirmationDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          onConfirm={confirmDeleteItem}
+          title="Delete Inventory Item"
+          description={`Are you sure you want to delete ${inventoryItem?.name}? This action cannot be undone.`}
+          isLoading={isSubmitting}
+        />
+
+        {/* Inventory In Use Alert Dialog */}
+        <InventoryInUseAlertDialog
+          open={inUseAlertOpen}
+          onOpenChange={setInUseAlertOpen}
+          itemName={inventoryItem?.name}
+          workOrderCount={workOrderCount}
+          title="Cannot Delete Inventory Item"
+        />
       </div>
     </MainLayout>
   )

@@ -32,6 +32,8 @@ import { Textarea } from '../components/ui/textarea'
 import { formatStatus, getStatusBadgeVariant, getStatusBadgeColor } from '../lib/status'
 import { formatCurrency } from '../lib/currency'
 import { toast } from 'sonner'
+import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '../hooks/useColumnVisibility'
+import { ColumnVisibilityDropdown } from '../components/ui/column-visibility-dropdown'
 import {
   Search,
   MoreHorizontal,
@@ -92,6 +94,17 @@ interface CustomerFormData {
   ownership_notes?: string
   status?: 'active' | 'inactive' | 'pending'
 }
+
+// Define columns for the customers table
+const CUSTOMER_COLUMNS = defineColumns([
+  { key: 'customer', label: 'Customer' },
+  { key: 'type', label: 'Type' },
+  { key: 'contact', label: 'Contact' },
+  { key: 'status', label: 'Status' },
+  { key: 'machines', label: 'Machines' },
+  { key: 'total_spent', label: 'Total Spent' },
+  { key: 'owner', label: 'Owner' },
+])
 
 const sampleCustomers: Customer[] = [
   {
@@ -183,6 +196,18 @@ export default function Customers() {
     status: '',
     customer_type: ''
   })
+  
+  // Column visibility hook
+  const {
+    visibleColumns,
+    toggleColumn,
+    isColumnVisible,
+    resetColumns,
+    showAllColumns,
+    hideAllColumns,
+    isSyncing
+  } = useColumnVisibility('customers', getDefaultColumnKeys(CUSTOMER_COLUMNS))
+  
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null)
   const [machineAlertOpen, setMachineAlertOpen] = useState(false)
@@ -314,7 +339,7 @@ export default function Customers() {
       // Refresh the customers list
       fetchCustomers()
       // Show success message
-      console.log('Customer deleted successfully')
+      
     } catch (error) {
       console.error('Error deleting customer:', error)
       // Show error message
@@ -519,6 +544,18 @@ export default function Customers() {
                     </button>
                   )}
                 </div>
+                
+                {/* Column Visibility */}
+                <ColumnVisibilityDropdown
+                  columns={CUSTOMER_COLUMNS}
+                  visibleColumns={visibleColumns}
+                  onToggleColumn={toggleColumn}
+                  onShowAll={showAllColumns}
+                  onHideAll={hideAllColumns}
+                  onReset={resetColumns}
+                  isSyncing={isSyncing}
+                />
+                
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline">
@@ -638,13 +675,13 @@ export default function Customers() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Machines</TableHead>
-                  <TableHead>Total Spent</TableHead>
-                  <TableHead>Owner</TableHead>
+                  {isColumnVisible('customer') && <TableHead>Customer</TableHead>}
+                  {isColumnVisible('type') && <TableHead>Type</TableHead>}
+                  {isColumnVisible('contact') && <TableHead>Contact</TableHead>}
+                  {isColumnVisible('status') && <TableHead>Status</TableHead>}
+                  {isColumnVisible('machines') && <TableHead>Machines</TableHead>}
+                  {isColumnVisible('total_spent') && <TableHead>Total Spent</TableHead>}
+                  {isColumnVisible('owner') && <TableHead>Owner</TableHead>}
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -655,61 +692,75 @@ export default function Customers() {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => navigate(`/customers/${customer.id}`)}
                   >
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">
-                          {customer.customer_type === 'company' ? customer.company_name : customer.name}
-                        </div>
-                        <div className="text-sm text-muted-foreground flex items-center">
-                          <MapPin className="mr-1 h-3 w-3" />
-                          {customer.city || 'N/A'}
-                        </div>
-                        {customer.customer_type === 'company' && customer.contact_person && (
-                          <div className="text-sm text-muted-foreground flex items-center mt-1">
-                            <User className="mr-1 h-3 w-3" />
-                            {customer.contact_person}
+                    {isColumnVisible('customer') && (
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">
+                            {customer.customer_type === 'company' ? customer.company_name : customer.name}
                           </div>
-                        )}
-                        {customer.customer_type === 'private' && customer.company_name && (
-                          <div className="text-sm text-muted-foreground flex items-center mt-1">
-                            <Building2 className="mr-1 h-3 w-3" />
-                            {customer.company_name}
+                          <div className="text-sm text-muted-foreground flex items-center">
+                            <MapPin className="mr-1 h-3 w-3" />
+                            {customer.city || 'N/A'}
                           </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={customer.customer_type === 'company' ? 'default' : 'secondary'} 
-                        className="text-xs"
-                      >
-                        {customer.customer_type === 'company' ? 'Company' : 'Private'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center text-sm">
-                          <Mail className="mr-1 h-3 w-3" />
-                          {customer.email}
+                          {customer.customer_type === 'company' && customer.contact_person && (
+                            <div className="text-sm text-muted-foreground flex items-center mt-1">
+                              <User className="mr-1 h-3 w-3" />
+                              {customer.contact_person}
+                            </div>
+                          )}
+                          {customer.customer_type === 'private' && customer.company_name && (
+                            <div className="text-sm text-muted-foreground flex items-center mt-1">
+                              <Building2 className="mr-1 h-3 w-3" />
+                              {customer.company_name}
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <Phone className="mr-1 h-3 w-3" />
-                          {customer.phone}
+                      </TableCell>
+                    )}
+                    {isColumnVisible('type') && (
+                      <TableCell>
+                        <Badge 
+                          variant={customer.customer_type === 'company' ? 'default' : 'secondary'} 
+                          className="text-xs"
+                        >
+                          {customer.customer_type === 'company' ? 'Company' : 'Private'}
+                        </Badge>
+                      </TableCell>
+                    )}
+                    {isColumnVisible('contact') && (
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center text-sm">
+                            <Mail className="mr-1 h-3 w-3" />
+                            {customer.email}
+                          </div>
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <Phone className="mr-1 h-3 w-3" />
+                            {customer.phone}
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(customer.status || 'active')}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{customer.total_machines || 0} machines</Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {customer.total_spent ? formatCurrency(customer.total_spent) : 'N/A'}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {customer.owner_name || 'N/A'}
-                    </TableCell>
+                      </TableCell>
+                    )}
+                    {isColumnVisible('status') && (
+                      <TableCell>
+                        {getStatusBadge(customer.status || 'active')}
+                      </TableCell>
+                    )}
+                    {isColumnVisible('machines') && (
+                      <TableCell>
+                        <Badge variant="outline">{customer.total_machines || 0} machines</Badge>
+                      </TableCell>
+                    )}
+                    {isColumnVisible('total_spent') && (
+                      <TableCell className="text-sm text-muted-foreground">
+                        {customer.total_spent ? formatCurrency(customer.total_spent) : 'N/A'}
+                      </TableCell>
+                    )}
+                    {isColumnVisible('owner') && (
+                      <TableCell className="text-sm text-muted-foreground">
+                        {customer.owner_name || 'N/A'}
+                      </TableCell>
+                    )}
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

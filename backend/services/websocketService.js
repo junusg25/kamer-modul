@@ -131,7 +131,9 @@ class WebSocketService {
       name: socket.userName,
       role: userRole,
       status: 'online',
-      connectedAt: new Date().toISOString()
+      connectedAt: new Date().toISOString(),
+      actionsCount: 0,
+      lastActionAt: new Date().toISOString()
     });
     
     // Emit to all admins that a user came online
@@ -285,11 +287,31 @@ class WebSocketService {
         status: status.status,
         connectedAt: status.connectedAt,
         session_duration: this.calculateSessionDuration(status.connectedAt),
-        actions_count: 0, // We can track this later if needed
+        actions_count: status.actionsCount || 0,
         login_attempts: 0
       });
     }
     return statuses;
+  }
+
+  // Track user action (called when user performs any action)
+  trackUserAction(userId) {
+    const userStatus = this.userStatuses.get(userId);
+    if (userStatus) {
+      userStatus.actionsCount = (userStatus.actionsCount || 0) + 1;
+      userStatus.lastActionAt = new Date().toISOString();
+      this.userStatuses.set(userId, userStatus);
+      
+      // Emit update to admins
+      this.io.to('admin_room').emit('user_activity_update', {
+        userId,
+        userName: userStatus.name,
+        userRole: userStatus.role,
+        status: userStatus.status,
+        actionsCount: userStatus.actionsCount,
+        timestamp: new Date().toISOString()
+      });
+    }
   }
 
   // Calculate session duration

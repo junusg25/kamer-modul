@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #2563eb;
+        }
+        .company-info {
+            flex: 1;
+        }
+        .company-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 5px;
+        }
+        .company-details {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.6;
+        }
+        .quote-info {
+            text-align: right;
+            flex: 1;
+        }
+        .quote-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+        .quote-number {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .quote-date {
+            font-size: 12px;
+            color: #666;
+        }
+        .customer-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+        }
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .customer-details {
+            font-size: 13px;
+            line-height: 1.8;
+        }
+        .customer-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        .items-table thead {
+            background-color: #2563eb;
+            color: white;
+        }
+        .items-table th {
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .items-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+        }
+        .items-table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+        .item-name {
+            font-weight: 600;
+            color: #1e40af;
+        }
+        .item-description {
+            color: #666;
+            font-size: 12px;
+            margin-top: 3px;
+        }
+        .item-category {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: #e0e7ff;
+            color: #3730a3;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .totals-section {
+            margin-left: auto;
+            width: 350px;
+            margin-bottom: 30px;
+        }
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 13px;
+        }
+        .totals-row.subtotal {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 12px;
+        }
+        .totals-row.discount {
+            color: #16a34a;
+        }
+        .totals-row.tax {
+            color: #666;
+        }
+        .totals-row.total {
+            border-top: 2px solid #2563eb;
+            padding-top: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e40af;
+        }
+        .terms-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            border-radius: 4px;
+        }
+        .notes-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f0f9ff;
+            border-left: 4px solid #0284c7;
+            border-radius: 4px;
+        }
+        .section-content {
+            font-size: 12px;
+            line-height: 1.8;
+            color: #333;
+            white-space: pre-wrap;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+            text-align: center;
+            font-size: 11px;
+            color: #666;
+        }
+        .validity-notice {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            color: #991b1b;
+        }
+        .validity-notice strong {
+            color: #7f1d1d;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-draft {
+            background-color: #f3f4f6;
+            color: #4b5563;
+        }
+        .badge-sent {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        .badge-accepted {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        @media print {
+            body {
+                padding: 10px;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="company-info">
+            <div class="company-name">{{COMPANY_NAME}}</div>
+            <div class="company-details">
+                {{COMPANY_ADDRESS}}<br>
+                {{COMPANY_CITY}}, {{COMPANY_POSTAL_CODE}}<br>
+                Phone: {{COMPANY_PHONE}}<br>
+                Email: {{COMPANY_EMAIL}}<br>
+                {{COMPANY_VAT}}
+            </div>
+        </div>
+        <div class="quote-info">
+            <div class="quote-title">QUOTATION</div>
+            <div class="quote-number">Quote #{{QUOTE_NUMBER}}</div>
+            <div class="quote-date">Date: {{QUOTE_DATE}}</div>
+            <div class="quote-date">Valid Until: {{VALID_UNTIL}}</div>
+            <span class="badge badge-{{STATUS}}">{{STATUS}}</span>
+        </div>
+    </div>
+
+    <!-- Customer Information -->
+    <div class="customer-section">
+        <div class="section-title">Bill To</div>
+        <div class="customer-name">{{CUSTOMER_NAME}}</div>
+        <div class="customer-details">
+            {{CUSTOMER_COMPANY}}<br>
+            {{CUSTOMER_ADDRESS}}<br>
+            {{CUSTOMER_CITY}}, {{CUSTOMER_POSTAL_CODE}}<br>
+            {{CUSTOMER_VAT}}<br>
+            Phone: {{CUSTOMER_PHONE}}<br>
+            Email: {{CUSTOMER_EMAIL}}
+        </div>
+    </div>
+
+    <!-- Quote Title -->
+    {{#if QUOTE_TITLE}}
+    <div style="margin-bottom: 20px;">
+        <h2 style="color: #1e40af; font-size: 18px; margin: 0;">{{QUOTE_TITLE}}</h2>
+        {{#if QUOTE_DESCRIPTION}}
+        <p style="color: #666; font-size: 13px; margin-top: 5px;">{{QUOTE_DESCRIPTION}}</p>
+        {{/if}}
+    </div>
+    {{/if}}
+
+    <!-- Validity Notice -->
+    {{#if IS_EXPIRING_SOON}}
+    <div class="validity-notice">
+        <strong>⚠ Important:</strong> This quote is valid until {{VALID_UNTIL}}. Please respond before this date to secure the quoted prices.
+    </div>
+    {{/if}}
+
+    <!-- Items Table -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 5%;">#</th>
+                <th style="width: 35%;">Item / Description</th>
+                <th style="width: 15%;">Category</th>
+                <th style="width: 10%;" class="text-center">Qty</th>
+                <th style="width: 15%;" class="text-right">Unit Price</th>
+                <th style="width: 20%;" class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{ITEMS}}
+        </tbody>
+    </table>
+
+    <!-- Totals -->
+    <div class="totals-section">
+        <div class="totals-row subtotal">
+            <span>Subtotal:</span>
+            <span>{{SUBTOTAL}}</span>
+        </div>
+        {{#if DISCOUNT_AMOUNT}}
+        <div class="totals-row discount">
+            <span>Discount ({{DISCOUNT_PERCENTAGE}}%):</span>
+            <span>-{{DISCOUNT_AMOUNT}}</span>
+        </div>
+        {{/if}}
+        {{#if TAX_AMOUNT}}
+        <div class="totals-row tax">
+            <span>Tax ({{TAX_RATE}}%):</span>
+            <span>{{TAX_AMOUNT}}</span>
+        </div>
+        {{/if}}
+        <div class="totals-row total">
+            <span>Total Amount:</span>
+            <span>{{TOTAL_AMOUNT}}</span>
+        </div>
+    </div>
+
+    <!-- Payment Terms -->
+    {{#if PAYMENT_TERMS}}
+    <div class="terms-section">
+        <div class="section-title">Payment Terms</div>
+        <div class="section-content">{{PAYMENT_TERMS}}</div>
+    </div>
+    {{/if}}
+
+    <!-- Delivery Terms -->
+    {{#if DELIVERY_TERMS}}
+    <div class="terms-section">
+        <div class="section-title">Delivery Terms</div>
+        <div class="section-content">{{DELIVERY_TERMS}}</div>
+    </div>
+    {{/if}}
+
+    <!-- Notes -->
+    {{#if NOTES}}
+    <div class="notes-section">
+        <div class="section-title">Additional Notes</div>
+        <div class="section-content">{{NOTES}}</div>
+    </div>
+    {{/if}}
+
+    <!-- Terms & Conditions -->
+    {{#if TERMS_CONDITIONS}}
+    <div class="terms-section">
+        <div class="section-title">Terms & Conditions</div>
+        <div class="section-content">{{TERMS_CONDITIONS}}</div>
+    </div>
+    {{/if}}
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>Thank you for your business!</p>
+        <p>If you have any questions about this quote, please contact us at {{COMPANY_PHONE}} or {{COMPANY_EMAIL}}</p>
+        <p style="margin-top: 10px; font-size: 10px;">Generated on {{GENERATED_DATE}} by {{CREATED_BY_NAME}}</p>
+    </div>
+</body>
+</html>
+

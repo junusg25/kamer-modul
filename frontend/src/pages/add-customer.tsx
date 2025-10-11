@@ -115,7 +115,7 @@ export default function AddCustomerPage() {
         Object.entries(customerData).filter(([_, value]) => value !== '' && value !== undefined)
       )
       
-      console.log('Sending customer data to API:', customerData)
+      
       await apiService.createCustomer(customerData)
       toast.success('Customer created successfully!')
       

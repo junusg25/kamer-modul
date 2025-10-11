@@ -1,0 +1,361 @@
+@import "tailwindcss";
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 30 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 30 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 30 100% 50%;
+  --radius: 0.5rem;
+  
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.dark {
+  --background: 0 0% 4%;
+  --foreground: 0 0% 95%;
+  --card: 0 0% 9%;
+  --card-foreground: 0 0% 95%;
+  --popover: 0 0% 9%;
+  --popover-foreground: 0 0% 95%;
+  --primary: 30 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 12%;
+  --secondary-foreground: 0 0% 95%;
+  --muted: 0 0% 12%;
+  --muted-foreground: 0 0% 65%;
+  --accent: 30 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 95%;
+  --border: 0 0% 15%;
+  --input: 0 0% 15%;
+  --ring: 30 100% 50%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Scrollbar styling for dark mode */
+.dark ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 5px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Custom button styles with #ff8800 accent */
+.btn-primary {
+  background-color: #ff8800;
+  color: white;
+  transition: background-color 0.2s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #e67700;
+}
+
+.btn-primary:active:not(:disabled) {
+  background-color: #cc6600;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Text link colors */
+.text-primary-link {
+  color: #ff8800;
+}
+
+.text-primary-link:hover {
+  color: #e67700;
+}
+
+/* Focus ring with accent color */
+.focus-ring:focus {
+  outline: none;
+  ring: 2px solid #ff8800;
+  ring-offset: 2px;
+}
+
+/* Input field focus styles */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #ff8800 !important;
+  box-shadow: 0 0 0 3px rgba(255, 136, 0, 0.1) !important;
+}
+
+/* Remove default Tailwind ring colors */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  border-color: #ff8800 !important;
+  box-shadow: 0 0 0 3px rgba(255, 136, 0, 0.1) !important;
+  --tw-ring-color: #ff8800 !important;
+}
+
+/* Custom card background color - match main frontend */
+.dark .card {
+  background-color: #171717 !important;
+}
+
+/* Header styling - make it more visible */
+.dark header {
+  background-color: #171717 !important;
+  border-color: #3a3a3a !important;
+}
+
+/* Custom dropdown background color - lighter than sidebar */
+.dark [data-radix-popper-content-wrapper] {
+  background-color: #2a2a2a !important;
+}
+
+.dark [data-radix-dropdown-menu-content] {
+  background-color: #2a2a2a !important;
+}
+
+.dark [data-radix-dropdown-menu-content] [data-radix-dropdown-menu-item] {
+  background-color: transparent;
+}
+
+.dark [data-radix-dropdown-menu-content] [data-radix-dropdown-menu-item]:hover {
+  background-color: #3a3a3a !important;
+}
+
+/* Table styling improvements */
+.dark .table {
+  background-color: #171717;
+}
+
+.dark .table th {
+  background-color: #1f1f1f;
+  border-color: #3a3a3a;
+}
+
+.dark .table td {
+  border-color: #3a3a3a;
+}
+
+/* Better contrast for secondary elements */
+.dark .secondary {
+  background-color: #1f1f1f;
+}
+
+.dark .muted {
+  background-color: #1f1f1f;
+}
+
+/* Force card styling with higher specificity */
+.dark [class*="card"] {
+  background-color: #171717 !important;
+}
+
+/* Force header styling */
+.dark [class*="header"] {
+  background-color: #171717 !important;
+}
+
+/* Force table styling */
+.dark [class*="table"] {
+  background-color: #171717 !important;
+}
+
+/* Force any element with bg-card class */
+.dark .bg-card {
+  background-color: #171717 !important;
+}
+
+/* Force any element with bg-background class */
+.dark .bg-background {
+  background-color: #0a0a0a !important;
+}
+
+/* More aggressive targeting for all dark mode elements */
+.dark {
+  --card: 0 0% 9%;
+  --background: 0 0% 4%;
+}
+
+/* Force all card-like elements */
+.dark div[class*="card"],
+.dark div[class*="Card"],
+.dark section[class*="card"],
+.dark section[class*="Card"] {
+  background-color: #171717 !important;
+}
+
+/* Force header elements */
+.dark header,
+.dark [role="banner"] {
+  background-color: #171717 !important;
+  border-bottom: 1px solid #3a3a3a !important;
+}
+
+/* Force main content areas */
+.dark main,
+.dark [role="main"] {
+  background-color: #0a0a0a !important;
+}
+
+/* Force all elements to have proper backgrounds */
+.dark * {
+  background-color: inherit !important;
+}
+
+/* Message boxes styling - make them grey instead of orange/black */
+.dark .bg-orange-500,
+.dark [class*="bg-orange"],
+.dark [style*="background-color: #ff8800"],
+.dark [style*="background-color: #ff8800"] {
+  background-color: #2a2a2a !important;
+  border: 1px solid #3a3a3a !important;
+}
+
+/* Button styling - make buttons solid with accent color */
+.dark .btn-primary,
+.dark button[class*="bg-orange"],
+.dark button[style*="background-color: #ff8800"],
+.dark .bg-primary {
+  background-color: #ff8800 !important;
+  color: white !important;
+  border: none !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Remove hover effects from primary buttons with solid backgrounds */
+.dark .btn-primary:hover,
+.dark button[class*="bg-orange"]:hover,
+.dark button[style*="background-color: #ff8800"]:hover,
+.dark .bg-primary:hover {
+  background-color: #ff8800 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Track and Sign In buttons - target by common button classes */
+.dark button[type="submit"],
+.dark button[type="button"],
+.dark .button,
+.dark [class*="btn"] {
+  background-color: #ff8800 !important;
+  color: white !important;
+  border: none !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 0.5rem !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Remove hover effects from solid background buttons */
+.dark button[type="submit"]:hover,
+.dark button[type="button"]:hover,
+.dark .button:hover,
+.dark [class*="btn"]:hover {
+  background-color: #ff8800 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* General button hover effects with accent color */
+.dark button:hover,
+.dark [role="button"]:hover,
+.dark .cursor-pointer:hover {
+  box-shadow: 0 0 0 2px rgba(255, 136, 0, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Remove hover effects from links */
+.dark a:hover,
+.dark [class*="link"]:hover,
+.dark [class*="text-orange"]:hover {
+  color: #ff8800 !important;
+  text-decoration: none !important;
+}
+
+/* Remove orange borders from message boxes */
+.dark [class*="border-orange"],
+.dark [style*="border-color: #ff8800"] {
+  border-color: #3a3a3a !important;
+}
+
+/* Customer Portal Layout Styling */
+.dark .customer-portal-sidebar {
+  background-color: #171717 !important;
+  border-right: 1px solid #3a3a3a !important;
+}
+
+.dark .customer-portal-header {
+  background-color: #171717 !important;
+  border-bottom: 1px solid #3a3a3a !important;
+}
+
+.dark .customer-portal-nav-item:hover {
+  background-color: #2a2a2a !important;
+  color: #ff8800 !important;
+}
+
+.dark .customer-portal-nav-item.active {
+  background-color: #ff8800 !important;
+  color: white !important;
+}
+
+/* Input styling for tracking form */
+.dark input[type="text"],
+.dark input[type="email"] {
+  background-color: #0a0a0a !important;
+  border-color: #3a3a3a !important;
+  color: white !important;
+}
+
+.dark input[type="text"]:focus,
+.dark input[type="email"]:focus {
+  border-color: #ff8800 !important;
+  box-shadow: 0 0 0 1px #ff8800 !important;
+}

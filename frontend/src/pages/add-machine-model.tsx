@@ -143,8 +143,6 @@ export default function AddMachineModelPage() {
       
       // Trim whitespace and normalize the name
       const trimmedName = categoryName.trim()
-      console.log('Creating category:', trimmedName)
-      console.log('Existing categories:', categories.map(cat => cat.name))
       
       // More thorough check for existing categories
       const existingCategory = categories.find(cat => {
@@ -156,7 +154,6 @@ export default function AddMachineModelPage() {
         
         // Check for similar names (in case of typos or variations)
         if (existingName.includes(newName) || newName.includes(existingName)) {
-          console.log(`Similar category found: "${cat.name}" vs "${trimmedName}"`)
           return true
         }
         

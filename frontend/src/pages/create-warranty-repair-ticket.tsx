@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Textarea } from '../components/ui/textarea'
+import { DatePicker } from '../components/ui/date-picker'
 import {
   Select,
   SelectContent,
@@ -53,6 +54,7 @@ import {
   Shield
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import apiService from '../services/api'
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
 import { Badge } from '../components/ui/badge'
@@ -429,7 +431,7 @@ export default function CreateWarrantyRepairTicket() {
         warranty_expiry_date: formData.newMachine.warranty_expiry_date
       }
       
-      console.log('Creating assigned machine with data:', assignedMachineData)
+      
       
       const assignedResponse = await apiService.createAssignedMachine(assignedMachineData) as any
       const newAssignedMachine = assignedResponse.data
@@ -465,8 +467,8 @@ export default function CreateWarrantyRepairTicket() {
       setIsSubmitting(true)
       setError(null)
       
-      console.log('Selected machine:', formData.selectedMachine)
-      console.log('Machine ID being sent:', formData.selectedMachine!.id)
+      
+      
       
       const ticketData = {
         customer_id: formData.selectedCustomer!.id,
@@ -479,16 +481,21 @@ export default function CreateWarrantyRepairTicket() {
         submitted_by: '1' // TODO: Get from auth context
       }
       
-      console.log('Warranty ticket data being sent:', ticketData)
+      
       
       const response = await apiService.createWarrantyRepairTicket(ticketData) as any
       const newTicket = response.data
+      
+      toast.success('Warranty repair ticket created successfully')
       
       // Navigate to the new warranty ticket detail page
       navigate(`/warranty-repair-tickets/${newTicket.id}`)
     } catch (err) {
       console.error('Error creating warranty repair ticket:', err)
       setError('Failed to create warranty repair ticket')
+      toast.error('Failed to create warranty repair ticket', {
+        description: err instanceof Error ? err.message : 'An error occurred'
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -700,7 +707,7 @@ export default function CreateWarrantyRepairTicket() {
                     <div
                       key={customer.id}
                       onClick={() => {
-                        console.log('Customer clicked:', customer.name)
+                        
                         setFormData(prev => ({ ...prev, selectedCustomer: customer }))
                         setCustomerPopoverOpen(false)
                       }}
@@ -1293,7 +1300,7 @@ export default function CreateWarrantyRepairTicket() {
                           <div
                             key={machine.id}
                             onClick={() => {
-                              console.log('Machine selected:', machine.model_name, machine.serial_number)
+                              
                               setFormData(prev => ({ ...prev, selectedMachine: machine }))
                               setMachinePopoverOpen(false)
                             }}
@@ -1401,7 +1408,7 @@ export default function CreateWarrantyRepairTicket() {
                           <div
                             key={model.id}
                             onClick={() => {
-                              console.log('Model selected:', model.name)
+                              
                               setFormData(prev => ({
                                 ...prev,
                                 newMachine: { ...prev.newMachine, model_id: model.id }
@@ -1459,15 +1466,13 @@ export default function CreateWarrantyRepairTicket() {
                 <Calendar className="w-4 h-4" />
                 Purchase Date
               </Label>
-              <Input
-                id="purchase-date"
-                type="date"
+              <DatePicker
                 value={formData.newMachine.purchase_date}
-                onChange={(e) => setFormData(prev => ({
+                onChange={(value) => setFormData(prev => ({
                   ...prev,
-                  newMachine: { ...prev.newMachine, purchase_date: e.target.value }
+                  newMachine: { ...prev.newMachine, purchase_date: value }
                 }))}
-                className="h-11"
+                placeholder="Select purchase date"
               />
             </div>
             
@@ -1626,15 +1631,13 @@ export default function CreateWarrantyRepairTicket() {
                 <Calendar className="w-4 h-4" />
                 Warranty Expiry Date
               </Label>
-              <Input
-                id="warranty-expiry"
-                type="date"
+              <DatePicker
                 value={formData.newMachine.warranty_expiry_date}
-                onChange={(e) => setFormData(prev => ({
+                onChange={(value) => setFormData(prev => ({
                   ...prev,
-                  newMachine: { ...prev.newMachine, warranty_expiry_date: e.target.value }
+                  newMachine: { ...prev.newMachine, warranty_expiry_date: value }
                 }))}
-                className="h-11"
+                placeholder="Select warranty expiry date"
               />
             </div>
             

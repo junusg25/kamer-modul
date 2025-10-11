@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { logCustomAction } = require('../utils/actionLogger');
 
 // GET all machine models with stats (from machine_models_with_stats view)
 router.get('/', async (req, res, next) => {
@@ -125,9 +126,18 @@ router.post('/', async (req, res, next) => {
       [name, catalogue_number || null, manufacturer, category_id || null, description || null, warranty_months || 12]
     );
     
+    const model = result.rows[0];
+
+    // Log action
+    await logCustomAction(req, 'create', 'machine_model', model.id, `${manufacturer} ${name}`, {
+      manufacturer: manufacturer,
+      catalogue_number: catalogue_number,
+      warranty_months: warranty_months || 12
+    });
+    
     res.status(201).json({
       status: 'success',
-      data: result.rows[0],
+      data: model,
       message: 'Machine model created successfully'
     });
   } catch (err) {
@@ -170,9 +180,16 @@ router.put('/:id', async (req, res, next) => {
       });
     }
     
+    const model = result.rows[0];
+
+    // Log action
+    await logCustomAction(req, 'update', 'machine_model', id, `${manufacturer} ${name}`, {
+      updated_fields: Object.keys(req.body)
+    });
+    
     res.json({
       status: 'success',
-      data: result.rows[0],
+      data: model,
       message: 'Machine model updated successfully'
     });
   } catch (err) {
@@ -203,18 +220,27 @@ router.delete('/:id', async (req, res, next) => {
         message: 'Cannot delete machine model that has serial numbers. Delete all serials first.'
       });
     }
-    
-    const result = await db.query(
-      'DELETE FROM machine_models WHERE id = $1 RETURNING *',
-      [id]
-    );
-    
-    if (result.rows.length === 0) {
+
+    // Get model details before deletion
+    const modelResult = await db.query('SELECT * FROM machine_models WHERE id = $1', [id]);
+    if (modelResult.rows.length === 0) {
       return res.status(404).json({
         status: 'error',
         message: 'Machine model not found'
       });
     }
+    const model = modelResult.rows[0];
+
+    // Log action before deletion
+    await logCustomAction(req, 'delete', 'machine_model', id, `${model.manufacturer} ${model.name}`, {
+      manufacturer: model.manufacturer,
+      catalogue_number: model.catalogue_number
+    });
+    
+    const result = await db.query(
+      'DELETE FROM machine_models WHERE id = $1 RETURNING *',
+      [id]
+    );
     
     res.json({
       status: 'success',

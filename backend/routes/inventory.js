@@ -4,6 +4,7 @@ const db = require('../db');
 const { body, validationResult } = require('express-validator');
 const { authenticateToken } = require('../middleware/auth');
 const { createInventoryNotification } = require('../utils/notificationHelpers');
+const { logCustomAction } = require('../utils/actionLogger');
 
 // GET all inventory items (with pagination and optional search/filters)
 router.get('/', async (req, res, next) => {
@@ -174,6 +175,12 @@ router.patch('/:id',
       // Convert unit_price to number for frontend compatibility
       inventory.unit_price = Number(inventory.unit_price);
 
+      // Log action
+      await logCustomAction(req, 'update', 'inventory', id, inventory.name, {
+        updated_fields: Object.keys(req.body),
+        quantity: inventory.quantity
+      });
+
       // Create notifications for inventory changes
       try {
         if (inventory.quantity === 0) {
@@ -225,6 +232,13 @@ router.post('/',
       // Convert unit_price to number for frontend compatibility
       inventory.unit_price = Number(inventory.unit_price);
 
+      // Log action
+      await logCustomAction(req, 'create', 'inventory', inventory.id, inventory.name, {
+        category: inventory.category,
+        quantity: inventory.quantity,
+        unit_price: inventory.unit_price
+      });
+
       // Create notification for new inventory item
       try {
         await createInventoryNotification(inventory.id, 'restocked');
@@ -242,6 +256,45 @@ router.delete('/:id', async (req, res, next) => {
   try {
     const itemId = req.params.id;
     
+    // Get item details before deletion
+    const itemResult = await db.query('SELECT * FROM inventory WHERE id = $1', [itemId]);
+    if (!itemResult.rows.length) return res.status(404).json({ status: 'fail', message: 'Inventory item not found' });
+    const item = itemResult.rows[0];
+
+    // Check if item is used in any work orders
+    const workOrderUsageQuery = `
+      SELECT COUNT(*) as count 
+      FROM work_order_inventory 
+      WHERE inventory_id = $1
+    `;
+    const workOrderUsageResult = await db.query(workOrderUsageQuery, [itemId]);
+    const workOrderUsageCount = parseInt(workOrderUsageResult.rows[0].count);
+
+    // Check if item is used in any warranty work orders
+    const warrantyWorkOrderUsageQuery = `
+      SELECT COUNT(*) as count 
+      FROM warranty_work_order_inventory 
+      WHERE inventory_id = $1
+    `;
+    const warrantyWorkOrderUsageResult = await db.query(warrantyWorkOrderUsageQuery, [itemId]);
+    const warrantyWorkOrderUsageCount = parseInt(warrantyWorkOrderUsageResult.rows[0].count);
+
+    // If item is used in any work orders, prevent deletion
+    if (workOrderUsageCount > 0 || warrantyWorkOrderUsageCount > 0) {
+      const totalUsage = workOrderUsageCount + warrantyWorkOrderUsageCount;
+      return res.status(400).json({ 
+        status: 'fail', 
+        message: `Cannot delete inventory item. It is currently used in ${totalUsage} work order${totalUsage > 1 ? 's' : ''}.` 
+      });
+    }
+
+    // Log action before deletion
+    await logCustomAction(req, 'delete', 'inventory', itemId, item.name, {
+      category: item.category,
+      quantity: item.quantity,
+      unit_price: item.unit_price
+    });
+    
     // Create notification for inventory deletion (before deletion)
     try {
       await createInventoryNotification(itemId, 'deleted', req.user?.id);
@@ -251,7 +304,6 @@ router.delete('/:id', async (req, res, next) => {
     }
 
     const result = await db.query('DELETE FROM inventory WHERE id = $1 RETURNING id', [itemId]);
-    if (!result.rows.length) return res.status(404).json({ status: 'fail', message: 'Inventory item not found' });
     res.json({ status: 'success', message: 'Deleted', id: result.rows[0].id });
   } catch (err) { next(err); }
 });

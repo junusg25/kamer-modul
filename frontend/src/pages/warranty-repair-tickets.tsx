@@ -53,6 +53,8 @@ import { toast } from 'sonner'
 import { formatDate } from '@/lib/dateTime'
 import { formatCurrency } from '@/lib/currency'
 import { formatStatus, getStatusBadgeVariant, getStatusBadgeColor } from '@/lib/status'
+import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '@/hooks/useColumnVisibility'
+import { ColumnVisibilityDropdown } from '@/components/ui/column-visibility-dropdown'
 
 interface WarrantyRepairTicket {
   id: string
@@ -85,6 +87,18 @@ interface WarrantyRepairTicket {
   lead_quality?: string
 }
 
+// Define columns for Warranty Repair Tickets table
+const WARRANTY_REPAIR_TICKET_COLUMNS = defineColumns([
+  { key: 'ticket_number', label: 'Ticket #' },
+  { key: 'customer', label: 'Customer' },
+  { key: 'machine', label: 'Machine' },
+  { key: 'problem', label: 'Problem' },
+  { key: 'status', label: 'Status' },
+  { key: 'priority', label: 'Priority' },
+  { key: 'submitted_by', label: 'Submitted By' },
+  { key: 'created_at', label: 'Created' },
+])
+
 export default function WarrantyRepairTickets() {
   const navigate = useNavigate()
   const { user, hasPermission } = useAuth()
@@ -116,6 +130,17 @@ export default function WarrantyRepairTickets() {
   const [convertedAlertOpen, setConvertedAlertOpen] = useState(false)
   const [convertedTicket, setConvertedTicket] = useState<WarrantyRepairTicket | null>(null)
 
+  // Column visibility hook
+  const {
+    visibleColumns,
+    toggleColumn,
+    isColumnVisible,
+    resetColumns,
+    showAllColumns,
+    hideAllColumns,
+    isSyncing
+  } = useColumnVisibility('warranty_repair_tickets', getDefaultColumnKeys(WARRANTY_REPAIR_TICKET_COLUMNS))
+
   useEffect(() => {
     fetchWarrantyRepairTickets()
     fetchUsers()
@@ -146,10 +171,10 @@ export default function WarrantyRepairTickets() {
         searchParams.technician_id = filters.technician
       }
       
-      console.log('Fetching warranty repair tickets with params:', searchParams)
+      
       
       const response = await apiService.getWarrantyRepairTickets(searchParams) as any
-      console.log('Warranty repair tickets response:', response)
+      
       
       setWarrantyRepairTickets(response.data || [])
       setTotalPages(response.pagination?.pages || 1)
@@ -204,25 +229,55 @@ export default function WarrantyRepairTickets() {
   }
 
   const getUniqueTechnicians = () => {
-    const technicians = new Set<string>()
+    const techniciansMap = new Map<string, string>()
     warrantyRepairTickets.forEach(ticket => {
-      if (ticket.converted_by_technician_name) {
-        technicians.add(ticket.converted_by_technician_name)
+      if (ticket.converted_by_technician_id && ticket.converted_by_technician_name) {
+        techniciansMap.set(ticket.converted_by_technician_id, ticket.converted_by_technician_name)
       }
-      if (ticket.submitted_by_name) {
-        technicians.add(ticket.submitted_by_name)
+      if (ticket.submitted_by && ticket.submitted_by_name) {
+        techniciansMap.set(ticket.submitted_by, ticket.submitted_by_name)
       }
     })
-    return Array.from(technicians).sort()
+    return Array.from(techniciansMap.entries())
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .map(([id, name]) => ({ id, name }))
   }
 
   const getActiveFiltersCount = () => {
     return Object.values(filters).filter(value => value !== '').length
   }
 
-  const handleConvertToWorkOrder = (ticket: WarrantyRepairTicket) => {
+  const handleConvertToWorkOrder = async (ticket: WarrantyRepairTicket) => {
     setSelectedTicket(ticket)
-    setConvertModalOpen(true)
+    
+    // Auto-assign if user is a technician
+    if (user?.role === 'technician') {
+      try {
+        setIsConverting(true)
+        const result = await apiService.convertWarrantyRepairTicketToWorkOrder(ticket.id, {
+          technician_id: user.id,
+          priority: ticket.priority || 'medium'
+        })
+        
+        toast.success('Warranty repair ticket converted and assigned to you')
+        
+        // Redirect to the newly created warranty work order
+        const warrantyWorkOrderId = result.data?.warranty_work_order?.id
+        if (warrantyWorkOrderId) {
+          navigate(`/warranty-work-orders/${warrantyWorkOrderId}`)
+        } else {
+          fetchWarrantyRepairTickets()
+        }
+      } catch (err: any) {
+        console.error('Error converting ticket:', err)
+        toast.error(err.response?.data?.message || 'Failed to convert warranty repair ticket')
+      } finally {
+        setIsConverting(false)
+      }
+    } else {
+      // Show dialog for admin/manager to assign technician
+      setConvertModalOpen(true)
+    }
   }
 
   const handleConvertSubmit = async () => {
@@ -230,7 +285,7 @@ export default function WarrantyRepairTickets() {
 
     try {
       setIsConverting(true)
-      await apiService.convertWarrantyRepairTicketToWorkOrder(selectedTicket.id, {
+      const result = await apiService.convertWarrantyRepairTicketToWorkOrder(selectedTicket.id, {
         technician_id: selectedTechnician,
         priority: selectedTicket.priority || 'medium'
       })
@@ -239,7 +294,14 @@ export default function WarrantyRepairTickets() {
       setConvertModalOpen(false)
       setSelectedTicket(null)
       setSelectedTechnician('')
-      fetchWarrantyRepairTickets()
+      
+      // Redirect to the newly created warranty work order
+      const warrantyWorkOrderId = result.data?.warranty_work_order?.id
+      if (warrantyWorkOrderId) {
+        navigate(`/warranty-work-orders/${warrantyWorkOrderId}`)
+      } else {
+        fetchWarrantyRepairTickets()
+      }
     } catch (err: any) {
       console.error('Error converting ticket:', err)
       toast.error(err.response?.data?.message || 'Failed to convert warranty repair ticket')
@@ -570,9 +632,9 @@ export default function WarrantyRepairTickets() {
                         <SelectContent>
                           <SelectItem value="all">All technicians</SelectItem>
                           <SelectItem value="unassigned">Unassigned</SelectItem>
-                          {getUniqueTechnicians().map(technician => (
-                            <SelectItem key={technician} value={technician}>
-                              {technician}
+                          {getUniqueTechnicians().map(tech => (
+                            <SelectItem key={tech.id} value={tech.id}>
+                              {tech.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -586,6 +648,17 @@ export default function WarrantyRepairTickets() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+
+                {/* Column Visibility */}
+                <ColumnVisibilityDropdown
+                  columns={WARRANTY_REPAIR_TICKET_COLUMNS}
+                  visibleColumns={visibleColumns}
+                  onToggleColumn={toggleColumn}
+                  onShowAll={showAllColumns}
+                  onHideAll={hideAllColumns}
+                  onReset={resetColumns}
+                  isSyncing={isSyncing}
+                />
               </div>
             </div>
           </CardHeader>
@@ -596,14 +669,14 @@ export default function WarrantyRepairTickets() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Ticket #</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Machine</TableHead>
-                    <TableHead>Problem</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Submitted By</TableHead>
-                    <TableHead>Created</TableHead>
+                    {isColumnVisible('ticket_number') && <TableHead>Ticket #</TableHead>}
+                    {isColumnVisible('customer') && <TableHead>Customer</TableHead>}
+                    {isColumnVisible('machine') && <TableHead>Machine</TableHead>}
+                    {isColumnVisible('problem') && <TableHead>Problem</TableHead>}
+                    {isColumnVisible('status') && <TableHead>Status</TableHead>}
+                    {isColumnVisible('priority') && <TableHead>Priority</TableHead>}
+                    {isColumnVisible('submitted_by') && <TableHead>Submitted By</TableHead>}
+                    {isColumnVisible('created_at') && <TableHead>Created</TableHead>}
                     <TableHead className="w-[70px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -624,37 +697,53 @@ export default function WarrantyRepairTickets() {
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => navigate(`/warranty-repair-tickets/${ticket.id}`)}
                       >
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            <Shield className="h-4 w-4 text-orange-500" />
-                            {ticket.formatted_number || `#${ticket.ticket_number || ticket.id}`}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{ticket.customer_name}</div>
-                            {ticket.company_name && (
-                              <div className="text-sm text-muted-foreground">{ticket.company_name}</div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{ticket.model_name || 'N/A'}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {ticket.serial_number || 'N/A'}
+                        {isColumnVisible('ticket_number') && (
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4 text-orange-500" />
+                              {ticket.formatted_number || `#${ticket.ticket_number || ticket.id}`}
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="max-w-[200px] truncate">
-                            {ticket.problem_description}
-                          </div>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(ticket.status)}</TableCell>
-                        <TableCell>{getPriorityBadge(ticket.priority)}</TableCell>
-                        <TableCell>{ticket.submitted_by_name || 'Unknown'}</TableCell>
-                        <TableCell>{formatDate(ticket.created_at)}</TableCell>
+                          </TableCell>
+                        )}
+                        {isColumnVisible('customer') && (
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{ticket.customer_name}</div>
+                              {ticket.company_name && (
+                                <div className="text-sm text-muted-foreground">{ticket.company_name}</div>
+                              )}
+                            </div>
+                          </TableCell>
+                        )}
+                        {isColumnVisible('machine') && (
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{ticket.model_name || 'N/A'}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {ticket.serial_number || 'N/A'}
+                              </div>
+                            </div>
+                          </TableCell>
+                        )}
+                        {isColumnVisible('problem') && (
+                          <TableCell>
+                            <div className="max-w-[200px] truncate">
+                              {ticket.problem_description}
+                            </div>
+                          </TableCell>
+                        )}
+                        {isColumnVisible('status') && (
+                          <TableCell>{getStatusBadge(ticket.status)}</TableCell>
+                        )}
+                        {isColumnVisible('priority') && (
+                          <TableCell>{getPriorityBadge(ticket.priority)}</TableCell>
+                        )}
+                        {isColumnVisible('submitted_by') && (
+                          <TableCell>{ticket.submitted_by_name || 'Unknown'}</TableCell>
+                        )}
+                        {isColumnVisible('created_at') && (
+                          <TableCell>{formatDate(ticket.created_at)}</TableCell>
+                        )}
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -666,38 +755,38 @@ export default function WarrantyRepairTickets() {
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => handleViewTicket(ticket.id)}>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewTicket(ticket.id); }}>
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Details
                               </DropdownMenuItem>
                               {hasPermission('repair_tickets:write') && (
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
                                   <Edit className="mr-2 h-4 w-4" />
                                   Edit Ticket
                                 </DropdownMenuItem>
                               )}
                               {hasPermission('repair_tickets:write') && (
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
                                   <User className="mr-2 h-4 w-4" />
                                   Assign Technician
                                 </DropdownMenuItem>
                               )}
                               {hasPermission('repair_tickets:write') && (
                                 <DropdownMenuItem 
-                                  onClick={() => handleConvertToWorkOrder(ticket)}
+                                  onClick={(e) => { e.stopPropagation(); handleConvertToWorkOrder(ticket); }}
                                   disabled={ticket.status === 'converted' || ticket.status === 'cancelled'}
                                 >
                                   <Wrench className="mr-2 h-4 w-4" />
                                   Convert to Work Order
                                 </DropdownMenuItem>
                               )}
-                              <DropdownMenuItem onClick={() => handlePrintTicket(ticket)}>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePrintTicket(ticket); }}>
                                 <Printer className="mr-2 h-4 w-4" />
                                 Print
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDownloadTicket(ticket)}>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDownloadTicket(ticket); }}>
                                 <FileText className="mr-2 h-4 w-4" />
                                 Download PDF
                               </DropdownMenuItem>

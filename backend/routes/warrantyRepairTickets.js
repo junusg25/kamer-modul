@@ -4,6 +4,7 @@ const db = require('../db');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
 const { createTicketNotification, createWorkOrderNotification, createNotification, createNotificationForManagers } = require('../utils/notificationHelpers');
+const { logCustomAction } = require('../utils/actionLogger');
 
 // GET all warranty repair tickets
 router.get('/', authenticateToken, async (req, res, next) => {
@@ -385,7 +386,6 @@ router.post('/', [
       ]);
 
       await client.query('COMMIT')
-      client.release()
 
       // Get the full ticket with customer and machine info
       const fullTicketQuery = `
@@ -405,14 +405,24 @@ router.post('/', [
         // Don't fail the request if notification fails
       }
 
+      const fullTicket = fullTicketResult.rows[0]
+
+      // Log action
+      await logCustomAction(req, 'create', 'warranty_repair_ticket', result.rows[0].id, fullTicket.formatted_number || `WRT-${result.rows[0].id}`, {
+        customer_name: fullTicket.customer_name,
+        machine_serial: fullTicket.serial_number,
+        priority: priority
+      });
+
       res.status(201).json({
         status: 'success',
-        data: fullTicketResult.rows[0]
+        data: fullTicket
       });
     } catch (error) {
       await client.query('ROLLBACK')
-      client.release()
       throw error
+    } finally {
+      client.release()
     }
   } catch (err) {
     next(err);
@@ -657,6 +667,17 @@ router.delete('/:id', authenticateToken, async (req, res, next) => {
       });
     }
 
+    // Get full ticket details before deletion
+    const fullTicketQuery = 'SELECT * FROM warranty_repair_tickets_view WHERE id = $1';
+    const fullTicketResult = await db.query(fullTicketQuery, [id]);
+    const fullTicket = fullTicketResult.rows[0];
+
+    // Log action before deletion
+    await logCustomAction(req, 'delete', 'warranty_repair_ticket', id, fullTicket?.formatted_number || `WRT-${id}`, {
+      customer_name: fullTicket?.customer_name,
+      machine_serial: fullTicket?.serial_number
+    });
+
     const query = 'DELETE FROM warranty_repair_tickets WHERE id = $1 RETURNING *';
     const result = await db.query(query, [id]);
 
@@ -729,7 +750,11 @@ router.post('/:id/convert', authenticateToken, async (req, res, next) => {
         assignedTechnicianId = req.user.id;
       }
 
-      // Create warranty work order with the same formatted number as the ticket
+      // Create warranty work order with WW- prefix but same number as ticket
+      // Extract number and year from ticket's formatted_number (e.g., WT-73/25 -> 73/25)
+      const numberAndYear = ticket.formatted_number.replace(/^[A-Z]+-/, ''); // Remove prefix
+      const workOrderFormattedNumber = `WW-${numberAndYear}`; // Apply WW- prefix
+      
       const workOrderQuery = `
         INSERT INTO warranty_work_orders (
           machine_id, customer_id, description, priority, 
@@ -748,7 +773,7 @@ router.post('/:id/convert', authenticateToken, async (req, res, next) => {
         assignedTechnicianId, // Assign based on role logic (used for both technician_id and owner_technician_id)
         ticket.ticket_number,
         ticket.id,
-        ticket.formatted_number, // Preserve the same formatted number
+        workOrderFormattedNumber, // Apply WW- prefix with same number
         ticket.year_created // Preserve the same year
       ]);
 

@@ -4,6 +4,7 @@ const { authenticateToken, authorizeRoles } = require('../middleware/auth')
 const { body, validationResult } = require('express-validator')
 const db = require('../db')
 const { createTicketNotification, createWorkOrderNotification, createNotification, createNotificationForManagers } = require('../utils/notificationHelpers');
+const { logCustomAction } = require('../utils/actionLogger');
 
 // GET all repair tickets with pagination and filters
 router.get('/', authenticateToken, async (req, res, next) => {
@@ -401,7 +402,6 @@ router.post('/', authenticateToken, [
       }
 
       await client.query('COMMIT')
-      client.release()
 
       // Get the full ticket with customer and machine info
       const fullTicketQuery = `
@@ -410,15 +410,24 @@ router.post('/', authenticateToken, [
       `
       
       const fullTicketResult = await db.query(fullTicketQuery, [ticket.id])
+      const fullTicket = fullTicketResult.rows[0]
+
+      // Log action
+      await logCustomAction(req, 'create', 'repair_ticket', ticket.id, fullTicket.formatted_number || `RT-${ticket.id}`, {
+        customer_name: fullTicket.customer_name,
+        machine_serial: fullTicket.serial_number,
+        priority: priority
+      });
 
       res.status(201).json({
         status: 'success',
-        data: fullTicketResult.rows[0]
+        data: fullTicket
       })
     } catch (error) {
       await client.query('ROLLBACK')
-      client.release()
       throw error
+    } finally {
+      client.release()
     }
   } catch (error) {
     next(error)
@@ -525,10 +534,17 @@ router.put('/:id', authenticateToken, [
     `
     
     const fullTicketResult = await db.query(fullTicketQuery, [id])
+    const fullTicket = fullTicketResult.rows[0]
+
+    // Log action
+    await logCustomAction(req, 'update', 'repair_ticket', id, fullTicket.formatted_number || `RT-${id}`, {
+      updated_fields: Object.keys(req.body),
+      status_change: status && status !== currentTicket.status ? { from: currentTicket.status, to: status } : null
+    });
 
     res.json({
       status: 'success',
-      data: fullTicketResult.rows[0]
+      data: fullTicket
     })
   } catch (error) {
     next(error)
@@ -554,6 +570,17 @@ router.delete('/:id', authenticateToken, async (req, res, next) => {
     if (ticket.status !== 'intake') {
       return res.status(400).json({ message: 'Cannot delete ticket that has been converted or cancelled' })
     }
+
+    // Get full ticket details before deletion
+    const fullTicketQuery = 'SELECT * FROM repair_tickets_view WHERE id = $1'
+    const fullTicketResult = await db.query(fullTicketQuery, [id])
+    const fullTicket = fullTicketResult.rows[0]
+
+    // Log action before deletion
+    await logCustomAction(req, 'delete', 'repair_ticket', id, fullTicket?.formatted_number || `RT-${id}`, {
+      customer_name: fullTicket?.customer_name,
+      machine_serial: fullTicket?.serial_number
+    });
 
     const query = 'DELETE FROM repair_tickets WHERE id = $1 RETURNING *'
     const result = await db.query(query, [id])
@@ -627,7 +654,11 @@ router.post('/:id/convert', authenticateToken, async (req, res, next) => {
         assignedTechnicianId = req.user.id;
       }
 
-      // Create work order with the same formatted number as the ticket
+      // Create work order with WO- prefix but same number as ticket
+      // Extract number and year from ticket's formatted_number (e.g., TK-73/25 -> 73/25)
+      const numberAndYear = ticket.formatted_number.replace(/^[A-Z]+-/, ''); // Remove prefix
+      const workOrderFormattedNumber = `WO-${numberAndYear}`; // Apply WO- prefix
+      
       const workOrderQuery = `
         INSERT INTO work_orders (
           machine_id, customer_id, description, priority, 
@@ -647,7 +678,7 @@ router.post('/:id/convert', authenticateToken, async (req, res, next) => {
         ticket.ticket_number, // Use the same ticket number from the table
         ticket.id,
         req.user.id, // Track who converted it
-        ticket.formatted_number, // Preserve the same formatted number
+        workOrderFormattedNumber, // Apply WO- prefix with same number
         ticket.year_created // Preserve the same year
       ])
 
@@ -704,6 +735,14 @@ router.post('/:id/convert', authenticateToken, async (req, res, next) => {
         console.error('Error creating notifications for repair ticket conversion:', notificationError);
         // Don't fail the request if notification fails
       }
+
+      // Log conversion action
+      await logCustomAction(req, 'convert', 'repair_ticket', id, ticket.formatted_number || `RT-${id}`, {
+        converted_to: 'work_order',
+        work_order_id: workOrder.id,
+        work_order_number: workOrder.formatted_number,
+        technician_id: technician_id
+      });
 
       res.json({
         status: 'success',

@@ -8,14 +8,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../components/ui/dropdown-menu'
 import { Label } from '../components/ui/label'
 import { Textarea } from '../components/ui/textarea'
 import { DatePickerInput } from '../components/ui/date-picker'
-import { Plus, Search, Filter, Eye, Edit, Trash2, Calendar, Truck, Calculator } from 'lucide-react'
+import { Plus, Search, Filter, Eye, Edit, Trash2, Calendar, Truck, Calculator, MoreHorizontal } from 'lucide-react'
 import apiService from '../services/api'
 import { formatDate, formatDateTime, parseEuropeanDate, formatDateForInput } from '../lib/dateTime'
 import { formatCurrency } from '../lib/currency'
 import { useAuth } from '../contexts/auth-context'
+import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '@/hooks/useColumnVisibility'
+import { ColumnVisibilityDropdown } from '@/components/ui/column-visibility-dropdown'
 
 interface MachineRental {
   id: string
@@ -64,6 +67,17 @@ interface RentalMachine {
   current_customer_name?: string
 }
 
+// Define columns for Active Rentals table
+const ACTIVE_RENTAL_COLUMNS = defineColumns([
+  { key: 'customer', label: 'Customer' },
+  { key: 'machine', label: 'Machine' },
+  { key: 'start_date', label: 'Start Date' },
+  { key: 'end_date', label: 'End Date' },
+  { key: 'status', label: 'Status' },
+  { key: 'billing_period', label: 'Billing Period' },
+  { key: 'total_amount', label: 'Total Amount' },
+])
+
 export default function MachineRentals() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -94,6 +108,17 @@ export default function MachineRentals() {
   const [rentalToDelete, setRentalToDelete] = useState<MachineRental | null>(null)
   const [isCalculatingPricing, setIsCalculatingPricing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Column visibility hook
+  const {
+    visibleColumns,
+    toggleColumn,
+    isColumnVisible,
+    resetColumns,
+    showAllColumns,
+    hideAllColumns,
+    isSyncing
+  } = useColumnVisibility('active_rentals', getDefaultColumnKeys(ACTIVE_RENTAL_COLUMNS))
 
   // Form state
   const [formData, setFormData] = useState({
@@ -774,7 +799,19 @@ export default function MachineRentals() {
         {/* Rentals Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Machine Rentals ({pagination.total})</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Machine Rentals ({pagination.total})</CardTitle>
+              {/* Column Visibility */}
+              <ColumnVisibilityDropdown
+                columns={ACTIVE_RENTAL_COLUMNS}
+                visibleColumns={visibleColumns}
+                onToggleColumn={toggleColumn}
+                onShowAll={showAllColumns}
+                onHideAll={hideAllColumns}
+                onReset={resetColumns}
+                isSyncing={isSyncing}
+              />
+            </div>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -783,14 +820,13 @@ export default function MachineRentals() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Machine</TableHead>
-                    <TableHead>Start Date</TableHead>
-                    <TableHead>End Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Billing</TableHead>
-                    <TableHead>Total Amount</TableHead>
-                    <TableHead>Created</TableHead>
+                    {isColumnVisible('customer') && <TableHead>Customer</TableHead>}
+                    {isColumnVisible('machine') && <TableHead>Machine</TableHead>}
+                    {isColumnVisible('start_date') && <TableHead>Start Date</TableHead>}
+                    {isColumnVisible('end_date') && <TableHead>End Date</TableHead>}
+                    {isColumnVisible('status') && <TableHead>Status</TableHead>}
+                    {isColumnVisible('billing_period') && <TableHead>Billing</TableHead>}
+                    {isColumnVisible('total_amount') && <TableHead>Total Amount</TableHead>}
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -801,61 +837,87 @@ export default function MachineRentals() {
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => navigate(`/machine-rentals/${rental.id}`)}
                     >
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{rental.customer_name}</div>
-                          {rental.customer_company && (
-                            <div className="text-sm text-muted-foreground">{rental.customer_company}</div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{rental.machine_manufacturer} {rental.machine_model_name}</div>
-                          <div className="text-sm text-muted-foreground">SN: {rental.machine_serial}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{formatDate(rental.rental_start_date)}</TableCell>
-                      <TableCell>{rental.rental_end_date ? formatDate(rental.rental_end_date) : '-'}</TableCell>
-                      <TableCell>{getStatusBadge(rental.rental_status)}</TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <div className="capitalize">{rental.billing_period}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{rental.total_amount ? formatCurrency(rental.total_amount) : '-'}</TableCell>
-                      <TableCell>{formatDateTime(rental.created_at)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate(`/machine-rentals/${rental.id}`)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          {user?.role !== 'sales' && (
-                            <>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openEditDialog(rental)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setRentalToDelete(rental)
-                                  setDeleteDialogOpen(true)
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
+                      {isColumnVisible('customer') && (
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{rental.customer_name}</div>
+                            {rental.customer_company && (
+                              <div className="text-sm text-muted-foreground">{rental.customer_company}</div>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
+                      {isColumnVisible('machine') && (
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{rental.machine_manufacturer} {rental.machine_model_name}</div>
+                            <div className="text-sm text-muted-foreground">SN: {rental.machine_serial}</div>
+                          </div>
+                        </TableCell>
+                      )}
+                      {isColumnVisible('start_date') && (
+                        <TableCell>{formatDate(rental.rental_start_date)}</TableCell>
+                      )}
+                      {isColumnVisible('end_date') && (
+                        <TableCell>{rental.rental_end_date ? formatDate(rental.rental_end_date) : '-'}</TableCell>
+                      )}
+                      {isColumnVisible('status') && (
+                        <TableCell>{getStatusBadge(rental.rental_status)}</TableCell>
+                      )}
+                      {isColumnVisible('billing_period') && (
+                        <TableCell>
+                          <div className="text-sm">
+                            <div className="capitalize">{rental.billing_period}</div>
+                          </div>
+                        </TableCell>
+                      )}
+                      {isColumnVisible('total_amount') && (
+                        <TableCell>{rental.total_amount ? formatCurrency(rental.total_amount) : '-'}</TableCell>
+                      )}
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation()
+                              navigate(`/machine-rentals/${rental.id}`)
+                            }}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                            {user?.role !== 'sales' && (
+                              <>
+                                <DropdownMenuItem onClick={(e) => {
+                                  e.stopPropagation()
+                                  openEditDialog(rental)
+                                }}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit Rental
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setRentalToDelete(rental)
+                                    setDeleteDialogOpen(true)
+                                  }}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}

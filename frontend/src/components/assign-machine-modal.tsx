@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -10,7 +11,7 @@ import { Loader2, Calendar, User, Package, Check, Search, ChevronDown } from 'lu
 import { apiService } from '@/services/api'
 import { useAuth } from '@/contexts/auth-context'
 import { cn } from '@/lib/utils'
-import { formatDate, formatDateForInput, parseEuropeanDate } from '@/lib/dateTime'
+import { formatDate } from '@/lib/dateTime'
 import { formatCurrency } from '@/lib/currency'
 
 interface Customer {
@@ -49,7 +50,6 @@ export function AssignMachineModal({
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [serialNumber, setSerialNumber] = useState('')
   const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0])
-  const [displayDate, setDisplayDate] = useState(formatDate(new Date().toISOString().split('T')[0]))
   const [salePrice, setSalePrice] = useState('')
   const [receiptNumber, setReceiptNumber] = useState('')
   const [machineCondition, setMachineCondition] = useState('new')
@@ -71,31 +71,6 @@ export function AssignMachineModal({
   }
 
   const warrantyExpiryDate = calculateWarrantyExpiry(purchaseDate)
-
-  // Handle date input changes
-  const handleDateChange = (value: string) => {
-    // Remove any non-digit characters except dots
-    let cleanValue = value.replace(/[^\d.]/g, '')
-    
-    // Auto-format as user types (dd.mm.yyyy)
-    if (cleanValue.length >= 2 && !cleanValue.includes('.')) {
-      cleanValue = cleanValue.substring(0, 2) + '.' + cleanValue.substring(2)
-    }
-    if (cleanValue.length >= 5 && cleanValue.split('.').length === 2) {
-      cleanValue = cleanValue.substring(0, 5) + '.' + cleanValue.substring(5)
-    }
-    
-    // Limit to dd.mm.yyyy format (10 characters)
-    if (cleanValue.length <= 10) {
-      setDisplayDate(cleanValue)
-      
-      // Parse European date format (dd.mm.yyyy) to ISO format (yyyy-mm-dd)
-      const parsedDate = parseEuropeanDate(cleanValue)
-      if (parsedDate) {
-        setPurchaseDate(formatDateForInput(parsedDate))
-      }
-    }
-  }
 
   // Predefined purchased_at options
   const [purchasedAtOptions, setPurchasedAtOptions] = useState<string[]>(['AMS', 'Kamer.ba'])
@@ -195,7 +170,6 @@ export function AssignMachineModal({
     setSelectedCustomer(null)
     setSerialNumber('')
     setPurchaseDate(new Date().toISOString().split('T')[0])
-    setDisplayDate(formatDate(new Date().toISOString().split('T')[0]))
     setSalePrice('')
     setReceiptNumber('')
     setMachineCondition('new')
@@ -340,23 +314,13 @@ export function AssignMachineModal({
 
             {/* Purchase Date */}
             <div className="space-y-2">
-              <Label htmlFor="purchaseDate">Purchase Date * (dd.mm.yyyy)</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="purchaseDate"
-                  type="text"
-                  value={displayDate}
-                  onChange={(e) => handleDateChange(e.target.value)}
-                  placeholder="dd.mm.yyyy"
-                  className="pl-10"
-                  disabled={isSubmitting}
-                  required
-                />
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Enter date in format: dd.mm.yyyy (e.g., 15.03.2024)
-              </div>
+              <Label htmlFor="purchaseDate">Purchase Date *</Label>
+              <DatePicker
+                value={purchaseDate}
+                onChange={(value) => setPurchaseDate(value)}
+                placeholder="Select purchase date"
+                disabled={isSubmitting}
+              />
             </div>
 
             {/* Machine Condition */}

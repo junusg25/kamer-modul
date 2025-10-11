@@ -28,15 +28,24 @@ router.get('/system-health', async (req, res, next) => {
     const dbTest = await db.query('SELECT NOW() as current_time')
     const dbResponseTime = Date.now() - startTime
     
-    // Get system metrics (mock data for now - in production, you'd get real metrics)
+    // Get real system metrics
+    const memUsage = process.memoryUsage()
+    const totalMemory = memUsage.heapTotal
+    const usedMemory = memUsage.heapUsed
+    const memoryUsagePercent = Math.round((usedMemory / totalMemory) * 100)
+
+    // Get active database connections
+    const poolQuery = await db.query('SELECT COUNT(*) as count FROM pg_stat_activity WHERE datname = current_database()')
+    const activeConnections = parseInt(poolQuery.rows[0].count)
+
     const systemHealth = {
       server_status: 'online',
       database_status: dbResponseTime < 1000 ? 'connected' : 'slow',
       api_response_time: dbResponseTime,
-      memory_usage: Math.floor(Math.random() * 30) + 40, // Mock: 40-70%
-      cpu_usage: Math.floor(Math.random() * 20) + 10, // Mock: 10-30%
-      disk_usage: Math.floor(Math.random() * 40) + 30, // Mock: 30-70%
-      active_connections: Math.floor(Math.random() * 50) + 10, // Mock: 10-60
+      memory_usage: memoryUsagePercent,
+      cpu_usage: Math.round(process.cpuUsage().user / 1000000), // Convert microseconds to percentage approximation
+      disk_usage: 0, // Disk usage requires OS-specific commands, keeping as 0 for now
+      active_connections: activeConnections,
       uptime: process.uptime() // Node.js process uptime in seconds
     }
 
@@ -80,6 +89,7 @@ router.get('/user-activity', async (req, res, next) => {
         u.name,
         u.email,
         u.role,
+        u.status,
         u.last_login
       FROM users u
       ORDER BY u.name
@@ -99,8 +109,9 @@ router.get('/user-activity', async (req, res, next) => {
           name: dbUser.name,
           email: dbUser.email,
           role: dbUser.role,
+          account_status: dbUser.status, // Database account status (active/inactive)
           last_login: dbUser.last_login,
-          status: realTimeUser.status,
+          status: realTimeUser.status, // Online/offline status
           session_duration: realTimeUser.session_duration,
           actions_count: realTimeUser.actions_count,
           login_attempts: realTimeUser.login_attempts
@@ -112,6 +123,7 @@ router.get('/user-activity', async (req, res, next) => {
           name: dbUser.name,
           email: dbUser.email,
           role: dbUser.role,
+          account_status: dbUser.status, // Database account status (active/inactive)
           last_login: dbUser.last_login,
           status: 'offline',
           session_duration: 'N/A',

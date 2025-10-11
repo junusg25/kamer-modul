@@ -6,6 +6,7 @@ const { authenticateToken } = require('../middleware/auth');
 const { createCustomerNotification } = require('../utils/notificationHelpers');
 const websocketService = require('../services/websocketService');
 const { cacheConfigs, keyGenerators, cacheConditions, invalidateCache } = require('../middleware/cache');
+const { logCustomAction } = require('../utils/actionLogger');
 
 // GET all customers (optional search)
 router.get('/', 
@@ -162,6 +163,11 @@ router.patch('/:id', authenticateToken, async (req, res, next) => {
     
     const customer = result.rows[0];
 
+    // Log action
+    await logCustomAction(req, 'update', 'customer', customerId, customer.name, {
+      updated_fields: Object.keys(req.body)
+    });
+
     // Create notification for customer update
     try {
       await createCustomerNotification(customer.id, 'updated', req.user?.id);
@@ -225,6 +231,12 @@ router.post('/',
       );
       
       const customer = result.rows[0];
+
+      // Log action
+      await logCustomAction(req, 'create', 'customer', customer.id, customer.name, {
+        customer_type: customer.customer_type,
+        company_name: customer.company_name
+      });
 
       // Create notification for new customer
       try {
@@ -298,6 +310,12 @@ router.delete('/:id', authenticateToken, async (req, res, next) => {
         ticket_count: totalTickets
       });
     }
+
+    // Log action before deletion
+    await logCustomAction(req, 'delete', 'customer', customerId, customer.name, {
+      customer_type: customer.customer_type,
+      company_name: customer.company_name
+    });
 
     // Create notification for customer deletion (before deletion)
     try {

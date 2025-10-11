@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { 
   hasPermission as checkPermission, 
   hasAnyPermission as checkAnyPermission, 
@@ -16,9 +17,16 @@ interface User {
   avatar?: string
 }
 
+interface UserPermission {
+  permission_key: string
+  granted: boolean
+  expires_at?: string
+}
+
 interface AuthContextType {
   user: User | null
   token: string | null
+  userPermissions: UserPermission[]
   login: (email: string, password: string) => Promise<void>
   logout: () => void
   isLoading: boolean
@@ -29,6 +37,7 @@ interface AuthContextType {
   hasAnyPermission: (permissions: string[]) => boolean
   hasAllPermissions: (permissions: string[]) => boolean
   validateToken: () => Promise<boolean>
+  refreshPermissions: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -36,6 +45,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
+  const [userPermissions, setUserPermissions] = useState<UserPermission[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -46,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (storedToken && storedUser) {
         try {
-          console.log('Found stored auth data, initializing...')
+          // Found stored auth data, initializing...
           // First set the token and user in state
           setToken(storedToken)
           setUser(JSON.parse(storedUser))
@@ -55,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await new Promise(resolve => setTimeout(resolve, 100))
           
           try {
-            console.log('Validating token with backend...')
+            
             const response = await fetch('http://localhost:3000/api/users/me', {
               method: 'GET',
               headers: {
@@ -64,24 +74,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               },
             })
             
-            console.log('Token validation response:', response.status, response.ok)
+            
             if (!response.ok) {
-              console.warn('Token validation failed during initialization, clearing auth data')
+              
               localStorage.removeItem('token')
               localStorage.removeItem('user')
               setToken(null)
               setUser(null)
             } else {
-              console.log('Token validation successful, user authenticated')
+              
+              
+              // Fetch user permissions after successful validation
+              const parsedUser = JSON.parse(storedUser)
+              try {
+                
+                const permResponse = await apiService.getUserPermissions(parsedUser.id)
+                
+                if (permResponse.data?.overrides) {
+                  
+                  setUserPermissions(permResponse.data.overrides)
+                } else {
+                  
+                }
+              } catch (error) {
+                console.error('Error fetching user permissions on init:', error)
+              }
             }
           } catch (validationError) {
-            console.warn('Token validation error during initialization:', validationError)
+            
             // Don't clear auth data on network errors during initialization
             // Let the periodic validation handle it later
           }
         } catch (error) {
           // Invalid stored data, clear it
-          console.warn('Invalid stored auth data, clearing')
+          
           localStorage.removeItem('token')
           localStorage.removeItem('user')
           setToken(null)
@@ -128,14 +154,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (response.ok) {
             const data = await response.json()
             
+            // Save token to localStorage FIRST so getUserPermissions can use it
             setToken(data.accessToken)
-            setUser(data.user)
             localStorage.setItem('token', data.accessToken)
             localStorage.setItem('user', JSON.stringify(data.user))
+            
+            // Now fetch user permissions (token is available in localStorage)
+            try {
+              const permResponse = await apiService.getUserPermissions(data.user.id)
+              if (permResponse.data?.overrides) {
+                setUserPermissions(permResponse.data.overrides)
+              }
+            } catch (error) {
+              console.error('Error fetching user permissions:', error)
+            }
+            
+            // Set user state LAST (after permissions are loaded)
+            setUser(data.user)
+            
             return
           }
         } catch (error) {
-          console.log('Demo login failed, falling back to mock data')
+          
         }
         
         // Fallback to demo token if backend is not available
@@ -173,10 +213,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const data = await response.json()
       
+      // Save token to localStorage FIRST so getUserPermissions can use it
       setToken(data.accessToken)
-      setUser(data.user)
       localStorage.setItem('token', data.accessToken)
       localStorage.setItem('user', JSON.stringify(data.user))
+      
+      // Now fetch user permissions (token is available in localStorage)
+      try {
+        
+        const permResponse = await apiService.getUserPermissions(data.user.id)
+        
+        if (permResponse.data?.overrides) {
+          
+          setUserPermissions(permResponse.data.overrides)
+        }
+      } catch (error) {
+        console.error('Error fetching user permissions during login:', error)
+      }
+      
+      // Set user state LAST (after permissions are loaded)
+      setUser(data.user)
     } catch (error) {
       if (error instanceof Error) {
         throw error
@@ -198,11 +254,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })
         
         if (!response.ok) {
-          console.warn('Logout API call failed')
+          
         }
       }
     } catch (error) {
-      console.warn('Logout error:', error)
+      
     } finally {
       // Clear any stored location/state
       localStorage.removeItem('redirectAfterLogin')
@@ -211,8 +267,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Always clear local state and storage
       setToken(null)
       setUser(null)
+      setUserPermissions([])
       localStorage.removeItem('token')
       localStorage.removeItem('user')
+      
+      // Show logout toast
+      toast.info('Logged out', {
+        description: 'You have been logged out successfully.'
+      })
     }
   }
 
@@ -233,39 +295,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return response.ok
     } catch (error) {
-      console.warn('Token validation error:', error)
+      
       return false
     }
   }
 
   // Helper function to show session expired notification
   const showSessionExpiredNotification = () => {
-    // Create a simple notification
-    const notification = document.createElement('div')
-    notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #dc2626;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      z-index: 9999;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 14px;
-      max-width: 300px;
-    `
-    notification.textContent = 'Your session has expired. Please log in again.'
-    
-    document.body.appendChild(notification)
-    
-    // Remove notification after 5 seconds
-    setTimeout(() => {
-      if (notification.parentNode) {
-        notification.parentNode.removeChild(notification)
-      }
-    }, 5000)
+    toast.error('Session Expired', {
+      description: 'Your session has expired. Please log in again.',
+      duration: 5000
+    })
   }
 
   const isAuthenticated = !!user && !!token
@@ -283,13 +323,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const isValid = await validateToken()
         if (!isValid) {
-          console.warn('Token expired during session, logging out')
+          
           showSessionExpiredNotification()
           await logout()
           window.location.href = '/login'
         }
       } catch (error) {
-        console.warn('Token validation error during periodic check:', error)
+        
         // Don't logout on network errors, just log the error
       }
     }, 5 * 60 * 1000) // Check every 5 minutes
@@ -302,9 +342,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return user?.role === role
   }
 
+  const refreshPermissions = async () => {
+    if (!user?.id) return
+    
+    try {
+      const response = await apiService.getUserPermissions(user.id)
+      if (response.data?.overrides) {
+        setUserPermissions(response.data.overrides)
+      }
+    } catch (error) {
+      console.error('Error fetching user permissions:', error)
+    }
+  }
+
   const hasPermission = (permission: string): boolean => {
-    if (!user?.role || !isValidRole(user.role)) return false
-    return checkPermission(user.role, permission)
+    if (!user?.role || !isValidRole(user.role)) {
+      return false
+    }
+    
+    // First check if there's a user-specific override
+    const override = userPermissions.find(p => p.permission_key === permission)
+    if (override) {
+      // Check if permission has expired
+      if (override.expires_at) {
+        const expiryDate = new Date(override.expires_at)
+        if (expiryDate < new Date()) {
+          // Permission has expired, fall back to role-based
+          return checkPermission(user.role, permission)
+        }
+      }
+      return override.granted
+    }
+    
+    // Fall back to role-based permission
+    const roleBasedResult = checkPermission(user.role, permission)
+    return roleBasedResult
   }
 
   const hasAnyRole = (roles: string[]): boolean => {
@@ -326,6 +398,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         token,
+        userPermissions,
         login,
         logout,
         isLoading,
@@ -336,6 +409,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         hasAnyPermission,
         hasAllPermissions,
         validateToken,
+        refreshPermissions,
       }}
     >
       {children}

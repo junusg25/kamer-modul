@@ -1,0 +1,514 @@
+import React, { useState, useEffect } from 'react'
+import { toast } from 'sonner'
+import { MainLayout } from '../components/layout/main-layout'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
+import { Badge } from '../components/ui/badge'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
+import { useAuth } from '../contexts/auth-context'
+import { 
+  Users, 
+  Shield, 
+  CheckCircle,
+  XCircle,
+  Plus,
+  Edit2,
+  Trash2,
+  Key,
+  Clock,
+  AlertTriangle
+} from 'lucide-react'
+import apiService from '../services/api'
+import { formatDateTime } from '../lib/dateTime'
+
+interface User {
+  id: number
+  name: string
+  email: string
+  role: string
+  status: string
+}
+
+interface PermissionOverride {
+  id: number
+  permission_key: string
+  granted: boolean
+  granted_at: string
+  expires_at?: string
+  reason?: string
+  granted_by_name?: string
+}
+
+interface AvailablePermissions {
+  [category: string]: {
+    [key: string]: {
+      description: string
+      defaultRoles: string[]
+    }
+  }
+}
+
+export default function Settings() {
+  const { user: currentUser, refreshPermissions } = useAuth()
+  const [activeTab, setActiveTab] = useState('users')
+  const [users, setUsers] = useState<User[]>([])
+  const [usersLoading, setUsersLoading] = useState(true)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [userPermissions, setUserPermissions] = useState<PermissionOverride[]>([])
+  const [availablePermissions, setAvailablePermissions] = useState<AvailablePermissions>({})
+  const [showPermissionDialog, setShowPermissionDialog] = useState(false)
+  const [permissionForm, setPermissionForm] = useState({
+    permission_key: '',
+    expires_at: '',
+    reason: ''
+  })
+
+  useEffect(() => {
+    loadUsers()
+    loadAvailablePermissions()
+  }, [])
+
+  const loadUsers = async () => {
+    try {
+      setUsersLoading(true)
+      const response = await apiService.getUsers()
+      setUsers(response.data || [])
+    } catch (error) {
+      console.error('Error loading users:', error)
+      alert('Failed to load users')
+    } finally {
+      setUsersLoading(false)
+    }
+  }
+
+  const loadAvailablePermissions = async () => {
+    try {
+      const response = await apiService.getAvailablePermissions()
+      setAvailablePermissions(response.data || {})
+    } catch (error) {
+      console.error('Error loading permissions:', error)
+    }
+  }
+
+  const loadUserPermissions = async (userId: number) => {
+    try {
+      const response = await apiService.getUserPermissions(userId.toString())
+      setUserPermissions(response.data?.overrides || [])
+    } catch (error) {
+      console.error('Error loading user permissions:', error)
+      alert('Failed to load user permissions')
+    }
+  }
+
+  const handleUserSelect = async (user: User) => {
+    setSelectedUser(user)
+    await loadUserPermissions(user.id)
+  }
+
+  const handleGrantPermission = () => {
+    setShowPermissionDialog(true)
+  }
+
+  const handleSavePermission = async () => {
+    if (!selectedUser || !permissionForm.permission_key) {
+      alert('Please select a permission')
+      return
+    }
+
+    try {
+      await apiService.grantPermission({
+        user_id: selectedUser.id,
+        permission_key: permissionForm.permission_key,
+        expires_at: permissionForm.expires_at || undefined,
+        reason: permissionForm.reason || undefined
+      })
+
+      toast.success('Permission granted successfully', {
+        description: `${selectedUser.name} can now access ${permissionForm.permission_key}`
+      })
+      setShowPermissionDialog(false)
+      setPermissionForm({ permission_key: '', expires_at: '', reason: '' })
+      await loadUserPermissions(selectedUser.id)
+      
+      // Refresh current user's permissions if they were modified
+      if (currentUser && selectedUser.id === parseInt(currentUser.id)) {
+        await refreshPermissions()
+      }
+    } catch (error) {
+      console.error('Error granting permission:', error)
+      toast.error('Failed to grant permission', {
+        description: error instanceof Error ? error.message : 'An error occurred'
+      })
+    }
+  }
+
+  const handleRevokePermission = async (permissionKey: string) => {
+    if (!selectedUser) return
+
+    if (!confirm('Are you sure you want to revoke this permission?')) return
+
+    try {
+      await apiService.revokePermission({
+        user_id: selectedUser.id,
+        permission_key: permissionKey,
+        reason: 'Revoked by admin'
+      })
+
+      toast.success('Permission revoked successfully', {
+        description: `${selectedUser.name} no longer has access to ${permissionKey}`
+      })
+      await loadUserPermissions(selectedUser.id)
+      
+      // Refresh current user's permissions if they were modified
+      if (currentUser && selectedUser.id === parseInt(currentUser.id)) {
+        await refreshPermissions()
+      }
+    } catch (error) {
+      console.error('Error revoking permission:', error)
+      toast.error('Failed to revoke permission', {
+        description: error instanceof Error ? error.message : 'An error occurred'
+      })
+    }
+  }
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case 'admin': return 'destructive'
+      case 'manager': return 'default'
+      case 'technician': return 'secondary'
+      case 'sales': return 'outline'
+      default: return 'secondary'
+    }
+  }
+
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'default'
+      case 'inactive': return 'secondary'
+      default: return 'outline'
+    }
+  }
+
+  // Check if current user is admin
+  const isAdmin = currentUser?.role === 'admin'
+
+  if (!isAdmin) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
+            <p className="text-muted-foreground">You don't have permission to access settings.</p>
+          </div>
+        </div>
+      </MainLayout>
+    )
+  }
+
+  return (
+    <MainLayout>
+      <div className="space-y-6">
+        {/* Page Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>
+            <p className="text-muted-foreground">
+              Manage users, permissions, and system configuration
+            </p>
+          </div>
+        </div>
+
+        {/* Settings Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 bg-muted">
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Users
+            </TabsTrigger>
+            <TabsTrigger value="permissions" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Permissions
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Users Tab */}
+          <TabsContent value="users" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Users List */}
+              <Card className="lg:col-span-1">
+                <CardHeader>
+                  <CardTitle className="text-foreground">All Users</CardTitle>
+                  <CardDescription>Select a user to manage their permissions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {usersLoading ? (
+                    <div className="text-center py-4 text-muted-foreground">Loading users...</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {users.map((user) => (
+                        <div
+                          key={user.id}
+                          className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                            selectedUser?.id === user.id 
+                              ? 'bg-primary/10 border-primary' 
+                              : 'bg-card border-border hover:bg-muted'
+                          }`}
+                          onClick={() => handleUserSelect(user)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <p className="font-medium text-foreground">{user.name}</p>
+                              <p className="text-sm text-muted-foreground">{user.email}</p>
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                              <Badge variant={getRoleBadgeColor(user.role) as any}>
+                                {user.role}
+                              </Badge>
+                              <Badge variant={getStatusBadgeColor(user.status) as any} className="text-xs">
+                                {user.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* User Permissions */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-foreground">
+                        {selectedUser ? `${selectedUser.name}'s Permissions` : 'Permission Overrides'}
+                      </CardTitle>
+                      <CardDescription>
+                        {selectedUser 
+                          ? `Manage custom permissions for ${selectedUser.name} (${selectedUser.role})`
+                          : 'Select a user to view and manage their permissions'
+                        }
+                      </CardDescription>
+                    </div>
+                    {selectedUser && (
+                      <Button onClick={handleGrantPermission} size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Grant Permission
+                      </Button>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {!selectedUser ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Shield className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p>Select a user from the list to view their permissions</p>
+                    </div>
+                  ) : userPermissions.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Key className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="mb-2">No custom permissions</p>
+                      <p className="text-sm">This user has default role-based permissions only</p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-foreground">Permission</TableHead>
+                          <TableHead className="text-foreground">Status</TableHead>
+                          <TableHead className="text-foreground">Granted</TableHead>
+                          <TableHead className="text-foreground">Expires</TableHead>
+                          <TableHead className="text-foreground">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {userPermissions.map((perm) => (
+                          <TableRow key={perm.id}>
+                            <TableCell>
+                              <div>
+                                <p className="font-medium text-foreground">{perm.permission_key}</p>
+                                {perm.reason && (
+                                  <p className="text-sm text-muted-foreground">{perm.reason}</p>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {perm.granted ? (
+                                <Badge variant="default" className="flex items-center gap-1 w-fit">
+                                  <CheckCircle className="h-3 w-3" />
+                                  Granted
+                                </Badge>
+                              ) : (
+                                <Badge variant="destructive" className="flex items-center gap-1 w-fit">
+                                  <XCircle className="h-3 w-3" />
+                                  Denied
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                <p className="text-foreground">{formatDateTime(perm.granted_at)}</p>
+                                {perm.granted_by_name && (
+                                  <p className="text-muted-foreground">by {perm.granted_by_name}</p>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {perm.expires_at ? (
+                                <div className="flex items-center gap-1 text-sm">
+                                  <Clock className="h-3 w-3 text-muted-foreground" />
+                                  <span className="text-foreground">{formatDateTime(perm.expires_at)}</span>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">Never</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRevokePermission(perm.permission_key)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Permissions Tab */}
+          <TabsContent value="permissions" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-foreground">Available Permissions</CardTitle>
+                <CardDescription>
+                  View all available permissions and their default role assignments
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {Object.entries(availablePermissions).map(([category, perms]) => (
+                    <div key={category} className="space-y-3">
+                      <h3 className="text-lg font-semibold capitalize text-foreground">
+                        {category.replace(/_/g, ' ')}
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {Object.entries(perms).map(([key, value]) => (
+                          <Card key={key} className="bg-card border-border">
+                            <CardContent className="pt-6">
+                              <div className="space-y-2">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <p className="font-medium text-sm text-foreground">{key}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      {value.description}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex flex-wrap gap-1 pt-2">
+                                  {value.defaultRoles.map((role) => (
+                                    <Badge
+                                      key={role}
+                                      variant={getRoleBadgeColor(role) as any}
+                                      className="text-xs"
+                                    >
+                                      {role}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Grant Permission Dialog */}
+        <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
+          <DialogContent className="bg-background border-border">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">Grant Permission</DialogTitle>
+              <DialogDescription>
+                Grant a custom permission to {selectedUser?.name}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="permission" className="text-foreground">Permission</Label>
+                <Select
+                  value={permissionForm.permission_key}
+                  onValueChange={(value) => setPermissionForm({ ...permissionForm, permission_key: value })}
+                >
+                  <SelectTrigger className="bg-background border-border text-foreground">
+                    <SelectValue placeholder="Select permission" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border-border">
+                    {Object.entries(availablePermissions).map(([category, perms]) =>
+                      Object.keys(perms).map((key) => (
+                        <SelectItem key={key} value={key} className="text-foreground">
+                          {key}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="expires_at" className="text-foreground">Expires At (Optional)</Label>
+                <Input
+                  id="expires_at"
+                  type="datetime-local"
+                  value={permissionForm.expires_at}
+                  onChange={(e) => setPermissionForm({ ...permissionForm, expires_at: e.target.value })}
+                  className="bg-background border-border text-foreground"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="reason" className="text-foreground">Reason (Optional)</Label>
+                <Input
+                  id="reason"
+                  placeholder="Why is this permission being granted?"
+                  value={permissionForm.reason}
+                  onChange={(e) => setPermissionForm({ ...permissionForm, reason: e.target.value })}
+                  className="bg-background border-border text-foreground"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowPermissionDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSavePermission}>
+                Grant Permission
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </MainLayout>
+  )
+}
+

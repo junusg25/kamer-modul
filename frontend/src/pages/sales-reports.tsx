@@ -36,6 +36,8 @@ import {
   Mail
 } from 'lucide-react'
 import { useAuth } from '../contexts/auth-context'
+import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '@/hooks/useColumnVisibility'
+import { ColumnVisibilityDropdown } from '@/components/ui/column-visibility-dropdown'
 
 interface SalesMetrics {
   totalRevenue: number
@@ -113,10 +115,45 @@ const REPORT_TYPES = [
   { value: 'forecast', label: 'Forecast' }
 ]
 
+// Define columns for Performance table
+const PERFORMANCE_COLUMNS = defineColumns([
+  { key: 'name', label: 'Sales Person' },
+  { key: 'revenue', label: 'Revenue' },
+  { key: 'target', label: 'Target' },
+  { key: 'achievement', label: 'Achievement' },
+  { key: 'leads', label: 'Leads' },
+  { key: 'quotes', label: 'Quotes' },
+  { key: 'conversion', label: 'Conversion' },
+  { key: 'performance', label: 'Performance' },
+])
+
+// Define columns for Trends table
+const TRENDS_COLUMNS = defineColumns([
+  { key: 'period', label: 'Period' },
+  { key: 'revenue', label: 'Revenue' },
+  { key: 'leads', label: 'Leads' },
+  { key: 'quotes', label: 'Quotes' },
+  { key: 'deals', label: 'Deals' },
+])
+
+// Define columns for Forecast table
+const FORECAST_COLUMNS = defineColumns([
+  { key: 'month', label: 'Month' },
+  { key: 'forecasted', label: 'Forecasted' },
+  { key: 'actual', label: 'Actual' },
+  { key: 'variance', label: 'Variance' },
+  { key: 'confidence', label: 'Confidence' },
+])
+
 export default function SalesReports() {
   const { user } = useAuth()
   const [selectedPeriod, setSelectedPeriod] = useState('30d')
   const [selectedReport, setSelectedReport] = useState('overview')
+
+  // Column visibility hooks
+  const performanceColumnVisibility = useColumnVisibility('sales_performance', getDefaultColumnKeys(PERFORMANCE_COLUMNS))
+  const trendsColumnVisibility = useColumnVisibility('sales_trends', getDefaultColumnKeys(TRENDS_COLUMNS))
+  const forecastColumnVisibility = useColumnVisibility('sales_forecast', getDefaultColumnKeys(FORECAST_COLUMNS))
 
   // Helper function to convert frontend time period to backend format
   const getBackendTimePeriod = (period: string) => {
@@ -325,7 +362,7 @@ export default function SalesReports() {
 
   const handleExport = () => {
     // Here you would implement export functionality
-    console.log('Exporting sales report...')
+    
   }
 
   return (
@@ -525,62 +562,86 @@ export default function SalesReports() {
             {/* Sales Team Performance */}
             <Card>
               <CardHeader>
-                <CardTitle>Sales Team Performance</CardTitle>
-                <CardDescription>
-                  Individual performance metrics and targets
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Sales Team Performance</CardTitle>
+                    <CardDescription>
+                      Individual performance metrics and targets
+                    </CardDescription>
+                  </div>
+                  {/* Column Visibility */}
+                  <ColumnVisibilityDropdown
+                    columns={PERFORMANCE_COLUMNS}
+                    visibleColumns={performanceColumnVisibility.visibleColumns}
+                    onToggleColumn={performanceColumnVisibility.toggleColumn}
+                    onShowAll={performanceColumnVisibility.showAllColumns}
+                    onHideAll={performanceColumnVisibility.hideAllColumns}
+                    onReset={performanceColumnVisibility.resetColumns}
+                    isSyncing={performanceColumnVisibility.isSyncing}
+                  />
+                </div>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Salesperson</TableHead>
-                      <TableHead>Revenue</TableHead>
-                      <TableHead>Target</TableHead>
-                      <TableHead>Leads</TableHead>
-                      <TableHead>Conversion</TableHead>
-                      <TableHead>Deal Size</TableHead>
-                      <TableHead>Performance</TableHead>
+                      {performanceColumnVisibility.isColumnVisible('name') && <TableHead>Salesperson</TableHead>}
+                      {performanceColumnVisibility.isColumnVisible('revenue') && <TableHead>Revenue</TableHead>}
+                      {performanceColumnVisibility.isColumnVisible('target') && <TableHead>Target</TableHead>}
+                      {performanceColumnVisibility.isColumnVisible('leads') && <TableHead>Leads</TableHead>}
+                      {performanceColumnVisibility.isColumnVisible('conversion') && <TableHead>Conversion</TableHead>}
+                      {performanceColumnVisibility.isColumnVisible('performance') && <TableHead>Performance</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {salesTeam.map((person) => (
                       <TableRow key={person.id}>
-                        <TableCell>
-                          <div className="flex items-center space-x-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarFallback className="text-xs">
-                                {person.name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="font-medium">{person.name}</div>
-                              <div className="text-sm text-muted-foreground">{person.email}</div>
+                        {performanceColumnVisibility.isColumnVisible('name') && (
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              <Avatar className="h-8 w-8">
+                                <AvatarFallback className="text-xs">
+                                  {person.name.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="font-medium">{person.name}</div>
+                                <div className="text-sm text-muted-foreground">{person.email}</div>
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {formatCurrency(person.totalRevenue)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Progress 
-                              value={person.monthlyTarget > 0 ? (person.monthlyActual / person.monthlyTarget) * 100 : 0} 
-                              className="w-16" 
-                            />
-                            <span className="text-xs text-muted-foreground">
-                              {person.monthlyTarget > 0 ? formatPercentage((person.monthlyActual / person.monthlyTarget) * 100) : '0%'}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{person.totalLeads}</TableCell>
-                        <TableCell>{formatPercentage(person.conversionRate)}</TableCell>
-                        <TableCell>{formatCurrency(person.averageDealSize)}</TableCell>
-                        <TableCell>
-                          <Badge className={getPerformanceColor(person.performance)}>
-                            {person.performance.replace('_', ' ')}
-                          </Badge>
-                        </TableCell>
+                          </TableCell>
+                        )}
+                        {performanceColumnVisibility.isColumnVisible('revenue') && (
+                          <TableCell className="font-medium">
+                            {formatCurrency(person.totalRevenue)}
+                          </TableCell>
+                        )}
+                        {performanceColumnVisibility.isColumnVisible('target') && (
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Progress 
+                                value={person.monthlyTarget > 0 ? (person.monthlyActual / person.monthlyTarget) * 100 : 0} 
+                                className="w-16" 
+                              />
+                              <span className="text-xs text-muted-foreground">
+                                {person.monthlyTarget > 0 ? formatPercentage((person.monthlyActual / person.monthlyTarget) * 100) : '0%'}
+                              </span>
+                            </div>
+                          </TableCell>
+                        )}
+                        {performanceColumnVisibility.isColumnVisible('leads') && (
+                          <TableCell>{person.totalLeads}</TableCell>
+                        )}
+                        {performanceColumnVisibility.isColumnVisible('conversion') && (
+                          <TableCell>{formatPercentage(person.conversionRate)}</TableCell>
+                        )}
+                        {performanceColumnVisibility.isColumnVisible('performance') && (
+                          <TableCell>
+                            <Badge className={getPerformanceColor(person.performance)}>
+                              {person.performance.replace('_', ' ')}
+                            </Badge>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
@@ -593,10 +654,24 @@ export default function SalesReports() {
             {/* Sales Trends */}
             <Card>
               <CardHeader>
-                <CardTitle>Sales Trends</CardTitle>
-                <CardDescription>
-                  Monthly revenue and activity trends
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Sales Trends</CardTitle>
+                    <CardDescription>
+                      Monthly revenue and activity trends
+                    </CardDescription>
+                  </div>
+                  {/* Column Visibility */}
+                  <ColumnVisibilityDropdown
+                    columns={TRENDS_COLUMNS}
+                    visibleColumns={trendsColumnVisibility.visibleColumns}
+                    onToggleColumn={trendsColumnVisibility.toggleColumn}
+                    onShowAll={trendsColumnVisibility.showAllColumns}
+                    onHideAll={trendsColumnVisibility.hideAllColumns}
+                    onReset={trendsColumnVisibility.resetColumns}
+                    isSyncing={trendsColumnVisibility.isSyncing}
+                  />
+                </div>
               </CardHeader>
               <CardContent>
                 {trendsLoading ? (
@@ -611,12 +686,11 @@ export default function SalesReports() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Month</TableHead>
-                        <TableHead>Revenue</TableHead>
-                        <TableHead>Leads</TableHead>
-                        <TableHead>Quotes</TableHead>
-                        <TableHead>Deals</TableHead>
-                        <TableHead>Trend</TableHead>
+                        {trendsColumnVisibility.isColumnVisible('period') && <TableHead>Month</TableHead>}
+                        {trendsColumnVisibility.isColumnVisible('revenue') && <TableHead>Revenue</TableHead>}
+                        {trendsColumnVisibility.isColumnVisible('leads') && <TableHead>Leads</TableHead>}
+                        {trendsColumnVisibility.isColumnVisible('quotes') && <TableHead>Quotes</TableHead>}
+                        {trendsColumnVisibility.isColumnVisible('deals') && <TableHead>Deals</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -626,23 +700,21 @@ export default function SalesReports() {
                         
                         return (
                           <TableRow key={trend.month}>
-                            <TableCell className="font-medium">{trend.month}</TableCell>
-                            <TableCell>{formatCurrency(trend.revenue)}</TableCell>
-                            <TableCell>{trend.leads}</TableCell>
-                            <TableCell>{trend.quotes}</TableCell>
-                            <TableCell>{trend.deals}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-1">
-                                {growth >= 0 ? (
-                                  <TrendingUp className="h-4 w-4 text-green-600" />
-                                ) : (
-                                  <TrendingDown className="h-4 w-4 text-red-600" />
-                                )}
-                                <span className={`text-sm ${growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                  {formatPercentage(Math.abs(growth))}
-                                </span>
-                              </div>
-                            </TableCell>
+                            {trendsColumnVisibility.isColumnVisible('period') && (
+                              <TableCell className="font-medium">{trend.month}</TableCell>
+                            )}
+                            {trendsColumnVisibility.isColumnVisible('revenue') && (
+                              <TableCell>{formatCurrency(trend.revenue)}</TableCell>
+                            )}
+                            {trendsColumnVisibility.isColumnVisible('leads') && (
+                              <TableCell>{trend.leads}</TableCell>
+                            )}
+                            {trendsColumnVisibility.isColumnVisible('quotes') && (
+                              <TableCell>{trend.quotes}</TableCell>
+                            )}
+                            {trendsColumnVisibility.isColumnVisible('deals') && (
+                              <TableCell>{trend.deals}</TableCell>
+                            )}
                           </TableRow>
                         )
                       })}
@@ -657,10 +729,24 @@ export default function SalesReports() {
             {/* Sales Forecast */}
             <Card>
               <CardHeader>
-                <CardTitle>Sales Forecast</CardTitle>
-                <CardDescription>
-                  Revenue forecast and confidence levels based on historical data
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Sales Forecast</CardTitle>
+                    <CardDescription>
+                      Revenue forecast and confidence levels based on historical data
+                    </CardDescription>
+                  </div>
+                  {/* Column Visibility */}
+                  <ColumnVisibilityDropdown
+                    columns={FORECAST_COLUMNS}
+                    visibleColumns={forecastColumnVisibility.visibleColumns}
+                    onToggleColumn={forecastColumnVisibility.toggleColumn}
+                    onShowAll={forecastColumnVisibility.showAllColumns}
+                    onHideAll={forecastColumnVisibility.hideAllColumns}
+                    onReset={forecastColumnVisibility.resetColumns}
+                    isSyncing={forecastColumnVisibility.isSyncing}
+                  />
+                </div>
               </CardHeader>
               <CardContent>
                 {forecastLoading ? (
@@ -675,11 +761,11 @@ export default function SalesReports() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Month</TableHead>
-                        <TableHead>Forecasted</TableHead>
-                        <TableHead>Actual</TableHead>
-                        <TableHead>Variance</TableHead>
-                        <TableHead>Confidence</TableHead>
+                        {forecastColumnVisibility.isColumnVisible('month') && <TableHead>Month</TableHead>}
+                        {forecastColumnVisibility.isColumnVisible('forecasted') && <TableHead>Forecasted</TableHead>}
+                        {forecastColumnVisibility.isColumnVisible('actual') && <TableHead>Actual</TableHead>}
+                        {forecastColumnVisibility.isColumnVisible('variance') && <TableHead>Variance</TableHead>}
+                        {forecastColumnVisibility.isColumnVisible('confidence') && <TableHead>Confidence</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -690,33 +776,43 @@ export default function SalesReports() {
                         
                         return (
                           <TableRow key={forecast.month}>
-                            <TableCell className="font-medium">{forecast.month}</TableCell>
-                            <TableCell>{formatCurrency(forecast.forecasted)}</TableCell>
-                            <TableCell>
-                              {forecast.actual > 0 ? formatCurrency(forecast.actual) : '-'}
-                            </TableCell>
-                            <TableCell>
-                              {forecast.actual > 0 && (
-                                <div className="flex items-center space-x-1">
-                                  {variance >= 0 ? (
-                                    <TrendingUp className="h-4 w-4 text-green-600" />
-                                  ) : (
-                                    <TrendingDown className="h-4 w-4 text-red-600" />
-                                  )}
-                                  <span className={`text-sm ${variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                    {formatPercentage(Math.abs(variance))}
+                            {forecastColumnVisibility.isColumnVisible('month') && (
+                              <TableCell className="font-medium">{forecast.month}</TableCell>
+                            )}
+                            {forecastColumnVisibility.isColumnVisible('forecasted') && (
+                              <TableCell>{formatCurrency(forecast.forecasted)}</TableCell>
+                            )}
+                            {forecastColumnVisibility.isColumnVisible('actual') && (
+                              <TableCell>
+                                {forecast.actual > 0 ? formatCurrency(forecast.actual) : '-'}
+                              </TableCell>
+                            )}
+                            {forecastColumnVisibility.isColumnVisible('variance') && (
+                              <TableCell>
+                                {forecast.actual > 0 && (
+                                  <div className="flex items-center space-x-1">
+                                    {variance >= 0 ? (
+                                      <TrendingUp className="h-4 w-4 text-green-600" />
+                                    ) : (
+                                      <TrendingDown className="h-4 w-4 text-red-600" />
+                                    )}
+                                    <span className={`text-sm ${variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                      {formatPercentage(Math.abs(variance))}
+                                    </span>
+                                  </div>
+                                )}
+                              </TableCell>
+                            )}
+                            {forecastColumnVisibility.isColumnVisible('confidence') && (
+                              <TableCell>
+                                <div className="flex items-center space-x-2">
+                                  <Progress value={forecast.confidence} className="w-16" />
+                                  <span className="text-sm text-muted-foreground">
+                                    {forecast.confidence}%
                                   </span>
                                 </div>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <Progress value={forecast.confidence} className="w-16" />
-                                <span className="text-sm text-muted-foreground">
-                                  {forecast.confidence}%
-                                </span>
-                              </div>
-                            </TableCell>
+                              </TableCell>
+                            )}
                           </TableRow>
                         )
                       })}

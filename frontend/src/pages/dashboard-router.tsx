@@ -12,6 +12,8 @@ const DashboardRouter = () => {
       // Redirect based on user role
       if (user.role === 'admin') {
         navigate('/dashboard/admin', { replace: true })
+      } else if (user.role === 'manager') {
+        navigate('/dashboard/manager', { replace: true })
       } else {
         navigate('/dashboard/my-work', { replace: true })
       }

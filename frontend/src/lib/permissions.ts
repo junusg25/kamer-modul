@@ -48,6 +48,17 @@ export const PERMISSIONS = {
   'sales_reports:write': ['admin', 'manager', 'sales'],
   'sales_reports:delete': ['admin', 'manager', 'sales'],
   
+  // Sales Targets
+  'sales_targets:read': ['admin', 'manager'],
+  'sales_targets:write': ['admin', 'manager'],
+  
+  // Dynamic Pricing
+  'dynamic_pricing:read': ['admin', 'manager', 'sales'],
+  'dynamic_pricing:write': ['admin', 'manager'],
+  
+  // Rental Analytics
+  'rental_analytics:read': ['admin', 'manager', 'sales'],
+  
   // User Management
   'users:read': ['admin', 'manager'],
   'users:write': ['admin'],

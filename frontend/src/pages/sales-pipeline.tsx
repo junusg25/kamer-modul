@@ -271,7 +271,7 @@ export default function SalesPipeline() {
     
     if (draggedLead && draggedLead.sales_stage !== targetStage) {
       // Here you would make API call to update lead stage
-      console.log(`Moving lead ${draggedLead.id} from ${draggedLead.sales_stage} to ${targetStage}`)
+      
       
       // Update local state
       setPipelineData(prev => {

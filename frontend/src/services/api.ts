@@ -1,3 +1,5 @@
+import { toast } from 'sonner'
+
 const API_BASE_URL = 'http://localhost:3000/api'
 
 class ApiService {
@@ -10,32 +12,10 @@ class ApiService {
 
   // Helper function to show session expired notification
   private showSessionExpiredNotification() {
-    // Create a simple notification
-    const notification = document.createElement('div')
-    notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #dc2626;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      z-index: 9999;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 14px;
-      max-width: 300px;
-    `
-    notification.textContent = 'Your session has expired. Please log in again.'
-    
-    document.body.appendChild(notification)
-    
-    // Remove notification after 5 seconds
-    setTimeout(() => {
-      if (notification.parentNode) {
-        notification.parentNode.removeChild(notification)
-      }
-    }, 5000)
+    toast.error('Session Expired', {
+      description: 'Your session has expired. Please log in again.',
+      duration: 5000
+    })
   }
 
   private getAuthHeaders() {
@@ -63,7 +43,7 @@ class ApiService {
         // Check for authentication errors
         if (response.status === 401 || response.status === 403) {
           // Token is expired or invalid, trigger automatic logout
-          console.warn('Authentication error detected, logging out automatically')
+          
           
           // Show session expired notification
           this.showSessionExpiredNotification()
@@ -103,7 +83,7 @@ class ApiService {
       
       // If it's a network error (backend not running), return mock data
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        console.warn('Backend not available, using mock data')
+        
         return this.getMockData<T>(endpoint)
       }
       
@@ -487,7 +467,7 @@ class ApiService {
 
   async updateInventoryItem(id: string, item: any) {
     return this.request(`/inventory/${id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(item),
     })
   }
@@ -651,7 +631,7 @@ class ApiService {
 
   async updateQuote(id: string, quote: any) {
     return this.request(`/quotes/${id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(quote),
     })
   }
@@ -1044,6 +1024,106 @@ class ApiService {
     return this.request(`/quotes/${quoteId}/items/${itemId}`, {
       method: 'DELETE',
     })
+  }
+
+  // Quote Templates API
+  async getQuoteTemplates(params?: { template_type?: string; is_active?: boolean }) {
+    const queryParams = new URLSearchParams()
+    if (params?.template_type) queryParams.append('template_type', params.template_type)
+    if (params?.is_active !== undefined) queryParams.append('is_active', params.is_active.toString())
+    const query = queryParams.toString()
+    return this.request(`/quotes/templates${query ? `?${query}` : ''}`)
+  }
+
+  async getQuoteTemplate(id: string) {
+    return this.request(`/quotes/templates/${id}`)
+  }
+
+  async createQuoteTemplate(template: any) {
+    return this.request('/quotes/templates', {
+      method: 'POST',
+      body: JSON.stringify(template)
+    })
+  }
+
+  async updateQuoteTemplate(id: string, template: any) {
+    return this.request(`/quotes/templates/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(template)
+    })
+  }
+
+  async deleteQuoteTemplate(id: string) {
+    return this.request(`/quotes/templates/${id}`, {
+      method: 'DELETE'
+    })
+  }
+
+  async createQuoteFromTemplate(templateId: string, data: any) {
+    return this.request(`/quotes/from-template/${templateId}`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    })
+  }
+
+  // Quote Catalog API
+  async getQuoteCatalogMachines(params?: { search?: string; category?: string; manufacturer?: string }) {
+    const queryParams = new URLSearchParams()
+    if (params?.search) queryParams.append('search', params.search)
+    if (params?.category) queryParams.append('category', params.category)
+    if (params?.manufacturer) queryParams.append('manufacturer', params.manufacturer)
+    const query = queryParams.toString()
+    return this.request(`/quotes/catalog/machines${query ? `?${query}` : ''}`)
+  }
+
+  async getQuoteCatalogParts(params?: { search?: string; category?: string; in_stock_only?: boolean }) {
+    const queryParams = new URLSearchParams()
+    if (params?.search) queryParams.append('search', params.search)
+    if (params?.category) queryParams.append('category', params.category)
+    if (params?.in_stock_only !== undefined) queryParams.append('in_stock_only', params.in_stock_only.toString())
+    const query = queryParams.toString()
+    return this.request(`/quotes/catalog/parts${query ? `?${query}` : ''}`)
+  }
+
+  async getQuoteCatalogServices() {
+    return this.request('/quotes/catalog/services')
+  }
+
+  // Quote Actions API
+  async duplicateQuote(id: string) {
+    return this.request(`/quotes/${id}/duplicate`, {
+      method: 'POST'
+    })
+  }
+
+  async downloadQuotePDF(id: string) {
+    const response = await fetch(`${API_BASE_URL}/quotes/${id}/pdf`, {
+      method: 'GET',
+      headers: this.getAuthHeaders()
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to download PDF')
+    }
+    
+    // Get the blob and ensure it has the correct MIME type
+    const blob = await response.blob()
+    const pdfBlob = new Blob([blob], { type: 'application/pdf' })
+    
+    // Create download link
+    const url = window.URL.createObjectURL(pdfBlob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `quote-${id}.pdf`
+    a.style.display = 'none'
+    document.body.appendChild(a)
+    a.click()
+    
+    // Cleanup
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    }, 100)
   }
 
   // Sales Reports endpoints
@@ -1520,6 +1600,213 @@ class ApiService {
     
     const queryString = queryParams.toString()
     return this.request(`/sales/targets/current${queryString ? `?${queryString}` : ''}`)
+  }
+
+  // Permissions Management
+  async getAvailablePermissions() {
+    return this.request('/permissions/available')
+  }
+
+  async getUserPermissions(userId: string) {
+    return this.request(`/permissions/user/${userId}`)
+  }
+
+  async getUserPermissionAudit(userId: string, params?: { limit?: number; offset?: number }) {
+    const queryParams = new URLSearchParams()
+    if (params?.limit) queryParams.append('limit', params.limit.toString())
+    if (params?.offset) queryParams.append('offset', params.offset.toString())
+    const query = queryParams.toString()
+    return this.request(`/permissions/audit/${userId}${query ? `?${query}` : ''}`)
+  }
+
+  async grantPermission(data: {
+    user_id: number
+    permission_key: string
+    expires_at?: string
+    reason?: string
+  }) {
+    return this.request('/permissions/grant', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    })
+  }
+
+  async revokePermission(data: {
+    user_id: number
+    permission_key: string
+    reason?: string
+  }) {
+    return this.request('/permissions/revoke', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    })
+  }
+
+  async getUsersWithOverrides() {
+    return this.request('/permissions/users-with-overrides')
+  }
+
+  async deletePermissionOverride(permissionId: string) {
+    return this.request(`/permissions/${permissionId}`, {
+      method: 'DELETE'
+    })
+  }
+
+  // Table Preferences API
+  async getAllTablePreferences() {
+    return this.request('/table-preferences')
+  }
+
+  async getTablePreference(tableKey: string) {
+    return this.request(`/table-preferences/${tableKey}`)
+  }
+
+  async saveTablePreference(tableKey: string, visibleColumns: string[]) {
+    return this.request(`/table-preferences/${tableKey}`, {
+      method: 'PUT',
+      body: JSON.stringify({ visible_columns: visibleColumns })
+    })
+  }
+
+  async deleteTablePreference(tableKey: string) {
+    return this.request(`/table-preferences/${tableKey}`, {
+      method: 'DELETE'
+    })
+  }
+
+  async saveBulkTablePreferences(preferences: Array<{ table_key: string; visible_columns: string[] }>) {
+    return this.request('/table-preferences/bulk', {
+      method: 'POST',
+      body: JSON.stringify({ preferences })
+    })
+  }
+
+  // Action Logs API
+  async getAllActionLogs(params?: {
+    user_id?: string
+    action_type?: string
+    entity_type?: string
+    start_date?: string
+    end_date?: string
+    search?: string
+    page?: number
+    limit?: number
+  }) {
+    const queryParams = new URLSearchParams()
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, value.toString())
+        }
+      })
+    }
+    return this.request(`/action-logs?${queryParams.toString()}`)
+  }
+
+  async getUserActionLogs(userId: string, params?: {
+    action_type?: string
+    entity_type?: string
+    start_date?: string
+    end_date?: string
+    page?: number
+    limit?: number
+  }) {
+    const queryParams = new URLSearchParams()
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, value.toString())
+        }
+      })
+    }
+    return this.request(`/action-logs/user/${userId}?${queryParams.toString()}`)
+  }
+
+  async getActionLogStats(params?: {
+    start_date?: string
+    end_date?: string
+  }) {
+    const queryParams = new URLSearchParams()
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, value.toString())
+        }
+      })
+    }
+    return this.request(`/action-logs/stats?${queryParams.toString()}`)
+  }
+
+  async getEntityActionLogs(entityType: string, entityId: string, params?: {
+    page?: number
+    limit?: number
+  }) {
+    const queryParams = new URLSearchParams()
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, value.toString())
+        }
+      })
+    }
+    return this.request(`/action-logs/entity/${entityType}/${entityId}?${queryParams.toString()}`)
+  }
+
+  // Manager Dashboard API
+  async getManagerOverview(params?: { time_period?: string; start_date?: string; end_date?: string }) {
+    const queryParams = new URLSearchParams()
+    if (params?.time_period) queryParams.append('time_period', params.time_period)
+    if (params?.start_date) queryParams.append('start_date', params.start_date)
+    if (params?.end_date) queryParams.append('end_date', params.end_date)
+    const queryString = queryParams.toString()
+    return this.request(`/manager-dashboard/overview${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async getManagerTeamWorkload(params?: { time_period?: string; start_date?: string; end_date?: string }) {
+    const queryParams = new URLSearchParams()
+    if (params?.time_period) queryParams.append('time_period', params.time_period)
+    if (params?.start_date) queryParams.append('start_date', params.start_date)
+    if (params?.end_date) queryParams.append('end_date', params.end_date)
+    const queryString = queryParams.toString()
+    return this.request(`/manager-dashboard/team-workload${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async getManagerPriorityWorkOrders() {
+    return this.request('/manager-dashboard/priority-work-orders')
+  }
+
+  async getManagerRecentActivity() {
+    return this.request('/manager-dashboard/recent-activity')
+  }
+
+  async getManagerSalesOverview(params?: { time_period?: string; start_date?: string; end_date?: string }) {
+    const queryParams = new URLSearchParams()
+    if (params?.time_period) queryParams.append('time_period', params.time_period)
+    if (params?.start_date) queryParams.append('start_date', params.start_date)
+    if (params?.end_date) queryParams.append('end_date', params.end_date)
+    const queryString = queryParams.toString()
+    return this.request(`/manager-dashboard/sales-overview${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async getManagerSalesTeam(params?: { time_period?: string; start_date?: string; end_date?: string }) {
+    const queryParams = new URLSearchParams()
+    if (params?.time_period) queryParams.append('time_period', params.time_period)
+    if (params?.start_date) queryParams.append('start_date', params.start_date)
+    if (params?.end_date) queryParams.append('end_date', params.end_date)
+    const queryString = queryParams.toString()
+    return this.request(`/manager-dashboard/sales-team${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async getManagerRevenueTrends(period: string = 'month') {
+    return this.request(`/manager-dashboard/revenue-trends?period=${period}`)
+  }
+
+  async getManagerTopOpportunities() {
+    return this.request('/manager-dashboard/top-opportunities')
+  }
+
+  async getManagerInventoryAlerts() {
+    return this.request('/manager-dashboard/inventory-alerts')
   }
 }
 

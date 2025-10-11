@@ -154,10 +154,10 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!socket || !isConnected || user?.role !== 'admin') return
 
-    console.log('🔔 Setting up feedback notification listener for admin')
+    
 
     const handleFeedbackSubmitted = (data: any) => {
-      console.log('🔔 Received feedback notification:', data)
+      
       
       // Refresh the feedback list to show the new feedback
       refreshFeedback()
@@ -178,12 +178,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
         low: 'Low'
       }
       
-      console.log('🔔 Adding to notification bell:', {
-        type: data.type,
-        priority: data.priority,
-        user: data.user.name,
-        page: data.page_url
-      })
+      
       
       // Add to notifications system (this will show in the notification bell)
       addNotification({
@@ -197,13 +192,13 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
         created_at: new Date().toISOString()
       })
       
-      console.log('🔔 Notification added to bell')
+      
     }
 
     socket.on('feedback_submitted', handleFeedbackSubmitted)
 
     return () => {
-      console.log('🔔 Cleaning up feedback notification listener')
+      
       socket.off('feedback_submitted', handleFeedbackSubmitted)
     }
   }, [socket, isConnected, user?.role, refreshFeedback])

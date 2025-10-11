@@ -114,11 +114,7 @@ export function PriorityAlerts() {
       const stats = response.data
       
       // Debug logging to understand the data
-      console.log('Dashboard stats for priority alerts:', {
-        regularHighPriority: stats.work_orders?.high_priority_orders,
-        warrantyHighPriority: stats.work_orders?.warranty_high_priority_orders,
-        workOrdersData: stats.work_orders
-      })
+      
       
       // Generate alerts based on real data
       const generatedAlerts: PriorityAlert[] = []

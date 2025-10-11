@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const { authenticateToken } = require('../middleware/auth');
 const { createNotification } = require('../utils/notificationHelpers');
+const { logCustomAction } = require('../utils/actionLogger');
 
 // GET all assigned machines
 router.get('/', async (req, res, next) => {
@@ -217,6 +218,18 @@ router.post('/', authenticateToken, async (req, res, next) => {
       const details = detailsResult.rows[0];
       
       if (details) {
+        // Log action
+        await logCustomAction(req, details.is_sale ? 'sell' : 'assign', 'machine', assignedMachine.id, 
+          `${details.model_name} - ${serial_number}`, {
+          customer_id: customer_id,
+          customer_name: details.customer_name,
+          model_name: details.model_name,
+          manufacturer: details.manufacturer,
+          is_sale: details.is_sale,
+          sale_price: details.sale_price,
+          machine_condition: details.machine_condition
+        });
+
         if (details.is_sale) {
           // Machine sale notification
           const title = 'Machine Sold';

@@ -6,6 +6,7 @@ const { body, validationResult } = require('express-validator');
 const { handleValidationErrors } = require('../middleware/validators');
 const { createNotification } = require('../utils/notificationHelpers');
 const StatusManager = require('../services/statusManager');
+const { logCustomAction } = require('../utils/actionLogger');
 
 // Validation rules
 const rentalMachineValidation = [
@@ -287,7 +288,16 @@ router.post('/', authenticateToken, authorizeRoles('admin', 'manager', 'technici
       result.rows[0].id
     );
 
-    res.status(201).json(result.rows[0]);
+    const rentalMachine = result.rows[0];
+
+    // Log action
+    await logCustomAction(req, 'create', 'rental_machine', rentalMachine.id, serial_number, {
+      model_id: model_id,
+      rental_status: rental_status,
+      condition: condition
+    });
+
+    res.status(201).json(rentalMachine);
 
   } catch (error) {
     console.error('Error creating rental machine:', error);
@@ -348,7 +358,16 @@ router.put('/:id', authenticateToken, authorizeRoles('admin', 'manager', 'techni
       model_id, serial_number, rental_status, condition, location, notes, id
     ]);
 
-    res.json(result.rows[0]);
+    const rentalMachine = result.rows[0];
+
+    // Log action
+    await logCustomAction(req, 'update', 'rental_machine', id, serial_number, {
+      updated_fields: Object.keys(req.body),
+      rental_status: rental_status,
+      condition: condition
+    });
+
+    res.json(rentalMachine);
 
   } catch (error) {
     console.error('Error updating rental machine:', error);
@@ -388,6 +407,22 @@ router.delete('/:id', authenticateToken, authorizeRoles('admin', 'manager'), asy
         message: 'Cannot delete rental machine with active rentals. Please return all active rentals first.' 
       });
     }
+
+    // Get full machine details before deletion
+    const machineDetails = await client.query(
+      `SELECT rm.*, mm.name as model_name 
+       FROM rental_machines rm
+       LEFT JOIN machine_models mm ON rm.model_id = mm.id
+       WHERE rm.id = $1`,
+      [id]
+    );
+    const machine = machineDetails.rows[0];
+
+    // Log action before deletion
+    await logCustomAction(req, 'delete', 'rental_machine', id, machine.serial_number, {
+      model_name: machine.model_name,
+      rental_status: machine.rental_status
+    });
 
     // Delete rental machine (this will cascade delete related rentals due to foreign key)
     await client.query('DELETE FROM rental_machines WHERE id = $1', [id]);

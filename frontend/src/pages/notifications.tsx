@@ -339,10 +339,10 @@ export default function NotificationsPage() {
             navigate('/admin-feedback')
             break
           default:
-            console.warn('Unknown notification type:', notification.related_entity_type)
+            
         }
       } else {
-        console.warn('Notification has no related entity:', notification)
+        
       }
     } catch (error) {
       console.error('Navigation error:', error)

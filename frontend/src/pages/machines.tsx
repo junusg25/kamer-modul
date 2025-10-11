@@ -48,6 +48,8 @@ import {
 } from 'lucide-react'
 import { apiService } from '@/services/api'
 import { useAuth } from '@/contexts/auth-context'
+import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '@/hooks/useColumnVisibility'
+import { ColumnVisibilityDropdown } from '@/components/ui/column-visibility-dropdown'
 
 interface MachineModel {
   id: string
@@ -66,8 +68,30 @@ interface MachineModel {
   updated_at: string
 }
 
+// Define columns for the machines table
+const MACHINE_COLUMNS = defineColumns([
+  { key: 'name', label: 'Model Name' },
+  { key: 'manufacturer', label: 'Manufacturer' },
+  { key: 'catalogue', label: 'Catalogue #' },
+  { key: 'category', label: 'Category' },
+  { key: 'warranty', label: 'Warranty' },
+  { key: 'serials', label: 'Serials' },
+  { key: 'assigned', label: 'Assigned' },
+])
+
 export default function Machines() {
   const navigate = useNavigate()
+  
+  // Column visibility hook
+  const {
+    visibleColumns,
+    toggleColumn,
+    isColumnVisible,
+    resetColumns,
+    showAllColumns,
+    hideAllColumns,
+    isSyncing
+  } = useColumnVisibility('machines', getDefaultColumnKeys(MACHINE_COLUMNS))
   const { hasPermission } = useAuth()
   const [machineModels, setMachineModels] = useState<MachineModel[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -276,6 +300,18 @@ export default function Machines() {
                     </Button>
                   )}
                 </div>
+                
+                {/* Column Visibility */}
+                <ColumnVisibilityDropdown
+                  columns={MACHINE_COLUMNS}
+                  visibleColumns={visibleColumns}
+                  onToggleColumn={toggleColumn}
+                  onShowAll={showAllColumns}
+                  onHideAll={hideAllColumns}
+                  onReset={resetColumns}
+                  isSyncing={isSyncing}
+                />
+                
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="h-9">
@@ -355,14 +391,13 @@ export default function Machines() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Model Name</TableHead>
-                  <TableHead>Manufacturer</TableHead>
-                  <TableHead>Catalogue Number</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Warranty Period</TableHead>
-                  <TableHead>Total Serials</TableHead>
-                  <TableHead>Assigned</TableHead>
-                  <TableHead>Warranty Status</TableHead>
+                  {isColumnVisible('name') && <TableHead>Model Name</TableHead>}
+                  {isColumnVisible('manufacturer') && <TableHead>Manufacturer</TableHead>}
+                  {isColumnVisible('catalogue') && <TableHead>Catalogue Number</TableHead>}
+                  {isColumnVisible('category') && <TableHead>Category</TableHead>}
+                  {isColumnVisible('warranty') && <TableHead>Warranty Period</TableHead>}
+                  {isColumnVisible('serials') && <TableHead>Total Serials</TableHead>}
+                  {isColumnVisible('assigned') && <TableHead>Assigned</TableHead>}
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -373,53 +408,55 @@ export default function Machines() {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => handleViewModel(model.id)}
                   >
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{model.name}</div>
-                        {model.description && (
-                          <div className="text-sm text-muted-foreground">
-                            {model.description}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{model.manufacturer}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {model.catalogue_number || 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{model.category_name || 'Uncategorized'}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="border-orange-300 text-orange-700">
-                        {model.warranty_months} months
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">{model.total_serials}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="default" className="bg-green-100 text-green-800">
-                          {model.total_assigned}
+                    {isColumnVisible('name') && (
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{model.name}</div>
+                          {model.description && (
+                            <div className="text-sm text-muted-foreground">
+                              {model.description}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                    )}
+                    {isColumnVisible('manufacturer') && (
+                      <TableCell className="font-medium">{model.manufacturer}</TableCell>
+                    )}
+                    {isColumnVisible('catalogue') && (
+                      <TableCell className="text-sm text-muted-foreground">
+                        {model.catalogue_number || 'N/A'}
+                      </TableCell>
+                    )}
+                    {isColumnVisible('category') && (
+                      <TableCell>
+                        <Badge variant="outline">{model.category_name || 'Uncategorized'}</Badge>
+                      </TableCell>
+                    )}
+                    {isColumnVisible('warranty') && (
+                      <TableCell>
+                        <Badge variant="outline" className="border-orange-300 text-orange-700">
+                          {model.warranty_months} months
                         </Badge>
-                        {model.unassigned_serials > 0 && (
-                          <Badge variant="outline" className="border-orange-300 text-orange-700">
-                            {model.unassigned_serials} unassigned
+                      </TableCell>
+                    )}
+                    {isColumnVisible('serials') && (
+                      <TableCell className="font-medium">{model.total_serials}</TableCell>
+                    )}
+                    {isColumnVisible('assigned') && (
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                            {model.total_assigned}
                           </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="default" className="bg-green-100 text-green-800">
-                          {model.active_warranty} active
-                        </Badge>
-                        {model.expired_warranty > 0 && (
-                          <Badge variant="destructive">
-                            {model.expired_warranty} expired
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
+                          {model.unassigned_serials > 0 && (
+                            <Badge variant="outline" className="border-orange-300 text-orange-700 dark:border-orange-700 dark:text-orange-400">
+                              {model.unassigned_serials} unassigned
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                    )}
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

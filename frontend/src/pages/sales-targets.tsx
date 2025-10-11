@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { useAuth } from '../contexts/auth-context'
 import apiService from '../services/api'
 import { MainLayout } from '../components/layout/main-layout'
@@ -6,13 +7,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
+import { DatePicker } from '../components/ui/date-picker'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../components/ui/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
 import { Badge } from '../components/ui/badge'
-import { Plus, Edit, Trash2, Target, Users } from 'lucide-react'
+import { Plus, Edit, Trash2, Target, Users, MoreHorizontal } from 'lucide-react'
 import { formatCurrency } from '../lib/currency'
 import { format } from 'date-fns'
+import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '@/hooks/useColumnVisibility'
+import { ColumnVisibilityDropdown } from '@/components/ui/column-visibility-dropdown'
 
 interface SalesTarget {
   id: number
@@ -53,8 +58,19 @@ const TARGET_TYPES = [
   { value: 'yearly', label: 'Yearly' }
 ]
 
+// Define columns for Sales Targets table
+const SALES_TARGET_COLUMNS = defineColumns([
+  { key: 'user', label: 'Sales Person' },
+  { key: 'type', label: 'Type' },
+  { key: 'amount', label: 'Target Amount' },
+  { key: 'period', label: 'Period' },
+  { key: 'description', label: 'Description' },
+  { key: 'created_by', label: 'Created By' },
+])
+
 export default function SalesTargets() {
-  const { user } = useAuth()
+  const { user, hasPermission } = useAuth()
+  const canWrite = hasPermission('sales_targets:write')
   const [targets, setTargets] = useState<SalesTarget[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [usersLoading, setUsersLoading] = useState(true)
@@ -70,6 +86,17 @@ export default function SalesTargets() {
     target_period_end: '',
     description: ''
   })
+
+  // Column visibility hook
+  const {
+    visibleColumns,
+    toggleColumn,
+    isColumnVisible,
+    resetColumns,
+    showAllColumns,
+    hideAllColumns,
+    isSyncing
+  } = useColumnVisibility('sales_targets', getDefaultColumnKeys(SALES_TARGET_COLUMNS))
 
   useEffect(() => {
     loadTargets()
@@ -143,25 +170,41 @@ export default function SalesTargets() {
       if (editingTarget) {
         // Update existing target
         await apiService.updateSalesTarget(editingTarget.id.toString(), formData)
+        toast.success('Target updated successfully', {
+          description: `Updated ${formData.target_type} target for ${users.find(u => u.id === formData.user_id)?.name}`
+        })
       } else {
         // Create new target
         await apiService.createSalesTarget(formData)
+        toast.success('Target created successfully', {
+          description: `Created ${formData.target_type} target for ${users.find(u => u.id === formData.user_id)?.name}`
+        })
       }
       
       setIsDialogOpen(false)
       loadTargets()
     } catch (error) {
       console.error('Error saving target:', error)
+      toast.error('Failed to save target', {
+        description: error instanceof Error ? error.message : 'An error occurred'
+      })
     }
   }
 
   const handleDeleteTarget = async (targetId: number) => {
+    const target = targets.find(t => t.id === targetId)
     if (window.confirm('Are you sure you want to deactivate this target?')) {
       try {
         await apiService.deleteSalesTarget(targetId.toString())
+        toast.success('Target deleted successfully', {
+          description: target ? `Deleted ${target.target_type} target for ${target.user_name}` : 'Target has been removed'
+        })
         loadTargets()
       } catch (error) {
         console.error('Error deleting target:', error)
+        toast.error('Failed to delete target', {
+          description: error instanceof Error ? error.message : 'An error occurred'
+        })
       }
     }
   }
@@ -230,10 +273,12 @@ export default function SalesTargets() {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleCreateTarget} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Create Target
-          </Button>
+          {canWrite && (
+            <Button onClick={handleCreateTarget} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Create Target
+            </Button>
+          )}
         </div>
       </div>
 
@@ -286,15 +331,29 @@ export default function SalesTargets() {
       {/* Targets Table */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            {selectedTargetType === 'all' ? 'Current Targets' : `${TARGET_TYPES.find(t => t.value === selectedTargetType)?.label} Targets`}
-          </CardTitle>
-          <CardDescription>
-            {selectedTargetType === 'all' 
-              ? 'View and manage all active sales targets' 
-              : `View and manage all active ${selectedTargetType} sales targets`
-            }
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>
+                {selectedTargetType === 'all' ? 'Current Targets' : `${TARGET_TYPES.find(t => t.value === selectedTargetType)?.label} Targets`}
+              </CardTitle>
+              <CardDescription>
+                {selectedTargetType === 'all' 
+                  ? 'View and manage all active sales targets' 
+                  : `View and manage all active ${selectedTargetType} sales targets`
+                }
+              </CardDescription>
+            </div>
+            {/* Column Visibility */}
+            <ColumnVisibilityDropdown
+              columns={SALES_TARGET_COLUMNS}
+              visibleColumns={visibleColumns}
+              onToggleColumn={toggleColumn}
+              onShowAll={showAllColumns}
+              onHideAll={hideAllColumns}
+              onReset={resetColumns}
+              isSyncing={isSyncing}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -307,63 +366,80 @@ export default function SalesTargets() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Target Amount</TableHead>
-                  <TableHead>Period</TableHead>
-                  <TableHead>Created By</TableHead>
-                  <TableHead>Actions</TableHead>
+                  {isColumnVisible('user') && <TableHead>User</TableHead>}
+                  {isColumnVisible('type') && <TableHead>Type</TableHead>}
+                  {isColumnVisible('amount') && <TableHead>Target Amount</TableHead>}
+                  {isColumnVisible('period') && <TableHead>Period</TableHead>}
+                  {isColumnVisible('created_by') && <TableHead>Created By</TableHead>}
+                  {canWrite && <TableHead>Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {targets?.map((target) => (
                   <TableRow key={target.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{target.user_name}</div>
-                        <div className="text-sm text-muted-foreground">{target.user_email}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getTargetTypeColor(target.target_type)}>
-                        {target.target_type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {formatCurrency(target.target_amount)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <div>{format(new Date(target.target_period_start), 'MMM dd, yyyy')}</div>
-                        <div className="text-muted-foreground">to {format(new Date(target.target_period_end), 'MMM dd, yyyy')}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <div>{target.created_by_name}</div>
-                        <div className="text-muted-foreground">
-                          {format(new Date(target.created_at), 'MMM dd, yyyy')}
+                    {isColumnVisible('user') && (
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{target.user_name}</div>
+                          <div className="text-sm text-muted-foreground">{target.user_email}</div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditTarget(target)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteTarget(target.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+                      </TableCell>
+                    )}
+                    {isColumnVisible('type') && (
+                      <TableCell>
+                        <Badge className={getTargetTypeColor(target.target_type)}>
+                          {target.target_type}
+                        </Badge>
+                      </TableCell>
+                    )}
+                    {isColumnVisible('amount') && (
+                      <TableCell className="font-medium">
+                        {formatCurrency(target.target_amount)}
+                      </TableCell>
+                    )}
+                    {isColumnVisible('period') && (
+                      <TableCell>
+                        <div className="text-sm">
+                          <div>{format(new Date(target.target_period_start), 'MMM dd, yyyy')}</div>
+                          <div className="text-muted-foreground">to {format(new Date(target.target_period_end), 'MMM dd, yyyy')}</div>
+                        </div>
+                      </TableCell>
+                    )}
+                    {isColumnVisible('created_by') && (
+                      <TableCell>
+                        <div className="text-sm">
+                          <div>{target.created_by_name}</div>
+                          <div className="text-muted-foreground">
+                            {format(new Date(target.created_at), 'MMM dd, yyyy')}
+                          </div>
+                        </div>
+                      </TableCell>
+                    )}
+                    {canWrite && (
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleEditTarget(target)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit Target
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteTarget(target.id)}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -445,22 +521,18 @@ export default function SalesTargets() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="target_period_start">Start Date</Label>
-                <Input
-                  id="target_period_start"
-                  type="date"
+                <DatePicker
                   value={formData.target_period_start}
-                  onChange={(e) => setFormData(prev => ({ ...prev, target_period_start: e.target.value }))}
-                  required
+                  onChange={(value) => setFormData(prev => ({ ...prev, target_period_start: value }))}
+                  placeholder="Select start date"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="target_period_end">End Date</Label>
-                <Input
-                  id="target_period_end"
-                  type="date"
+                <DatePicker
                   value={formData.target_period_end}
-                  onChange={(e) => setFormData(prev => ({ ...prev, target_period_end: e.target.value }))}
-                  required
+                  onChange={(value) => setFormData(prev => ({ ...prev, target_period_end: value }))}
+                  placeholder="Select end date"
                 />
               </div>
             </div>

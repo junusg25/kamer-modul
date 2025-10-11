@@ -8,12 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../components/ui/dropdown-menu'
 import { Label } from '../components/ui/label'
 import { Textarea } from '../components/ui/textarea'
-import { Plus, Search, Filter, Eye, Edit, Trash2, Truck, Calendar } from 'lucide-react'
+import { Plus, Search, Filter, Eye, Edit, Trash2, Truck, Calendar, MoreHorizontal } from 'lucide-react'
 import apiService from '../services/api'
 import { formatDate, formatDateTime } from '../lib/dateTime'
 import { useAuth } from '../contexts/auth-context'
+import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '@/hooks/useColumnVisibility'
+import { ColumnVisibilityDropdown } from '@/components/ui/column-visibility-dropdown'
 
 interface RentalMachine {
   id: string
@@ -38,6 +41,17 @@ interface MachineModel {
   manufacturer: string
   catalogue_number?: string
 }
+
+// Define columns for Rental Fleet table
+const RENTAL_FLEET_COLUMNS = defineColumns([
+  { key: 'serial_number', label: 'Serial Number' },
+  { key: 'model', label: 'Model' },
+  { key: 'manufacturer', label: 'Manufacturer' },
+  { key: 'status', label: 'Status' },
+  { key: 'condition', label: 'Condition' },
+  { key: 'location', label: 'Location' },
+  { key: 'rental_count', label: 'Rental Count' },
+])
 
 export default function RentalMachines() {
   const navigate = useNavigate()
@@ -65,6 +79,17 @@ export default function RentalMachines() {
   const [editingMachine, setEditingMachine] = useState<RentalMachine | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [machineToDelete, setMachineToDelete] = useState<RentalMachine | null>(null)
+
+  // Column visibility hook
+  const {
+    visibleColumns,
+    toggleColumn,
+    isColumnVisible,
+    resetColumns,
+    showAllColumns,
+    hideAllColumns,
+    isSyncing
+  } = useColumnVisibility('rental_fleet', getDefaultColumnKeys(RENTAL_FLEET_COLUMNS))
 
   // Form state
   const [formData, setFormData] = useState({
@@ -119,7 +144,7 @@ export default function RentalMachines() {
       } else if (response && Array.isArray(response.data)) {
         setModels(response.data)
       } else {
-        console.warn('Unexpected response format for machine models:', response)
+        
         setModels([])
       }
     } catch (error) {
@@ -434,7 +459,19 @@ export default function RentalMachines() {
         {/* Machines Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Rental Machines ({pagination.total})</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Rental Machines ({pagination.total})</CardTitle>
+              {/* Column Visibility */}
+              <ColumnVisibilityDropdown
+                columns={RENTAL_FLEET_COLUMNS}
+                visibleColumns={visibleColumns}
+                onToggleColumn={toggleColumn}
+                onShowAll={showAllColumns}
+                onHideAll={hideAllColumns}
+                onReset={resetColumns}
+                isSyncing={isSyncing}
+              />
+            </div>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -443,14 +480,13 @@ export default function RentalMachines() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Serial Number</TableHead>
-                    <TableHead>Model</TableHead>
-                    <TableHead>Manufacturer</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Condition</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Rental Count</TableHead>
-                    <TableHead>Created</TableHead>
+                    {isColumnVisible('serial_number') && <TableHead>Serial Number</TableHead>}
+                    {isColumnVisible('model') && <TableHead>Model</TableHead>}
+                    {isColumnVisible('manufacturer') && <TableHead>Manufacturer</TableHead>}
+                    {isColumnVisible('status') && <TableHead>Status</TableHead>}
+                    {isColumnVisible('condition') && <TableHead>Condition</TableHead>}
+                    {isColumnVisible('location') && <TableHead>Location</TableHead>}
+                    {isColumnVisible('rental_count') && <TableHead>Rental Count</TableHead>}
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -461,45 +497,71 @@ export default function RentalMachines() {
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => navigate(`/rental-machines/${machine.id}`)}
                     >
-                      <TableCell className="font-medium">{machine.serial_number}</TableCell>
-                      <TableCell>{machine.model_name}</TableCell>
-                      <TableCell>{machine.manufacturer}</TableCell>
-                      <TableCell>{getStatusBadge(machine.rental_status)}</TableCell>
-                      <TableCell>{getConditionBadge(machine.condition)}</TableCell>
-                      <TableCell>{machine.location || '-'}</TableCell>
-                      <TableCell>{machine.rental_count}</TableCell>
-                      <TableCell>{formatDateTime(machine.created_at)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate(`/rental-machines/${machine.id}`)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          {user?.role !== 'sales' && (
-                            <>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openEditDialog(machine)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setMachineToDelete(machine)
-                                  setDeleteDialogOpen(true)
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
+                      {isColumnVisible('serial_number') && (
+                        <TableCell className="font-medium">{machine.serial_number}</TableCell>
+                      )}
+                      {isColumnVisible('model') && (
+                        <TableCell>{machine.model_name}</TableCell>
+                      )}
+                      {isColumnVisible('manufacturer') && (
+                        <TableCell>{machine.manufacturer}</TableCell>
+                      )}
+                      {isColumnVisible('status') && (
+                        <TableCell>{getStatusBadge(machine.rental_status)}</TableCell>
+                      )}
+                      {isColumnVisible('condition') && (
+                        <TableCell>{getConditionBadge(machine.condition)}</TableCell>
+                      )}
+                      {isColumnVisible('location') && (
+                        <TableCell>{machine.location || '-'}</TableCell>
+                      )}
+                      {isColumnVisible('rental_count') && (
+                        <TableCell>{machine.rental_count}</TableCell>
+                      )}
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation()
+                              navigate(`/rental-machines/${machine.id}`)
+                            }}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                            {user?.role !== 'sales' && (
+                              <>
+                                <DropdownMenuItem onClick={(e) => {
+                                  e.stopPropagation()
+                                  openEditDialog(machine)
+                                }}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit Machine
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setMachineToDelete(machine)
+                                    setDeleteDialogOpen(true)
+                                  }}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}

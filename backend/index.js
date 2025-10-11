@@ -44,10 +44,12 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:3001', // Frontend dev server (old)
       'http://localhost:5173', // Vite dev server (new)
+      'http://localhost:5174', // Customer Portal
       'http://localhost:5137', // React Admin demo
       'http://localhost:3000', // Backend API server
       'http://127.0.0.1:3001',
       'http://127.0.0.1:5173', // Vite dev server
+      'http://127.0.0.1:5174', // Customer Portal
       'http://127.0.0.1:5137', // React Admin demo
       'http://127.0.0.1:3000',
     ];
@@ -117,6 +119,10 @@ app.use('/api/rental-analytics', require('./routes/rentalAnalytics'));
 app.use('/api/dynamic-pricing', require('./routes/dynamicPricing'));
 app.use('/api/scheduler', require('./routes/scheduler'));
 app.use('/api/workOrders', require('./routes/workOrders'));
+
+// Customer Portal Routes
+app.use('/api/customer-portal/auth', require('./routes/customerPortalAuth'));
+app.use('/api/customer-portal', require('./routes/customerPortalTracking'));
 app.use('/api/warrantyWorkOrders', require('./routes/warrantyWorkOrders'));
 app.use('/api/repairTickets', require('./routes/repairTickets'));
 app.use('/api/warrantyRepairTickets', require('./routes/warrantyRepairTickets'));
@@ -143,7 +149,11 @@ app.use('/api/machine-categories', require('./routes/machineCategories'));
 app.use('/api/inventory-categories', require('./routes/inventoryCategories'));
 app.use('/api/websocket', require('./routes/websocket'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/manager-dashboard', require('./routes/managerDashboard'));
 app.use('/api/feedback', require('./routes/feedback'));
+app.use('/api/permissions', require('./routes/permissions'));
+app.use('/api/table-preferences', require('./routes/tablePreferences'));
+app.use('/api/action-logs', require('./routes/actionLogs'));
 app.use('/history/customers', require('./routes/history/customerHistory'));
 app.use('/history/machines', require('./routes/history/machineHistory'));
 app.use('/history/users', require('./routes/history/userHistory'));

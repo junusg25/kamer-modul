@@ -29,6 +29,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -668,7 +669,7 @@ export default function MachineDetail() {
                                 <DropdownMenuItem onClick={() => navigate(`/work-orders/${workOrder.id}`)}>
                                   <Eye className="mr-2 h-4 w-4" /> View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => console.log('Edit Work Order', workOrder.id)}>
+                                <DropdownMenuItem onClick={() => navigate(`/work-orders/${workOrder.id}`)}>
                                   <Edit className="mr-2 h-4 w-4" /> Edit Work Order
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -742,7 +743,7 @@ export default function MachineDetail() {
                                 <DropdownMenuItem onClick={() => navigate(`/warranty-work-orders/${workOrder.id}`)}>
                                   <Eye className="mr-2 h-4 w-4" /> View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => console.log('Edit Warranty Work Order', workOrder.id)}>
+                                <DropdownMenuItem onClick={() => navigate(`/warranty-work-orders/${workOrder.id}`)}>
                                   <Edit className="mr-2 h-4 w-4" /> Edit Work Order
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -808,11 +809,10 @@ export default function MachineDetail() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="warranty_expiry_date">Warranty Expiry Date</Label>
-                <Input
-                  id="warranty_expiry_date"
-                  type="date"
+                <DatePicker
                   value={editFormData.warranty_expiry_date}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, warranty_expiry_date: e.target.value }))}
+                  onChange={(value) => setEditFormData(prev => ({ ...prev, warranty_expiry_date: value }))}
+                  placeholder="Select warranty expiry date"
                 />
               </div>
               <div className="space-y-2">

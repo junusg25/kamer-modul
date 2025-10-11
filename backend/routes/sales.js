@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+const { authenticateToken, authorizeRoles, authorizePermission } = require('../middleware/auth');
 const { body } = require('express-validator');
 const { handleValidationErrors } = require('../middleware/validators');
 
@@ -662,7 +662,7 @@ router.get('/lead-sources', authenticateToken, async (req, res, next) => {
 // ==================== SALES TARGETS MANAGEMENT ====================
 
 // GET all sales targets
-router.get('/targets', authenticateToken, authorizeRoles('admin', 'manager'), async (req, res, next) => {
+router.get('/targets', authenticateToken, authorizePermission('sales_targets:read'), async (req, res, next) => {
   try {
     const { user_id, target_type, is_active } = req.query;
     

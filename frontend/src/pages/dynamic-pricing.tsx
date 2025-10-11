@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react'
+import { toast } from 'sonner'
+import { useAuth } from '../contexts/auth-context'
 import { MainLayout } from '../components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
+import { DatePicker } from '../components/ui/date-picker'
 import { Label } from '../components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
 import { Badge } from '../components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../components/ui/dropdown-menu'
 import { Textarea } from '../components/ui/textarea'
 import { apiService } from '../services/api'
 import { formatCurrency } from '../lib/currency'
@@ -25,6 +29,7 @@ import {
   Eye,
   BarChart3,
   Target,
+  MoreHorizontal,
   Clock
 } from 'lucide-react'
 
@@ -65,6 +70,8 @@ interface BasePricing {
 }
 
 export default function DynamicPricing() {
+  const { hasPermission } = useAuth()
+  const canWrite = hasPermission('dynamic_pricing:write')
   const [pricingRules, setPricingRules] = useState<PricingRule[]>([])
   const [customerTiers, setCustomerTiers] = useState<CustomerTier[]>([])
   const [basePricing, setBasePricing] = useState<BasePricing[]>([])
@@ -169,7 +176,7 @@ export default function DynamicPricing() {
       } else if (response && Array.isArray(response.machines)) {
         return response.machines
       } else {
-        console.warn('Unexpected response format for rental machines:', response)
+        
         return []
       }
     } catch (error) {
@@ -181,12 +188,17 @@ export default function DynamicPricing() {
   const handleCreateRule = async () => {
     try {
       await apiService.createPricingRule(ruleForm)
+      toast.success('Pricing rule created', {
+        description: `Created ${ruleForm.name} rule`
+      })
       setIsRuleDialogOpen(false)
       resetRuleForm()
       fetchData()
     } catch (error) {
       console.error('Error creating pricing rule:', error)
-      setError('Failed to create pricing rule')
+      toast.error('Failed to create pricing rule', {
+        description: error instanceof Error ? error.message : 'An error occurred'
+      })
     }
   }
 
@@ -195,31 +207,44 @@ export default function DynamicPricing() {
     
     try {
       await apiService.updatePricingRule(editingRule.id.toString(), ruleForm)
+      toast.success('Pricing rule updated', {
+        description: `Updated ${ruleForm.name} rule`
+      })
       setIsRuleDialogOpen(false)
       setEditingRule(null)
       resetRuleForm()
       fetchData()
     } catch (error) {
       console.error('Error updating pricing rule:', error)
-      setError('Failed to update pricing rule')
+      toast.error('Failed to update pricing rule', {
+        description: error instanceof Error ? error.message : 'An error occurred'
+      })
     }
   }
 
   const handleDeleteRule = async (ruleId: number) => {
+    const rule = pricingRules.find(r => r.id === ruleId)
     if (!confirm('Are you sure you want to delete this pricing rule?')) return
     
     try {
       await apiService.deletePricingRule(ruleId.toString())
+      toast.success('Pricing rule deleted', {
+        description: rule ? `Deleted ${rule.name} rule` : 'Rule has been removed'
+      })
       fetchData()
     } catch (error) {
       console.error('Error deleting pricing rule:', error)
-      setError('Failed to delete pricing rule')
+      toast.error('Failed to delete pricing rule', {
+        description: error instanceof Error ? error.message : 'An error occurred'
+      })
     }
   }
 
   const handleCreatePricing = async () => {
     if (!pricingForm.rental_machine_id || !pricingForm.base_price_daily) {
-      setError('Please select a machine and enter a daily price')
+      toast.error('Validation Error', {
+        description: 'Please select a machine and enter a daily price'
+      })
       return
     }
     
@@ -236,27 +261,18 @@ export default function DynamicPricing() {
       }
       
       await apiService.setBasePricing(cleanedData.rental_machine_id, cleanedData)
+      const machine = rentalMachines.find(m => m.id === cleanedData.rental_machine_id)
+      toast.success('Base pricing created', {
+        description: machine ? `Set pricing for ${machine.model_name}` : 'Pricing has been configured'
+      })
       setIsPricingDialogOpen(false)
       resetPricingForm()
       fetchData()
     } catch (error) {
       console.error('Error creating base pricing:', error)
-      if (error.message && error.message.includes('Validation failed')) {
-        // Try to get specific validation errors from the response
-        try {
-          const errorData = JSON.parse(error.message)
-          if (errorData.errors && errorData.errors.length > 0) {
-            const errorMessages = errorData.errors.map((err: any) => err.msg).join(', ')
-            setError(`Validation failed: ${errorMessages}`)
-          } else {
-            setError('Please check all required fields are filled correctly')
-          }
-        } catch {
-          setError('Please check all required fields are filled correctly')
-        }
-      } else {
-        setError('Failed to create base pricing')
-      }
+      toast.error('Failed to create base pricing', {
+        description: error instanceof Error ? error.message : 'An error occurred'
+      })
     }
   }
 
@@ -276,17 +292,18 @@ export default function DynamicPricing() {
       }
       
       await apiService.setBasePricing(editingPricing.rental_machine_id.toString(), cleanedData)
+      toast.success('Base pricing updated', {
+        description: `Updated pricing for ${editingPricing.machine_name}`
+      })
       setIsPricingDialogOpen(false)
       setEditingPricing(null)
       resetPricingForm()
       fetchData()
     } catch (error) {
       console.error('Error updating base pricing:', error)
-      if (error.message && error.message.includes('Validation failed')) {
-        setError('Please check all required fields are filled correctly')
-      } else {
-        setError('Failed to update base pricing')
-      }
+      toast.error('Failed to update base pricing', {
+        description: error instanceof Error ? error.message : 'An error occurred'
+      })
     }
   }
 
@@ -296,7 +313,7 @@ export default function DynamicPricing() {
         simulationForm.rental_machine_id,
         simulationForm.scenarios
       )
-      console.log('Simulation results:', results)
+      
       // Display results in a dialog or table
     } catch (error) {
       console.error('Error running simulation:', error)
@@ -307,12 +324,17 @@ export default function DynamicPricing() {
   const handleCreateTier = async () => {
     try {
       await apiService.createCustomerTier(tierForm)
+      toast.success('Customer tier created', {
+        description: `Created ${tierForm.name} tier`
+      })
       setIsTierDialogOpen(false)
       resetTierForm()
       fetchData()
     } catch (error) {
       console.error('Error creating customer tier:', error)
-      setError('Failed to create customer tier')
+      toast.error('Failed to create customer tier', {
+        description: error instanceof Error ? error.message : 'An error occurred'
+      })
     }
   }
 
@@ -321,38 +343,54 @@ export default function DynamicPricing() {
     
     try {
       await apiService.updateCustomerTier(editingTier.id.toString(), tierForm)
+      toast.success('Customer tier updated', {
+        description: `Updated ${tierForm.name} tier`
+      })
       setIsTierDialogOpen(false)
       setEditingTier(null)
       resetTierForm()
       fetchData()
     } catch (error) {
       console.error('Error updating customer tier:', error)
-      setError('Failed to update customer tier')
+      toast.error('Failed to update customer tier', {
+        description: error instanceof Error ? error.message : 'An error occurred'
+      })
     }
   }
 
   const handleDeleteTier = async (tierId: number) => {
+    const tier = customerTiers.find(t => t.id === tierId)
     if (!confirm('Are you sure you want to delete this customer tier?')) return
     
     try {
       await apiService.deleteCustomerTier(tierId.toString())
+      toast.success('Customer tier deleted', {
+        description: tier ? `Deleted ${tier.name} tier` : 'Tier has been removed'
+      })
       fetchData()
     } catch (error) {
       console.error('Error deleting customer tier:', error)
-      setError('Failed to delete customer tier')
+      toast.error('Failed to delete customer tier', {
+        description: error instanceof Error ? error.message : 'An error occurred'
+      })
     }
   }
 
   const handleDeletePricing = async (pricingId: number) => {
+    const pricing = basePricing.find(p => p.id === pricingId)
     if (!confirm('Are you sure you want to delete this base pricing?')) return
     
     try {
       // Note: We'll need to add a delete endpoint for base pricing
       // For now, we'll just show an error message
-      setError('Delete functionality for base pricing not yet implemented')
+      toast.warning('Feature Not Available', {
+        description: 'Delete functionality for base pricing not yet implemented'
+      })
     } catch (error) {
       console.error('Error deleting base pricing:', error)
-      setError('Failed to delete base pricing')
+      toast.error('Failed to delete base pricing', {
+        description: error instanceof Error ? error.message : 'An error occurred'
+      })
     }
   }
 
@@ -500,10 +538,12 @@ export default function DynamicPricing() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Pricing Rules</CardTitle>
-                <Button onClick={() => setIsRuleDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Rule
-                </Button>
+                {canWrite && (
+                  <Button onClick={() => setIsRuleDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Rule
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 <Table>
@@ -513,7 +553,7 @@ export default function DynamicPricing() {
                       <TableHead>Type</TableHead>
                       <TableHead>Priority</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
+                      {canWrite && <TableHead>Actions</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -536,24 +576,31 @@ export default function DynamicPricing() {
                             {rule.is_active ? 'Active' : 'Inactive'}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openEditRule(rule)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDeleteRule(rule.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                        {canWrite && (
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => openEditRule(rule)}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit Rule
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleDeleteRule(rule.id)}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
@@ -567,10 +614,12 @@ export default function DynamicPricing() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Customer Pricing Tiers</CardTitle>
-                <Button onClick={() => setIsTierDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Tier
-                </Button>
+                {canWrite && (
+                  <Button onClick={() => setIsTierDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Tier
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 <Table>
@@ -581,7 +630,7 @@ export default function DynamicPricing() {
                       <TableHead>Min Rentals</TableHead>
                       <TableHead>Min Spent</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
+                      {canWrite && <TableHead>Actions</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -605,24 +654,31 @@ export default function DynamicPricing() {
                             {tier.is_active ? 'Active' : 'Inactive'}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openEditTier(tier)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDeleteTier(tier.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                        {canWrite && (
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => openEditTier(tier)}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit Tier
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleDeleteTier(tier.id)}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
@@ -636,10 +692,12 @@ export default function DynamicPricing() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Machine Base Pricing</CardTitle>
-                <Button onClick={() => setIsPricingDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Base Pricing
-                </Button>
+                {canWrite && (
+                  <Button onClick={() => setIsPricingDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Base Pricing
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 {basePricing.length === 0 ? (
@@ -649,10 +707,12 @@ export default function DynamicPricing() {
                     <p className="text-gray-600 mb-4">
                       Base pricing is the foundation of the dynamic pricing system. Set base prices for each rental machine.
                     </p>
-                    <Button onClick={() => setIsPricingDialogOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add First Base Pricing
-                    </Button>
+                    {canWrite && (
+                      <Button onClick={() => setIsPricingDialogOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add First Base Pricing
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <Table>
@@ -664,7 +724,7 @@ export default function DynamicPricing() {
                         <TableHead>Monthly Price</TableHead>
                         <TableHead>Min Days</TableHead>
                         <TableHead>Max Days</TableHead>
-                        <TableHead>Actions</TableHead>
+                        {canWrite && <TableHead>Actions</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -687,24 +747,31 @@ export default function DynamicPricing() {
                           </TableCell>
                           <TableCell>{pricing.minimum_rental_days}</TableCell>
                           <TableCell>{pricing.maximum_rental_days || '∞'}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => openEditPricing(pricing)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDeletePricing(pricing.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
+                          {canWrite && (
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuItem onClick={() => openEditPricing(pricing)}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit Pricing
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleDeletePricing(pricing.id)}
+                                    className="text-red-600"
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          )}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -1017,23 +1084,23 @@ export default function DynamicPricing() {
                         setSimulationForm(prev => ({ ...prev, scenarios: newScenarios }))
                       }}
                     />
-                    <Input
-                      type="date"
+                    <DatePicker
                       value={scenario.start_date}
-                      onChange={(e) => {
+                      onChange={(value) => {
                         const newScenarios = [...simulationForm.scenarios]
-                        newScenarios[index].start_date = e.target.value
+                        newScenarios[index].start_date = value
                         setSimulationForm(prev => ({ ...prev, scenarios: newScenarios }))
                       }}
+                      placeholder="Start date"
                     />
-                    <Input
-                      type="date"
+                    <DatePicker
                       value={scenario.end_date}
-                      onChange={(e) => {
+                      onChange={(value) => {
                         const newScenarios = [...simulationForm.scenarios]
-                        newScenarios[index].end_date = e.target.value
+                        newScenarios[index].end_date = value
                         setSimulationForm(prev => ({ ...prev, scenarios: newScenarios }))
                       }}
+                      placeholder="End date"
                     />
                     <Input
                       placeholder="Customer ID (optional)"
