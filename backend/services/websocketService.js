@@ -91,6 +91,18 @@ class WebSocketService {
       socket.on('user_presence', (data) => {
         this.handleUserPresence(socket, data);
       });
+
+      socket.on('heartbeat', async () => {
+        // Update last_activity in database when client sends heartbeat
+        try {
+          await db.query(
+            'UPDATE online_users SET last_activity = CURRENT_TIMESTAMP WHERE user_id = $1',
+            [socket.userId]
+          );
+        } catch (error) {
+          logger.error('Error updating heartbeat:', error);
+        }
+      });
     });
   }
 
@@ -234,14 +246,27 @@ class WebSocketService {
   async updateUserOnlineStatus(userId, isOnline) {
     try {
       if (isOnline) {
-        // User connected - update last_seen
+        // User connected - insert into online_users table
+        await db.query(`
+          INSERT INTO online_users (user_id, connected_at, last_activity)
+          VALUES ($1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+          ON CONFLICT (user_id) DO UPDATE
+          SET connected_at = CURRENT_TIMESTAMP, last_activity = CURRENT_TIMESTAMP
+        `, [userId]);
+        
+        // Also update last_seen in users table
         await db.query(
           'UPDATE users SET last_seen = CURRENT_TIMESTAMP WHERE id = $1',
           [userId]
         );
       } else {
-        // User disconnected - only update last_seen, don't clear refresh_token
-        // The logout endpoint will handle clearing refresh_token and setting last_logout
+        // User disconnected - remove from online_users table
+        await db.query(
+          'DELETE FROM online_users WHERE user_id = $1',
+          [userId]
+        );
+        
+        // Update last_seen in users table
         await db.query(
           'UPDATE users SET last_seen = CURRENT_TIMESTAMP WHERE id = $1',
           [userId]
@@ -295,12 +320,22 @@ class WebSocketService {
   }
 
   // Track user action (called when user performs any action)
-  trackUserAction(userId) {
+  async trackUserAction(userId) {
     const userStatus = this.userStatuses.get(userId);
     if (userStatus) {
       userStatus.actionsCount = (userStatus.actionsCount || 0) + 1;
       userStatus.lastActionAt = new Date().toISOString();
       this.userStatuses.set(userId, userStatus);
+      
+      // Update last_activity in database for PM2 cluster compatibility
+      try {
+        await db.query(
+          'UPDATE online_users SET last_activity = CURRENT_TIMESTAMP WHERE user_id = $1',
+          [userId]
+        );
+      } catch (error) {
+        logger.error('Error updating user last_activity:', error);
+      }
       
       // Emit update to admins
       this.io.to('admin_room').emit('user_activity_update', {

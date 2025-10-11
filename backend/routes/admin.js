@@ -70,66 +70,64 @@ router.get('/system-health', async (req, res, next) => {
 router.get('/user-activity', async (req, res, next) => {
   try {
     console.log('Admin user-activity endpoint called by user:', req.user?.id, 'role:', req.user?.role)
-    // Get WebSocket service instance
-    const websocketService = require('../services/websocketService')
-    const wsInstance = websocketService.getInstance()
     
-    // Get real-time user statuses from WebSocket memory
-    const realTimeUsers = wsInstance.getAllUserStatuses()
-    
-    console.log('Real-time WebSocket users:', realTimeUsers.length, 'users found')
-    realTimeUsers.forEach(user => {
-      console.log(`User ${user.name}: status=${user.status}, connectedAt=${user.connectedAt}`)
-    })
-    
-    // Also get all users from database for complete list
+    // Get all users with their online status from database (works across PM2 clusters)
     const query = `
       SELECT 
         u.id,
         u.name,
         u.email,
         u.role,
-        u.status,
-        u.last_login
+        u.status as account_status,
+        u.last_login,
+        u.last_seen,
+        ou.connected_at,
+        ou.last_activity,
+        CASE 
+          WHEN ou.user_id IS NOT NULL AND ou.last_activity > NOW() - INTERVAL '5 minutes' THEN 'online'
+          WHEN ou.user_id IS NOT NULL THEN 'away'
+          ELSE 'offline'
+        END as online_status
       FROM users u
-      ORDER BY u.name
+      LEFT JOIN online_users ou ON u.id = ou.user_id
+      ORDER BY online_status DESC, u.name
     `
     
     const result = await db.query(query)
     const allUsers = result.rows
     
-    // Merge real-time status with database users
-    const userActivity = allUsers.map(dbUser => {
-      const realTimeUser = realTimeUsers.find(rt => rt.id === dbUser.id)
+    // Format user activity data
+    const userActivity = allUsers.map(user => {
+      const isOnline = user.online_status === 'online' || user.online_status === 'away'
+      const connectedAt = user.connected_at
       
-      if (realTimeUser) {
-        // User is connected via WebSocket - use real-time data
-        return {
-          id: dbUser.id,
-          name: dbUser.name,
-          email: dbUser.email,
-          role: dbUser.role,
-          account_status: dbUser.status, // Database account status (active/inactive)
-          last_login: dbUser.last_login,
-          status: realTimeUser.status, // Online/offline status
-          session_duration: realTimeUser.session_duration,
-          actions_count: realTimeUser.actions_count,
-          login_attempts: realTimeUser.login_attempts
+      // Calculate session duration
+      let sessionDuration = 'N/A'
+      if (isOnline && connectedAt) {
+        const now = new Date()
+        const connected = new Date(connectedAt)
+        const diffMs = now - connected
+        const diffMins = Math.floor(diffMs / 60000)
+        const diffHours = Math.floor(diffMins / 60)
+        
+        if (diffHours > 0) {
+          sessionDuration = `${diffHours}h ${diffMins % 60}m`
+        } else {
+          sessionDuration = `${diffMins}m`
         }
-      } else {
-        // User is not connected - show as offline
-        return {
-          id: dbUser.id,
-          name: dbUser.name,
-          email: dbUser.email,
-          role: dbUser.role,
-          account_status: dbUser.status, // Database account status (active/inactive)
-          last_login: dbUser.last_login,
-          status: 'offline',
-          session_duration: 'N/A',
-          actions_count: 0,
-          login_attempts: 0
-        }
+      }
+      
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        account_status: user.account_status,
+        last_login: user.last_login,
+        status: user.online_status,
+        session_duration: sessionDuration,
+        actions_count: 0, // TODO: Track actions in database
+        login_attempts: 0 // TODO: Track login attempts
       }
     })
 

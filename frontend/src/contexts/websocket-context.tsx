@@ -19,6 +19,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set())
   const { user, token, isAuthenticated } = useAuth()
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>()
+  const heartbeatIntervalRef = useRef<NodeJS.Timeout>()
 
   useEffect(() => {
     if (!isAuthenticated || !token || !user) {
@@ -26,6 +27,12 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current)
         reconnectTimeoutRef.current = undefined
+      }
+      
+      // Clear heartbeat interval
+      if (heartbeatIntervalRef.current) {
+        clearInterval(heartbeatIntervalRef.current)
+        heartbeatIntervalRef.current = undefined
       }
       
       // Disconnect if not authenticated
@@ -55,11 +62,25 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current)
       }
+      
+      // Start heartbeat to keep user marked as online
+      if (heartbeatIntervalRef.current) {
+        clearInterval(heartbeatIntervalRef.current)
+      }
+      heartbeatIntervalRef.current = setInterval(() => {
+        newSocket.emit('heartbeat')
+      }, 60000) // Send heartbeat every 60 seconds
     })
 
     newSocket.on('disconnect', () => {
       
       setIsConnected(false)
+      
+      // Clear heartbeat interval
+      if (heartbeatIntervalRef.current) {
+        clearInterval(heartbeatIntervalRef.current)
+        heartbeatIntervalRef.current = undefined
+      }
       
       // Clear any existing reconnect timeout
       if (reconnectTimeoutRef.current) {
@@ -109,6 +130,9 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     return () => {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current)
+      }
+      if (heartbeatIntervalRef.current) {
+        clearInterval(heartbeatIntervalRef.current)
       }
       newSocket.disconnect()
     }
