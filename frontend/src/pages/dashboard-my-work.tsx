@@ -99,19 +99,14 @@ const DashboardMyWork = () => {
     enabled: !!user?.id && user?.role === 'technician',
   })
 
-  // Fetch sales targets for sales users only (DISABLED for now to fix login issue)
-  // const { data: salesTargetsData, isLoading: salesTargetsLoading, error: salesTargetsError } = useQuery({
-  //   queryKey: ['my-sales-targets', user?.id],
-  //   queryFn: () => apiService.getSalesTargets({ user_id: user?.id }),
-  //   enabled: !!user?.id && user?.role === 'sales' && !!localStorage.getItem('token'),
-  //   retry: false, // Don't retry on failure
-  //   refetchOnWindowFocus: false, // Don't refetch on window focus
-  // })
-  
-  // Temporary: Set empty data to prevent errors
-  const salesTargetsData = { data: { targets: [] } }
-  const salesTargetsLoading = false
-  const salesTargetsError = null
+  // Fetch my performance for sales users (uses dedicated endpoint without permissions)
+  const { data: myPerformanceData, isLoading: myPerformanceLoading, error: myPerformanceError } = useQuery({
+    queryKey: ['my-performance', user?.id],
+    queryFn: () => apiService.getMyPerformance(),
+    enabled: !!user?.id && user?.role === 'sales',
+    retry: false, // Don't retry on failure
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+  })
 
   // Role-based loading and error states
   const isLoading = (user?.role === 'technician' && (repairsLoading || warrantyRepairsLoading || workOrdersLoading || warrantyWorkOrdersLoading || performanceLoading)) ||
@@ -167,7 +162,7 @@ const DashboardMyWork = () => {
   const myLeads = Array.isArray((myLeadsData as any)?.data) ? (myLeadsData as any).data : []
   const mySalesTrends = Array.isArray((mySalesTrendsData as any)?.data) ? (mySalesTrendsData as any).data : []
   const performance = (performanceData as any)?.data || {}
-  const salesTargets = (salesTargetsData as any)?.data?.targets || []
+  const myPerformance = (myPerformanceData as any)?.data || {}
   
   // Combine regular and warranty repair tickets
   const allMyRepairTickets = [...myRepairs, ...myWarrantyRepairs]
@@ -234,14 +229,8 @@ const DashboardMyWork = () => {
   const activeLeads = myLeads.filter((lead: any) => !['won', 'lost'].includes(lead.sales_stage)).length
 
   // Calculate sales target achievement
-  const currentMonthTarget = salesTargets.find((target: any) => 
-    target.target_type === 'monthly' && 
-    new Date(target.target_period_start) <= new Date() && 
-    new Date(target.target_period_end) >= new Date()
-  )
-  const targetAchievement = currentMonthTarget && currentMonthTarget.target_amount > 0 
-    ? Math.round((totalRevenue / currentMonthTarget.target_amount) * 100) 
-    : 0
+  // Get target achievement from the new my-performance endpoint
+  const targetAchievement = myPerformance.achievement_percentage || 0
 
   // Helper functions for chart (formatCurrency is now imported from lib/currency)
 

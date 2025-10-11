@@ -1548,6 +1548,10 @@ class ApiService {
     return this.request(`/sales/targets${queryString ? `?${queryString}` : ''}`)
   }
 
+  async getMyPerformance() {
+    return this.request('/sales/my-performance')
+  }
+
   async getUserTargets(userId: string, params?: {
     target_type?: string
     is_active?: boolean

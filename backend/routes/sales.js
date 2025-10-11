@@ -5,6 +5,90 @@ const { authenticateToken, authorizeRoles, authorizePermission } = require('../m
 const { body } = require('express-validator');
 const { handleValidationErrors } = require('../middleware/validators');
 
+// GET my performance (for sales users to see their own performance)
+router.get('/my-performance', authenticateToken, async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    // Get current month's target for this user
+    const targetQuery = `
+      SELECT 
+        id,
+        target_type,
+        target_amount,
+        target_period_start,
+        target_period_end,
+        description
+      FROM sales_targets
+      WHERE user_id = $1
+        AND is_active = true
+        AND target_type = 'monthly'
+        AND target_period_start <= CURRENT_DATE
+        AND target_period_end >= CURRENT_DATE
+      ORDER BY created_at DESC
+      LIMIT 1
+    `;
+
+    const targetResult = await db.query(targetQuery, [userId]);
+    const currentTarget = targetResult.rows[0];
+
+    // If no target found, return 0% achievement
+    if (!currentTarget) {
+      return res.json({
+        status: 'success',
+        data: {
+          achievement_percentage: 0,
+          current_sales: 0,
+          target_amount: 0,
+          target_period_start: null,
+          target_period_end: null,
+          description: 'No active target',
+          has_target: false
+        }
+      });
+    }
+
+    // Calculate actual sales for this user within the target period
+    const salesQuery = `
+      SELECT 
+        COALESCE(SUM(am.sale_price), 0) as total_sales
+      FROM assigned_machines am
+      WHERE am.sold_by_user_id = $1
+        AND am.is_sale = true
+        AND am.sale_price > 0
+        AND am.sale_date >= $2
+        AND am.sale_date <= $3
+    `;
+
+    const salesResult = await db.query(salesQuery, [
+      userId,
+      currentTarget.target_period_start,
+      currentTarget.target_period_end
+    ]);
+
+    const totalSales = parseFloat(salesResult.rows[0].total_sales) || 0;
+    const targetAmount = parseFloat(currentTarget.target_amount) || 0;
+    const achievementPercentage = targetAmount > 0 
+      ? Math.round((totalSales / targetAmount) * 100) 
+      : 0;
+
+    res.json({
+      status: 'success',
+      data: {
+        achievement_percentage: achievementPercentage,
+        current_sales: totalSales,
+        target_amount: targetAmount,
+        target_period_start: currentTarget.target_period_start,
+        target_period_end: currentTarget.target_period_end,
+        description: currentTarget.description,
+        has_target: true
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET sales metrics
 router.get('/metrics', authenticateToken, async (req, res, next) => {
   try {
