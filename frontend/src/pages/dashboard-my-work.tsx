@@ -92,14 +92,28 @@ const DashboardMyWork = () => {
     enabled: !!user?.id && (user?.role === 'sales' || user?.role === 'manager' || user?.role === 'admin'),
   })
 
+  // Fetch performance metrics
+  const { data: performanceData, isLoading: performanceLoading, error: performanceError } = useQuery({
+    queryKey: ['my-performance', user?.id],
+    queryFn: () => apiService.getQuickStats(),
+    enabled: !!user?.id,
+  })
+
+  // Fetch sales targets for sales users
+  const { data: salesTargetsData, isLoading: salesTargetsLoading, error: salesTargetsError } = useQuery({
+    queryKey: ['my-sales-targets', user?.id],
+    queryFn: () => apiService.getSalesTargets({ user_id: user?.id }),
+    enabled: !!user?.id && user?.role === 'sales',
+  })
+
   // Role-based loading and error states
-  const isLoading = (user?.role === 'technician' && (repairsLoading || warrantyRepairsLoading || workOrdersLoading || warrantyWorkOrdersLoading)) ||
-                   (user?.role === 'sales' && (salesLoading || leadsLoading || salesTrendsLoading)) ||
-                   ((user?.role === 'manager' || user?.role === 'admin') && (repairsLoading || warrantyRepairsLoading || workOrdersLoading || warrantyWorkOrdersLoading || salesLoading || leadsLoading || salesTrendsLoading))
+  const isLoading = (user?.role === 'technician' && (repairsLoading || warrantyRepairsLoading || workOrdersLoading || warrantyWorkOrdersLoading || performanceLoading)) ||
+                   (user?.role === 'sales' && (salesLoading || leadsLoading || salesTrendsLoading || performanceLoading || salesTargetsLoading)) ||
+                   ((user?.role === 'manager' || user?.role === 'admin') && (repairsLoading || warrantyRepairsLoading || workOrdersLoading || warrantyWorkOrdersLoading || salesLoading || leadsLoading || salesTrendsLoading || performanceLoading))
   
-  const hasError = (user?.role === 'technician' && (repairsError || warrantyRepairsError || workOrdersError || warrantyWorkOrdersError)) ||
-                  (user?.role === 'sales' && (salesError || leadsError || salesTrendsError)) ||
-                  ((user?.role === 'manager' || user?.role === 'admin') && (repairsError || warrantyRepairsError || workOrdersError || warrantyWorkOrdersError || salesError || leadsError || salesTrendsError))
+  const hasError = (user?.role === 'technician' && (repairsError || warrantyRepairsError || workOrdersError || warrantyWorkOrdersError || performanceError)) ||
+                  (user?.role === 'sales' && (salesError || leadsError || salesTrendsError || performanceError || salesTargetsError)) ||
+                  ((user?.role === 'manager' || user?.role === 'admin') && (repairsError || warrantyRepairsError || workOrdersError || warrantyWorkOrdersError || salesError || leadsError || salesTrendsError || performanceError))
 
   if (isLoading) {
     return (
@@ -145,6 +159,8 @@ const DashboardMyWork = () => {
   const mySales = Array.isArray((mySalesData as any)?.data?.sales) ? (mySalesData as any).data.sales : []
   const myLeads = Array.isArray((myLeadsData as any)?.data) ? (myLeadsData as any).data : []
   const mySalesTrends = Array.isArray((mySalesTrendsData as any)?.data) ? (mySalesTrendsData as any).data : []
+  const performance = (performanceData as any)?.data || {}
+  const salesTargets = (salesTargetsData as any)?.data?.targets || []
   
   // Combine regular and warranty repair tickets
   const allMyRepairTickets = [...myRepairs, ...myWarrantyRepairs]
@@ -209,6 +225,16 @@ const DashboardMyWork = () => {
   const totalSales = mySales.length
   const totalRevenue = mySales.reduce((sum: number, sale: any) => sum + (sale.sale_price || 0), 0)
   const activeLeads = myLeads.filter((lead: any) => !['won', 'lost'].includes(lead.sales_stage)).length
+
+  // Calculate sales target achievement
+  const currentMonthTarget = salesTargets.find((target: any) => 
+    target.target_type === 'monthly' && 
+    new Date(target.target_period_start) <= new Date() && 
+    new Date(target.target_period_end) >= new Date()
+  )
+  const targetAchievement = currentMonthTarget && currentMonthTarget.target_amount > 0 
+    ? Math.round((totalRevenue / currentMonthTarget.target_amount) * 100) 
+    : 0
 
   // Helper functions for chart (formatCurrency is now imported from lib/currency)
 
@@ -285,7 +311,9 @@ const DashboardMyWork = () => {
                   <User className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">92%</div>
+                  <div className="text-2xl font-bold">
+                    {performance.my_work_order_completion_rate || 0}%
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     Completion rate
                   </p>
@@ -342,7 +370,7 @@ const DashboardMyWork = () => {
                   <User className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">85%</div>
+                  <div className="text-2xl font-bold">{targetAchievement}%</div>
                   <p className="text-xs text-muted-foreground">
                     Target achievement
                   </p>
