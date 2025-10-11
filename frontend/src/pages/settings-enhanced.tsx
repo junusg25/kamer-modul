@@ -62,11 +62,21 @@ export default function Settings() {
   const [userPermissions, setUserPermissions] = useState<PermissionOverride[]>([])
   const [availablePermissions, setAvailablePermissions] = useState<AvailablePermissions>({})
   const [showPermissionDialog, setShowPermissionDialog] = useState(false)
+  const [showAddUserDialog, setShowAddUserDialog] = useState(false)
   const [permissionForm, setPermissionForm] = useState({
     permission_key: '',
     expires_at: '',
     reason: ''
   })
+  const [newUserForm, setNewUserForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'technician',
+    phone: '',
+    department: ''
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     loadUsers()
@@ -92,6 +102,44 @@ export default function Settings() {
       setAvailablePermissions(response.data || {})
     } catch (error) {
       console.error('Error loading permissions:', error)
+    }
+  }
+
+  const handleAddUser = async () => {
+    if (!newUserForm.name || !newUserForm.email || !newUserForm.password) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      await apiService.request('/users', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: newUserForm.name,
+          email: newUserForm.email,
+          password: newUserForm.password,
+          role: newUserForm.role,
+          phone: newUserForm.phone || null,
+          department: newUserForm.department || null
+        })
+      })
+
+      toast.success('User created successfully')
+      setShowAddUserDialog(false)
+      setNewUserForm({
+        name: '',
+        email: '',
+        password: '',
+        role: 'technician',
+        phone: '',
+        department: ''
+      })
+      loadUsers()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create user')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -243,8 +291,20 @@ export default function Settings() {
               {/* Users List */}
               <Card className="lg:col-span-1">
                 <CardHeader>
-                  <CardTitle className="text-foreground">All Users</CardTitle>
-                  <CardDescription>Select a user to manage their permissions</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-foreground">All Users</CardTitle>
+                      <CardDescription>Select a user to manage their permissions</CardDescription>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => setShowAddUserDialog(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add User
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {usersLoading ? (
@@ -503,6 +563,121 @@ export default function Settings() {
               </Button>
               <Button onClick={handleSavePermission}>
                 Grant Permission
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add User Dialog */}
+        <Dialog open={showAddUserDialog} onOpenChange={setShowAddUserDialog}>
+          <DialogContent className="bg-background border-border max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">Add New User</DialogTitle>
+              <DialogDescription>
+                Create a new user account for the system
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="name" className="text-foreground">Full Name *</Label>
+                <Input
+                  id="name"
+                  value={newUserForm.name}
+                  onChange={(e) => setNewUserForm({ ...newUserForm, name: e.target.value })}
+                  placeholder="Enter full name"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="email" className="text-foreground">Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={newUserForm.email}
+                  onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
+                  placeholder="user@example.com"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="password" className="text-foreground">Password *</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={newUserForm.password}
+                  onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
+                  placeholder="Enter password"
+                  className="mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Password will be hashed automatically
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="role" className="text-foreground">Role *</Label>
+                <Select
+                  value={newUserForm.role}
+                  onValueChange={(value) => setNewUserForm({ ...newUserForm, role: value })}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="technician">Technician</SelectItem>
+                    <SelectItem value="sales">Sales</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="phone" className="text-foreground">Phone (Optional)</Label>
+                <Input
+                  id="phone"
+                  value={newUserForm.phone}
+                  onChange={(e) => setNewUserForm({ ...newUserForm, phone: e.target.value })}
+                  placeholder="+387 XX XXX XXX"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="department" className="text-foreground">Department (Optional)</Label>
+                <Input
+                  id="department"
+                  value={newUserForm.department}
+                  onChange={(e) => setNewUserForm({ ...newUserForm, department: e.target.value })}
+                  placeholder="e.g. Technical Support"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowAddUserDialog(false)
+                  setNewUserForm({
+                    name: '',
+                    email: '',
+                    password: '',
+                    role: 'technician',
+                    phone: '',
+                    department: ''
+                  })
+                }}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleAddUser} disabled={isSubmitting}>
+                {isSubmitting ? 'Creating...' : 'Create User'}
               </Button>
             </DialogFooter>
           </DialogContent>
