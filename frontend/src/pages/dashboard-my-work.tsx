@@ -99,14 +99,19 @@ const DashboardMyWork = () => {
     enabled: !!user?.id && user?.role === 'technician',
   })
 
-  // Fetch sales targets for sales users only (optional - don't block login if it fails)
-  const { data: salesTargetsData, isLoading: salesTargetsLoading, error: salesTargetsError } = useQuery({
-    queryKey: ['my-sales-targets', user?.id],
-    queryFn: () => apiService.getSalesTargets({ user_id: user?.id }),
-    enabled: !!user?.id && user?.role === 'sales',
-    retry: false, // Don't retry on failure
-    refetchOnWindowFocus: false, // Don't refetch on window focus
-  })
+  // Fetch sales targets for sales users only (DISABLED for now to fix login issue)
+  // const { data: salesTargetsData, isLoading: salesTargetsLoading, error: salesTargetsError } = useQuery({
+  //   queryKey: ['my-sales-targets', user?.id],
+  //   queryFn: () => apiService.getSalesTargets({ user_id: user?.id }),
+  //   enabled: !!user?.id && user?.role === 'sales' && !!localStorage.getItem('token'),
+  //   retry: false, // Don't retry on failure
+  //   refetchOnWindowFocus: false, // Don't refetch on window focus
+  // })
+  
+  // Temporary: Set empty data to prevent errors
+  const salesTargetsData = { data: { targets: [] } }
+  const salesTargetsLoading = false
+  const salesTargetsError = null
 
   // Role-based loading and error states
   const isLoading = (user?.role === 'technician' && (repairsLoading || warrantyRepairsLoading || workOrdersLoading || warrantyWorkOrdersLoading || performanceLoading)) ||
