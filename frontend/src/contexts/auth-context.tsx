@@ -190,7 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Try real API if demo credentials don't match
-      const response = await fetch('http://localhost:3000/api/users/login', {
+      const response = await fetch(`${API_ROOT}/api/users/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -286,7 +286,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     try {
       // Try to make a simple authenticated request to validate the token
-      const response = await fetch('http://localhost:3000/api/users/me', {
+      const response = await fetch(`${API_ROOT}/api/users/me`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${tokenToValidate}`,
