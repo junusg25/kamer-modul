@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { API_ROOT } from '../config/api'
 import { 
   hasPermission as checkPermission, 
   hasAnyPermission as checkAnyPermission, 
@@ -66,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           try {
             
-            const response = await fetch('http://localhost:3000/api/users/me', {
+            const response = await fetch(`${API_ROOT}/api/users/me`, {
               method: 'GET',
               headers: {
                 'Authorization': `Bearer ${storedToken}`,
@@ -143,7 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // For demo mode, try to get a real token from the backend
         try {
-          const response = await fetch('http://localhost:3000/api/users/login', {
+          const response = await fetch(`${API_ROOT}/api/users/login`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -245,7 +246,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Call logout endpoint to clear refresh token and set last_logout
       if (token) {
-        const response = await fetch('http://localhost:3000/api/auth/logout', {
+        const response = await fetch(`${API_ROOT}/api/auth/logout`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,

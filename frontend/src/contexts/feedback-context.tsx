@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { API_ROOT } from '../config/api'
 import { useAuth } from './auth-context'
 import { useWebSocket } from './websocket-context'
 import { useNotifications } from './notifications-context'
@@ -57,7 +58,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
     setError(null)
     
     try {
-      const response = await fetch('http://localhost:3000/api/feedback', {
+      const response = await fetch(`${API_ROOT}/api/feedback`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -93,7 +94,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
     timestamp: string
   }) => {
     try {
-      const response = await fetch('http://localhost:3000/api/feedback', {
+      const response = await fetch(`${API_ROOT}/api/feedback`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -118,7 +119,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
 
   const updateFeedbackStatus = async (id: number, status: string, adminNotes?: string) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/feedback/${id}`, {
+      const response = await fetch(`${API_ROOT}/api/feedback/${id}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
