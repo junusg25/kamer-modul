@@ -638,11 +638,12 @@ export default function Settings() {
                   <SelectTrigger className="mt-1">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="technician">Technician</SelectItem>
-                  </SelectContent>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="technician">Technician</SelectItem>
+                      <SelectItem value="sales">Sales</SelectItem>
+                    </SelectContent>
                 </Select>
               </div>
 

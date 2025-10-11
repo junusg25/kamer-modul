@@ -294,7 +294,7 @@ router.post('/register',
     body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
     body('phone').optional().isMobilePhone().withMessage('Invalid phone format'),
     body('department').optional(),
-    body('role').optional().isIn(['admin', 'manager', 'technician']).withMessage('Invalid role')
+    body('role').optional().isIn(['admin', 'manager', 'technician', 'sales']).withMessage('Invalid role')
   ],
   authenticateToken,
   async (req, res, next) => {
