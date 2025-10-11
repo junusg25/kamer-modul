@@ -170,8 +170,18 @@ app.get('/', (req, res) => {
   res.send('Repair Shop API is running');
 });
 
-// Health check route
+// Health check routes (both /health and /api/health for compatibility)
 app.get('/health', (req, res) => {
+  const cacheStats = cacheService.getStats();
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    cache: cacheStats
+  });
+});
+
+// Also available at /api/health for frontend consistency
+app.get('/api/health', (req, res) => {
   const cacheStats = cacheService.getStats();
   res.json({ 
     status: 'ok', 
