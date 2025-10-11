@@ -111,18 +111,30 @@ export default function Settings() {
       return
     }
 
+    if (newUserForm.password.length < 8) {
+      toast.error('Password must be at least 8 characters')
+      return
+    }
+
     setIsSubmitting(true)
     try {
+      // Only send phone if it's not empty
+      const payload: any = {
+        name: newUserForm.name,
+        email: newUserForm.email,
+        password: newUserForm.password,
+        role: newUserForm.role,
+        department: newUserForm.department || undefined
+      }
+
+      // Only add phone if provided
+      if (newUserForm.phone && newUserForm.phone.trim()) {
+        payload.phone = newUserForm.phone
+      }
+
       await apiService.request('/users/register', {
         method: 'POST',
-        body: JSON.stringify({
-          name: newUserForm.name,
-          email: newUserForm.email,
-          password: newUserForm.password,
-          role: newUserForm.role,
-          phone: newUserForm.phone || null,
-          department: newUserForm.department || null
-        })
+        body: JSON.stringify(payload)
       })
 
       toast.success('User created successfully')
@@ -630,7 +642,6 @@ export default function Settings() {
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="manager">Manager</SelectItem>
                     <SelectItem value="technician">Technician</SelectItem>
-                    <SelectItem value="sales">Sales</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
