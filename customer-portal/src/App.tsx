@@ -16,7 +16,7 @@ import MachineDetail from './pages/MachineDetail';
 function App() {
   return (
     <ThemeProvider>
-      <Router>
+      <Router basename="/portal">
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
