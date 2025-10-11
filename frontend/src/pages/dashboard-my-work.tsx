@@ -92,14 +92,14 @@ const DashboardMyWork = () => {
     enabled: !!user?.id && (user?.role === 'sales' || user?.role === 'manager' || user?.role === 'admin'),
   })
 
-  // Fetch performance metrics
+  // Fetch performance metrics for technicians only
   const { data: performanceData, isLoading: performanceLoading, error: performanceError } = useQuery({
     queryKey: ['my-performance', user?.id],
-    queryFn: () => apiService.getQuickStats(),
-    enabled: !!user?.id,
+    queryFn: () => apiService.getDashboardStats(),
+    enabled: !!user?.id && user?.role === 'technician',
   })
 
-  // Fetch sales targets for sales users
+  // Fetch sales targets for sales users only
   const { data: salesTargetsData, isLoading: salesTargetsLoading, error: salesTargetsError } = useQuery({
     queryKey: ['my-sales-targets', user?.id],
     queryFn: () => apiService.getSalesTargets({ user_id: user?.id }),
@@ -108,12 +108,12 @@ const DashboardMyWork = () => {
 
   // Role-based loading and error states
   const isLoading = (user?.role === 'technician' && (repairsLoading || warrantyRepairsLoading || workOrdersLoading || warrantyWorkOrdersLoading || performanceLoading)) ||
-                   (user?.role === 'sales' && (salesLoading || leadsLoading || salesTrendsLoading || performanceLoading || salesTargetsLoading)) ||
-                   ((user?.role === 'manager' || user?.role === 'admin') && (repairsLoading || warrantyRepairsLoading || workOrdersLoading || warrantyWorkOrdersLoading || salesLoading || leadsLoading || salesTrendsLoading || performanceLoading))
+                   (user?.role === 'sales' && (salesLoading || leadsLoading || salesTrendsLoading || salesTargetsLoading)) ||
+                   ((user?.role === 'manager' || user?.role === 'admin') && (repairsLoading || warrantyRepairsLoading || workOrdersLoading || warrantyWorkOrdersLoading || salesLoading || leadsLoading || salesTrendsLoading))
   
   const hasError = (user?.role === 'technician' && (repairsError || warrantyRepairsError || workOrdersError || warrantyWorkOrdersError || performanceError)) ||
-                  (user?.role === 'sales' && (salesError || leadsError || salesTrendsError || performanceError || salesTargetsError)) ||
-                  ((user?.role === 'manager' || user?.role === 'admin') && (repairsError || warrantyRepairsError || workOrdersError || warrantyWorkOrdersError || salesError || leadsError || salesTrendsError || performanceError))
+                  (user?.role === 'sales' && (salesError || leadsError || salesTrendsError || salesTargetsError)) ||
+                  ((user?.role === 'manager' || user?.role === 'admin') && (repairsError || warrantyRepairsError || workOrdersError || warrantyWorkOrdersError || salesError || leadsError || salesTrendsError))
 
   if (isLoading) {
     return (
