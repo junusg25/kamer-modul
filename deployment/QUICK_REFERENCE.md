@@ -1,6 +1,10 @@
 # 🚀 Quick Reference - Deployment Commands
 
-Quick reference for deploying and managing Kamer.ba on Ubuntu server (192.168.2.174)
+Quick reference for deploying and managing Kamer.ba on Ubuntu server
+
+**Server IPs:**
+- Local: `192.168.2.174`
+- Tailscale: `100.114.201.33`
 
 ---
 
@@ -9,14 +13,17 @@ Quick reference for deploying and managing Kamer.ba on Ubuntu server (192.168.2.
 ### **Initial Deployment**
 
 ```bash
-# SSH to server
+# SSH to server (use either IP)
 ssh username@192.168.2.174
+# OR
+ssh username@100.114.201.33
 
 # Clone repository
 cd /var/www/kamerba
 git clone https://github.com/junusg25/kamer-modul.git .
 
 # Run setup
+cd deployment
 chmod +x server-setup.sh deploy.sh backup-db.sh
 ./server-setup.sh
 
@@ -27,11 +34,11 @@ chmod +x server-setup.sh deploy.sh backup-db.sh
 ### **Deploy Updates**
 
 ```bash
-# SSH to server
+# SSH to server (use either IP)
 ssh username@192.168.2.174
 
 # Navigate and deploy
-cd /var/www/kamerba
+cd /var/www/kamerba/deployment
 ./deploy.sh
 ```
 
@@ -283,10 +290,17 @@ pm2 logs kamerba-backend --lines 100 --err
 
 ## 📱 **Access URLs**
 
+### **Via Local Network** (192.168.2.174):
 - **Main Dashboard**: http://192.168.2.174/
 - **Customer Portal**: http://192.168.2.174/portal/
 - **API Health**: http://192.168.2.174/api/health
-- **API Base**: http://192.168.2.174/api/
+
+### **Via Tailscale** (100.114.201.33):
+- **Main Dashboard**: http://100.114.201.33/
+- **Customer Portal**: http://100.114.201.33/portal/
+- **API Health**: http://100.114.201.33/api/health
+
+> 💡 **Both IPs work automatically!** Use whichever is convenient.
 
 ---
 

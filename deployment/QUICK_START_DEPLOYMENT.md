@@ -10,11 +10,19 @@ This is a simplified guide to get your app running on your Ubuntu server (192.16
 
 From your Windows machine using PowerShell or Windows Terminal:
 
+**Via Local Network:**
 ```powershell
 ssh username@192.168.2.174
 ```
 
-Or use PuTTY with IP: `192.168.2.174`
+**Via Tailscale (Remote Access):**
+```powershell
+ssh username@100.114.201.33
+```
+
+Or use PuTTY with either IP address.
+
+> 💡 **Tip**: Both IPs connect to the same server! Use local IP when at home/office, use Tailscale IP when remote.
 
 ---
 
@@ -312,10 +320,29 @@ Check the full deployment guide: `DEPLOYMENT_GUIDE.md`
 
 ---
 
+## 🌐 Access Your Application
+
+After deployment completes, access your app via:
+
+### **Local Network** (when at home/office):
+- Main Dashboard: `http://192.168.2.174/`
+- Customer Portal: `http://192.168.2.174/portal/`
+- API Health: `http://192.168.2.174/api/health`
+
+### **Tailscale** (remote access from anywhere):
+- Main Dashboard: `http://100.114.201.33/`
+- Customer Portal: `http://100.114.201.33/portal/`
+- API Health: `http://100.114.201.33/api/health`
+
+> 🎉 **Both IPs work automatically!** No need to configure anything special for Tailscale - it just works!
+
+---
+
 **Quick Commands:**
 
 ```bash
 # Deploy updates
+cd /var/www/kamerba/deployment
 ./deploy.sh
 
 # Backup database
@@ -323,6 +350,9 @@ Check the full deployment guide: `DEPLOYMENT_GUIDE.md`
 
 # Restart everything
 pm2 restart all && sudo systemctl reload nginx
+
+# View logs
+pm2 logs kamerba-backend
 
 # View status
 pm2 status && sudo systemctl status nginx

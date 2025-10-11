@@ -9,7 +9,8 @@ upstream backend {
 server {
     listen 80;
     listen [::]:80;
-    server_name 192.168.2.174;
+    # Accept connections from both local IP and Tailscale IP
+    server_name 192.168.2.174 100.114.201.33 localhost;
 
     # Root directory for main frontend
     root /var/www/kamerba/frontend/dist;

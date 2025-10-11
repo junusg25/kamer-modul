@@ -1,12 +1,14 @@
 // PM2 Ecosystem Configuration for Kamer.ba
 // Documentation: https://pm2.keymetrics.io/docs/usage/application-declaration/
 
+const path = require('path');
+
 module.exports = {
   apps: [
     {
       name: 'kamerba-backend',
       script: './backend/index.js',
-      cwd: process.env.PWD || '/var/www/kamerba',
+      cwd: path.resolve(__dirname, '..'),  // Project root (parent of deployment folder)
       
       // Clustering
       instances: 2,  // Use 'max' for all CPU cores

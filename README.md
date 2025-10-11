@@ -799,33 +799,36 @@ server {
 
 We've added comprehensive deployment guides and automation tools:
 
-**📚 Deployment Guides**:
-- **[QUICK_START_DEPLOYMENT.md](QUICK_START_DEPLOYMENT.md)** ⭐ - Fast deployment (Start here!)
-- **[STEP_BY_STEP_DEPLOYMENT.md](STEP_BY_STEP_DEPLOYMENT.md)** - Detailed instructions
-- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete documentation
-- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Verification checklist
+**📚 Deployment Guides** (in `/deployment` folder):
+- **[QUICK_START_DEPLOYMENT.md](deployment/QUICK_START_DEPLOYMENT.md)** ⭐ - Fast deployment (Start here!)
+- **[STEP_BY_STEP_DEPLOYMENT.md](deployment/STEP_BY_STEP_DEPLOYMENT.md)** - Detailed instructions
+- **[DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md)** - Complete documentation
+- **[DEPLOYMENT_CHECKLIST.md](deployment/DEPLOYMENT_CHECKLIST.md)** - Verification checklist
+- **[NETWORK_CONFIGURATION.md](deployment/NETWORK_CONFIGURATION.md)** - Tailscale & network setup
 
-**🛠️ Automation Scripts**:
+**🛠️ Automation Scripts** (in `/deployment` folder):
 - `deploy.sh` - Automated deployment for updates
 - `server-setup.sh` - Initial server setup
 - `backup-db.sh` - Automated database backups
 - `ecosystem.config.js` - PM2 configuration
 - `nginx.conf.example` - Nginx template
+- `env.production.example` - Environment template
 
-**🐳 Docker Support**:
+**🐳 Docker Support** (in `/deployment` folder):
 - `Dockerfile` - Optimized multi-stage build
 - `docker-compose.yml` - Complete orchestration
 - `.dockerignore` - Build optimization
 
 **⚡ Quick Deploy Command**:
 ```bash
-cd /var/www/kamerba
+cd /var/www/kamerba/deployment
 ./deploy.sh
 ```
 
 **Access After Deployment**:
-- Main Dashboard: `http://your-server-ip/`
-- Customer Portal: `http://your-server-ip/portal/`
+- **Local Network**: `http://192.168.2.174/`
+- **Tailscale (Remote)**: `http://100.114.201.33/`
+- **Customer Portal**: Add `/portal/` to either URL
 
 ---
 

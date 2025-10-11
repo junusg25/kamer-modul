@@ -14,9 +14,11 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Get script directory
+# Get script directory (deployment folder)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+# Go to project root (parent of deployment folder)
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_ROOT"
 
 # Function to print colored output
 print_status() {
@@ -98,7 +100,7 @@ else
     exit 1
 fi
 
-# Return to root directory
+# Return to deployment directory
 cd "$SCRIPT_DIR"
 
 # Restart PM2 if it's running
@@ -113,6 +115,7 @@ if command -v pm2 &> /dev/null; then
         print_status "Backend restarted successfully"
     else
         print_warning "PM2 process not found. Starting new process..."
+        cd "$SCRIPT_DIR"  # Use ecosystem.config.js from deployment folder
         pm2 start ecosystem.config.js
         pm2 save
         print_status "Backend started successfully"
