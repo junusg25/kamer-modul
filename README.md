@@ -795,6 +795,38 @@ server {
 }
 ```
 
+### 📖 **NEW: Complete Deployment Documentation**
+
+We've added comprehensive deployment guides and automation tools:
+
+**📚 Deployment Guides**:
+- **[QUICK_START_DEPLOYMENT.md](QUICK_START_DEPLOYMENT.md)** ⭐ - Fast deployment (Start here!)
+- **[STEP_BY_STEP_DEPLOYMENT.md](STEP_BY_STEP_DEPLOYMENT.md)** - Detailed instructions
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete documentation
+- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Verification checklist
+
+**🛠️ Automation Scripts**:
+- `deploy.sh` - Automated deployment for updates
+- `server-setup.sh` - Initial server setup
+- `backup-db.sh` - Automated database backups
+- `ecosystem.config.js` - PM2 configuration
+- `nginx.conf.example` - Nginx template
+
+**🐳 Docker Support**:
+- `Dockerfile` - Optimized multi-stage build
+- `docker-compose.yml` - Complete orchestration
+- `.dockerignore` - Build optimization
+
+**⚡ Quick Deploy Command**:
+```bash
+cd /var/www/kamerba
+./deploy.sh
+```
+
+**Access After Deployment**:
+- Main Dashboard: `http://your-server-ip/`
+- Customer Portal: `http://your-server-ip/portal/`
+
 ---
 
 ## 📈 Performance
