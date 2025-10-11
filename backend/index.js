@@ -56,7 +56,14 @@ const corsOptions = {
     
     // Add production origins from environment variables
     if (process.env.FRONTEND_URL) {
-      allowedOrigins.push(process.env.FRONTEND_URL);
+      // Support comma-separated list of URLs
+      const frontendUrls = process.env.FRONTEND_URL.split(',').map(url => url.trim());
+      allowedOrigins.push(...frontendUrls);
+    }
+    
+    if (process.env.CUSTOMER_PORTAL_URL) {
+      const portalUrls = process.env.CUSTOMER_PORTAL_URL.split(',').map(url => url.trim());
+      allowedOrigins.push(...portalUrls);
     }
     
     if (process.env.NODE_ENV === 'production') {
