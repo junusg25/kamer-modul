@@ -168,6 +168,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
             } catch (error) {
               console.error('Error fetching user permissions:', error)
+              // Don't fail login if permissions can't be fetched - set empty permissions
+              setUserPermissions([])
             }
             
             // Set user state LAST (after permissions are loaded)
@@ -230,6 +232,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error('Error fetching user permissions during login:', error)
+        // Don't fail login if permissions can't be fetched - set empty permissions
+        setUserPermissions([])
       }
       
       // Set user state LAST (after permissions are loaded)
