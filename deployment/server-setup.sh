@@ -22,7 +22,11 @@ fi
 # Update system
 echo "📦 Updating system packages..."
 sudo apt update
-sudo apt upgrade -y
+# Upgrade with error handling for missing packages
+sudo apt upgrade -y || {
+    echo "⚠️  Some packages failed to upgrade, but continuing..."
+    sudo apt upgrade -y --fix-missing || true
+}
 
 # Install Node.js
 echo ""

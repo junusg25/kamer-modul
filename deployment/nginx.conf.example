@@ -1,33 +1,22 @@
-# Nginx Configuration for Kamer.ba
-# Copy this to: /etc/nginx/sites-available/kamerba
-
-upstream backend {
-    server localhost:3000;
-    keepalive 64;
-}
-
 server {
     listen 80;
-    listen [::]:80;
-    # Accept connections from both local IP and Tailscale IP
-    server_name 192.168.2.174 100.114.201.33 localhost;
+    server_name kamer-modul;  # Change this to your domain or IP
 
-    # Root directory for main frontend
-    root /var/www/kamerba/frontend/dist;
-    index index.html;
-
-    # Logs
-    access_log /var/log/nginx/kamerba-access.log;
-    error_log /var/log/nginx/kamerba-error.log warn;
-
-    # Main Frontend (Admin/Staff Portal)
+    # Main Frontend
     location / {
+        root /var/www/kamerba/frontend/dist;
         try_files $uri $uri/ /index.html;
         
-        # Cache control for HTML
-        add_header Cache-Control "no-cache, no-store, must-revalidate";
-        add_header Pragma "no-cache";
-        add_header Expires "0";
+        # Security headers
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        
+        # Cache static assets
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
     }
 
     # Customer Portal
@@ -35,23 +24,16 @@ server {
         alias /var/www/kamerba/customer-portal/dist;
         try_files $uri $uri/ /portal/index.html;
         
-        # Cache control for HTML
-        add_header Cache-Control "no-cache, no-store, must-revalidate";
-    }
-
-    # Static assets caching
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-        access_log off;
+        # Security headers
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header X-Content-Type-Options "nosniff" always;
     }
 
     # Backend API
     location /api {
-        proxy_pass http://backend;
+        proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
-        
-        # Headers
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
@@ -59,64 +41,23 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
-        
-        # Timeouts
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 75s;
     }
 
-    # WebSocket support for real-time features
+    # WebSocket Support
     location /socket.io {
-        proxy_pass http://backend;
+        proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_cache_bypass $http_upgrade;
     }
 
-    # Security headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-
-    # Gzip compression
-    gzip on;
-    gzip_vary on;
-    gzip_min_length 1024;
-    gzip_comp_level 6;
-    gzip_types 
-        text/plain 
-        text/css 
-        text/xml 
-        text/javascript 
-        application/x-javascript 
-        application/xml+rss 
-        application/json
-        application/javascript
-        application/xml
-        image/svg+xml;
-
-    # File upload size (adjust as needed)
-    client_max_body_size 50M;
-    client_body_buffer_size 128k;
-
-    # Deny access to hidden files
-    location ~ /\. {
-        deny all;
+    # Disable access logs for static files
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
         access_log off;
-        log_not_found off;
     }
 }
-
-# Optional: Redirect www to non-www (if using domain)
-# server {
-#     listen 80;
-#     server_name www.yourdomain.com;
-#     return 301 http://yourdomain.com$request_uri;
-# }
-
