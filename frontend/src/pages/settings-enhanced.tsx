@@ -113,7 +113,7 @@ export default function Settings() {
 
     setIsSubmitting(true)
     try {
-      await apiService.request('/users', {
+      await apiService.request('/users/register', {
         method: 'POST',
         body: JSON.stringify({
           name: newUserForm.name,
