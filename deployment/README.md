@@ -1,235 +1,161 @@
 # 📦 Deployment Resources
 
-This folder contains all the necessary tools, scripts, and documentation for deploying the Kamer.ba Repair Shop Management System to production.
-
----
-
-## 📚 Documentation
-
-| File | Description | When to Use |
-|------|-------------|-------------|
-| **[QUICK_START_DEPLOYMENT.md](QUICK_START_DEPLOYMENT.md)** | ⭐ Fast track deployment guide | Start here! |
-| **[STEP_BY_STEP_DEPLOYMENT.md](STEP_BY_STEP_DEPLOYMENT.md)** | Detailed step-by-step instructions | For first-time deployment |
-| **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** | Complete deployment reference | Comprehensive documentation |
-| **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** | Verification checklist | Ensure nothing is missed |
-| **[NETWORK_CONFIGURATION.md](NETWORK_CONFIGURATION.md)** | Tailscale & network setup | For multi-IP access setup |
-| **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** | Quick command reference | Daily operations |
-
----
-
-## 🛠️ Automation Scripts
-
-| File | Description | Usage |
-|------|-------------|-------|
-| `server-setup.sh` | Initial server setup (Node.js, PostgreSQL, Nginx, PM2) | Run once on new server |
-| `deploy.sh` | Automated deployment script | Run for updates |
-| `backup-db.sh` | Database backup automation | Run daily via cron |
-
-**Make scripts executable:**
-```bash
-chmod +x server-setup.sh deploy.sh backup-db.sh
-```
-
----
-
-## ⚙️ Configuration Files
-
-| File | Description | Copy To |
-|------|-------------|---------|
-| `env.production.example` | Backend environment variables | `../backend/.env` |
-| `ecosystem.config.js` | PM2 process manager config | Use as-is |
-| `nginx.conf.example` | Nginx web server config | `/etc/nginx/sites-available/kamerba` |
-
----
-
-## 🐳 Docker Files
-
-| File | Description |
-|------|-------------|
-| `Dockerfile` | Multi-stage production Docker build |
-| `docker-compose.yml` | Complete Docker orchestration (backend + database + redis) |
-| `.dockerignore` | Docker build optimization |
-
-**Docker deployment:**
-```bash
-cd ..  # Go to project root
-docker-compose -f deployment/docker-compose.yml up -d
-```
+Everything you need to deploy Kamer.ba to production.
 
 ---
 
 ## 🚀 Quick Start
 
-### First-Time Deployment:
+**1. Read the deployment guide:**  
+→ **[DEPLOY.md](DEPLOY.md)** ⭐ START HERE
+
+**2. Run the automated deployment:**
 
 ```bash
-# 1. SSH to your server
+# SSH to your server
 ssh username@192.168.2.174
-# or via Tailscale:
-ssh username@100.114.201.33
 
-# 2. Clone repository
+# Clone and setup
 sudo mkdir -p /var/www/kamerba
 sudo chown -R $USER:$USER /var/www/kamerba
 cd /var/www/kamerba
 git clone https://github.com/junusg25/kamer-modul.git .
 
-# 3. Run server setup (first time only)
+# Deploy
 cd deployment
-chmod +x server-setup.sh deploy.sh backup-db.sh
+chmod +x *.sh
 ./server-setup.sh
-
-# 4. Configure environment
-cp env.production.example ../backend/.env
-nano ../backend/.env  # Edit with your settings
-
-# 5. Deploy application
+# Follow prompts, then:
 ./deploy.sh
 ```
 
-### Deploy Updates:
+**3. Access your app:**
+- Main Dashboard: `http://192.168.2.174/`
+- Customer Portal: `http://192.168.2.174/portal/`
+
+---
+
+## 📚 Files in This Folder
+
+### **Documentation**
+- **[DEPLOY.md](DEPLOY.md)** - Complete deployment guide (READ THIS!)
+
+### **Scripts**
+- `server-setup.sh` - Install dependencies (run once on new server)
+- `deploy.sh` - Deploy/update application
+- `backup-db.sh` - Database backup automation
+
+### **Configuration**
+- `ecosystem.config.js` - PM2 process manager config
+- `nginx.conf.example` - Nginx web server config template
+- `env.production.example` - Backend environment template
+
+### **Docker** (Optional Alternative)
+- `Dockerfile` - Container image build
+- `docker-compose.yml` - Full stack orchestration
+- `.dockerignore` - Build optimization
+
+---
+
+## 🛠️ Automation Scripts
+
+### Make Scripts Executable
 
 ```bash
-# SSH to server
-ssh username@192.168.2.174
+cd /var/www/kamerba/deployment
+chmod +x server-setup.sh deploy.sh backup-db.sh
+```
 
-# Navigate and deploy
+### Script Usage
+
+| Script | Purpose | When to Run |
+|--------|---------|-------------|
+| `server-setup.sh` | Install Node.js, PostgreSQL, Nginx, PM2 | Once on fresh server |
+| `deploy.sh` | Build & deploy application | After code changes |
+| `backup-db.sh` | Backup PostgreSQL database | Daily (via cron) |
+
+---
+
+## 🔄 Update Your App
+
+After making changes and pushing to GitHub:
+
+```bash
+ssh username@192.168.2.174
 cd /var/www/kamerba/deployment
 ./deploy.sh
 ```
 
 ---
 
-## 🌐 Network Configuration
+## 📊 Common Commands
 
-Your server has **two IP addresses**:
-
-| Network | IP Address | Access |
-|---------|-----------|--------|
-| **Local LAN** | `192.168.2.174` | Fast, when at home/office |
-| **Tailscale VPN** | `100.114.201.33` | Secure remote access |
-
-**Good News**: Both work automatically! The configuration supports both IPs.
-
-**Access URLs:**
-- Main Dashboard: `http://192.168.2.174/` or `http://100.114.201.33/`
-- Customer Portal: `http://192.168.2.174/portal/` or `http://100.114.201.33/portal/`
-
-See [NETWORK_CONFIGURATION.md](NETWORK_CONFIGURATION.md) for details.
-
----
-
-## 📋 Deployment Checklist
-
-Before deploying, ensure:
-
-- [ ] Server has Ubuntu 20.04+ installed
-- [ ] You have sudo access
-- [ ] Server is accessible via SSH
-- [ ] You have your GitHub credentials ready
-- [ ] Database password is prepared (secure!)
-- [ ] JWT secrets are generated
-
-After deployment:
-
-- [ ] Application responds on both IPs
-- [ ] Database migrations completed
-- [ ] PM2 shows services running
-- [ ] Nginx is active
-- [ ] SSL certificates installed (if using HTTPS)
-- [ ] Backups scheduled
-
-See [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) for complete list.
-
----
-
-## 🔧 Common Commands
-
-### PM2 Process Manager:
 ```bash
-pm2 status                # View all services
-pm2 logs kamerba-backend  # View logs
-pm2 restart all           # Restart services
-pm2 monit                 # Live monitoring
-pm2 save                  # Save configuration
-```
-
-### Nginx Web Server:
-```bash
-sudo systemctl status nginx    # Check status
-sudo systemctl reload nginx    # Reload config
-sudo nginx -t                  # Test config
-sudo tail -f /var/log/nginx/kamerba-error.log  # View errors
-```
-
-### Database:
-```bash
-# Backup
-./backup-db.sh
-
-# Access PostgreSQL
-sudo -u postgres psql -d repairshop
-
-# View tables
-sudo -u postgres psql -d repairshop -c "\dt"
-```
-
-### Application Logs:
-```bash
-# Backend logs
+# View backend logs
 pm2 logs kamerba-backend
 
-# Nginx access logs
-sudo tail -f /var/log/nginx/kamerba-access.log
+# Restart backend
+pm2 restart kamerba-backend
 
-# Nginx error logs
-sudo tail -f /var/log/nginx/kamerba-error.log
+# Check status
+pm2 status
+
+# Monitor resources
+pm2 monit
+
+# Restart Nginx
+sudo systemctl restart nginx
+
+# Check Nginx config
+sudo nginx -t
 ```
 
 ---
 
-## 🆘 Troubleshooting
+## 🌐 Network Access
 
-### App not starting?
+Your server has **two IPs** that both work automatically:
+
+| IP | Network | Access |
+|----|---------|--------|
+| `192.168.2.174` | Local LAN | Fast, when at office |
+| `100.114.201.33` | Tailscale VPN | Secure remote access |
+
+Access your app via either IP - no special configuration needed!
+
+---
+
+## 🐛 Troubleshooting
+
+### Backend Not Starting?
 ```bash
-pm2 logs kamerba-backend --lines 100
+pm2 logs kamerba-backend
 ```
 
-### Port already in use?
-```bash
-sudo lsof -i :3000
-```
-
-### Nginx errors?
+### Frontend Not Loading?
 ```bash
 sudo nginx -t
 sudo tail -f /var/log/nginx/error.log
 ```
 
-### Database connection issues?
+### Database Issues?
 ```bash
 sudo systemctl status postgresql
-sudo -u postgres psql -d repairshop -c "SELECT 1"
+sudo -u postgres psql -d repairshop
 ```
 
----
-
-## 📖 Full Documentation
-
-For complete documentation, see the main [README.md](../README.md).
+**For detailed troubleshooting, see [DEPLOY.md](DEPLOY.md)**
 
 ---
 
-## 💬 Support
+## 📞 Need Help?
 
-For deployment issues:
-1. Check the troubleshooting section in [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-2. Review logs with `pm2 logs`
-3. Check system health with `pm2 monit`
+1. Check [DEPLOY.md](DEPLOY.md) troubleshooting section
+2. View PM2 logs: `pm2 logs kamerba-backend`
+3. Check Nginx logs: `sudo tail -f /var/log/nginx/error.log`
 
 ---
 
-**Last Updated**: October 11, 2025  
-**Version**: 0.6.0  
-**Maintained By**: Kamer.ba Development Team
-
+**Last Updated:** 2025-10-11  
+**Version:** 0.6.0  
+**Repository:** https://github.com/junusg25/kamer-modul
