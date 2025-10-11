@@ -5,6 +5,7 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: '/portal/', // Set base path for production deployment under /portal
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
