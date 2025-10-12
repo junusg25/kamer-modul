@@ -18,7 +18,13 @@ router.get('/', authenticateToken, async (req, res, next) => {
 
     if (search) {
       paramCount++;
-      whereConditions.push(`(wrt.problem_description ILIKE $${paramCount} OR wrt.customer_name ILIKE $${paramCount} OR wrt.model_name ILIKE $${paramCount} OR wrt.submitted_by_name ILIKE $${paramCount} OR wrt.converted_by_technician_name ILIKE $${paramCount})`);
+      whereConditions.push(`(
+        unaccent(wrt.problem_description) ILIKE unaccent($${paramCount}) OR 
+        unaccent(wrt.customer_name) ILIKE unaccent($${paramCount}) OR 
+        unaccent(wrt.model_name) ILIKE unaccent($${paramCount}) OR 
+        unaccent(wrt.submitted_by_name) ILIKE unaccent($${paramCount}) OR 
+        unaccent(wrt.converted_by_technician_name) ILIKE unaccent($${paramCount})
+      )`);
       params.push(`%${search}%`);
     }
 

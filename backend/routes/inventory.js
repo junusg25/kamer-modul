@@ -20,7 +20,12 @@ router.get('/', async (req, res, next) => {
     
     // Search filter
     if (search) {
-      whereConditions.push(`(name ILIKE $${paramIndex} OR COALESCE(description,'') ILIKE $${paramIndex} OR COALESCE(sku,'') ILIKE $${paramIndex} OR COALESCE(supplier,'') ILIKE $${paramIndex})`);
+      whereConditions.push(`(
+        unaccent(name) ILIKE unaccent($${paramIndex}) OR 
+        unaccent(COALESCE(description,'')) ILIKE unaccent($${paramIndex}) OR 
+        COALESCE(sku,'') ILIKE $${paramIndex} OR 
+        unaccent(COALESCE(supplier,'')) ILIKE unaccent($${paramIndex})
+      )`);
       params.push(`%${search}%`);
       paramIndex++;
     }

@@ -23,7 +23,14 @@ router.get('/',
     
     if (search) {
       const like = `%${search}%`;
-      whereConditions.push(`(c.name ILIKE $${paramIndex} OR COALESCE(c.email,'') ILIKE $${paramIndex} OR COALESCE(c.phone,'') ILIKE $${paramIndex} OR COALESCE(c.company_name,'') ILIKE $${paramIndex} OR COALESCE(c.city,'') ILIKE $${paramIndex} OR COALESCE(c.vat_number,'') ILIKE $${paramIndex})`);
+      whereConditions.push(`(
+        unaccent(c.name) ILIKE unaccent($${paramIndex}) OR 
+        COALESCE(c.email,'') ILIKE $${paramIndex} OR 
+        COALESCE(c.phone,'') ILIKE $${paramIndex} OR 
+        unaccent(COALESCE(c.company_name,'')) ILIKE unaccent($${paramIndex}) OR 
+        unaccent(COALESCE(c.city,'')) ILIKE unaccent($${paramIndex}) OR 
+        COALESCE(c.vat_number,'') ILIKE $${paramIndex}
+      )`);
       params.push(like);
       paramIndex++;
     }

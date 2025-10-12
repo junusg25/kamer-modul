@@ -17,7 +17,7 @@ router.get('/models', async (req, res, next) => {
     
     if (search) {
       params.push(`%${search}%`)
-      where = `WHERE mm.name ILIKE $${paramIndex} OR COALESCE(mm.catalogue_number,'') ILIKE $${paramIndex} OR COALESCE(mm.manufacturer,'') ILIKE $${paramIndex}`
+      where = `WHERE unaccent(mm.name) ILIKE unaccent($${paramIndex}) OR COALESCE(mm.catalogue_number,'') ILIKE $${paramIndex} OR unaccent(COALESCE(mm.manufacturer,'')) ILIKE unaccent($${paramIndex})`
       paramIndex++;
     }
     

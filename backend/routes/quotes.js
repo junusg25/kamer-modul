@@ -25,7 +25,11 @@ router.get('/', authenticateToken, async (req, res, next) => {
 
     if (search) {
       paramCount++;
-      whereClause += ` AND (q.title ILIKE $${paramCount} OR q.customer_name ILIKE $${paramCount} OR q.quote_number::text ILIKE $${paramCount})`;
+      whereClause += ` AND (
+        unaccent(q.title) ILIKE unaccent($${paramCount}) OR 
+        unaccent(q.customer_name) ILIKE unaccent($${paramCount}) OR 
+        q.quote_number::text ILIKE $${paramCount}
+      )`;
       params.push(`%${search}%`);
     }
 
@@ -603,7 +607,11 @@ router.get('/catalog/machines', authenticateToken, async (req, res, next) => {
 
     if (search) {
       paramCount++;
-      whereConditions.push(`(mm.name ILIKE $${paramCount} OR mm.manufacturer ILIKE $${paramCount} OR mm.catalogue_number ILIKE $${paramCount})`);
+      whereConditions.push(`(
+        unaccent(mm.name) ILIKE unaccent($${paramCount}) OR 
+        unaccent(mm.manufacturer) ILIKE unaccent($${paramCount}) OR 
+        mm.catalogue_number ILIKE $${paramCount}
+      )`);
       params.push(`%${search}%`);
     }
 
@@ -615,7 +623,7 @@ router.get('/catalog/machines', authenticateToken, async (req, res, next) => {
 
     if (manufacturer) {
       paramCount++;
-      whereConditions.push(`mm.manufacturer ILIKE $${paramCount}`);
+      whereConditions.push(`unaccent(mm.manufacturer) ILIKE unaccent($${paramCount})`);
       params.push(`%${manufacturer}%`);
     }
 
@@ -666,7 +674,11 @@ router.get('/catalog/parts', authenticateToken, async (req, res, next) => {
 
     if (search) {
       paramCount++;
-      whereConditions.push(`(i.name ILIKE $${paramCount} OR i.description ILIKE $${paramCount} OR i.sku ILIKE $${paramCount})`);
+      whereConditions.push(`(
+        unaccent(i.name) ILIKE unaccent($${paramCount}) OR 
+        unaccent(i.description) ILIKE unaccent($${paramCount}) OR 
+        i.sku ILIKE $${paramCount}
+      )`);
       params.push(`%${search}%`);
     }
 

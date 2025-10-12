@@ -120,7 +120,11 @@ router.get('/', authenticateToken, async (req, res, next) => {
     let paramIndex = 1;
 
     if (search) {
-      whereConditions.push(`(wwo.description ILIKE $${paramIndex} OR c.name ILIKE $${paramIndex} OR mm.name ILIKE $${paramIndex})`);
+      whereConditions.push(`(
+        unaccent(wwo.description) ILIKE unaccent($${paramIndex}) OR 
+        unaccent(c.name) ILIKE unaccent($${paramIndex}) OR 
+        unaccent(mm.name) ILIKE unaccent($${paramIndex})
+      )`);
       queryParams.push(`%${search}%`);
       paramIndex++;
     }

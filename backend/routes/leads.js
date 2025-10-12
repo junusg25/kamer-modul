@@ -29,8 +29,8 @@ router.get('/', authenticateToken, async (req, res, next) => {
     if (search) {
       paramCount++;
       whereConditions.push(`(
-        customer_name ILIKE $${paramCount} OR 
-        company_name ILIKE $${paramCount} OR 
+        unaccent(customer_name) ILIKE unaccent($${paramCount}) OR 
+        unaccent(company_name) ILIKE unaccent($${paramCount}) OR 
         email ILIKE $${paramCount} OR 
         phone ILIKE $${paramCount}
       )`);

@@ -25,7 +25,13 @@ router.get('/', authenticateToken, async (req, res, next) => {
     let queryParams = []
 
     if (search) {
-      whereConditions.push(`(rt.problem_description ILIKE $${queryParams.length + 1} OR rt.customer_name ILIKE $${queryParams.length + 1} OR rt.model_name ILIKE $${queryParams.length + 1} OR rt.submitted_by_name ILIKE $${queryParams.length + 1} OR rt.converted_by_technician_name ILIKE $${queryParams.length + 1})`)
+      whereConditions.push(`(
+        unaccent(rt.problem_description) ILIKE unaccent($${queryParams.length + 1}) OR 
+        unaccent(rt.customer_name) ILIKE unaccent($${queryParams.length + 1}) OR 
+        unaccent(rt.model_name) ILIKE unaccent($${queryParams.length + 1}) OR 
+        unaccent(rt.submitted_by_name) ILIKE unaccent($${queryParams.length + 1}) OR 
+        unaccent(rt.converted_by_technician_name) ILIKE unaccent($${queryParams.length + 1})
+      )`)
       queryParams.push(`%${search}%`)
     }
 
