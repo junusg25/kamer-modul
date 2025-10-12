@@ -19,6 +19,7 @@ router.get('/', authenticateToken, async (req, res, next) => {
     const machineId = req.query.machine_id
     const technicianId = req.query.technician_id
     const submittedBy = req.query.submitted_by
+    const year = req.query.year
 
     let whereConditions = []
     let queryParams = []
@@ -62,6 +63,11 @@ router.get('/', authenticateToken, async (req, res, next) => {
       queryParams.push(submittedBy)
     }
 
+    if (year) {
+      whereConditions.push(`rt.year_created = $${queryParams.length + 1}`)
+      queryParams.push(parseInt(year))
+    }
+
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : ''
 
     // Get total count using the new view
@@ -93,6 +99,23 @@ router.get('/', authenticateToken, async (req, res, next) => {
         pages: Math.ceil(total / limit)
       }
     })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET available years (for year filter dropdown)
+router.get('/filter/years', authenticateToken, async (req, res, next) => {
+  try {
+    const query = `
+      SELECT DISTINCT year_created 
+      FROM repair_tickets 
+      WHERE year_created IS NOT NULL 
+      ORDER BY year_created DESC
+    `
+    const result = await db.query(query)
+    const years = result.rows.map(row => row.year_created)
+    res.json({ data: years })
   } catch (error) {
     next(error)
   }

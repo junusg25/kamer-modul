@@ -1824,6 +1824,24 @@ class ApiService {
   async getManagerInventoryAlerts() {
     return this.request('/manager-dashboard/inventory-alerts')
   }
+
+  // ==================== YEAR FILTERS ====================
+  
+  async getRepairTicketYears() {
+    return this.request('/repair-tickets/filter/years')
+  }
+
+  async getWorkOrderYears() {
+    return this.request('/work-orders/filter/years')
+  }
+
+  async getWarrantyRepairTicketYears() {
+    return this.request('/warranty-repair-tickets/filter/years')
+  }
+
+  async getWarrantyWorkOrderYears() {
+    return this.request('/warranty-work-orders/filter/years')
+  }
 }
 
 export const apiService = new ApiService()

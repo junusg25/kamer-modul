@@ -9,7 +9,7 @@ const { logCustomAction } = require('../utils/actionLogger');
 // GET all warranty repair tickets
 router.get('/', authenticateToken, async (req, res, next) => {
   try {
-    const { status, priority, customer_id, machine_id, technician_id, submitted_by, search, page = 1, limit = 20 } = req.query;
+    const { status, priority, customer_id, machine_id, technician_id, submitted_by, search, year, page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
     
     let whereConditions = [];
@@ -62,6 +62,12 @@ router.get('/', authenticateToken, async (req, res, next) => {
       params.push(submitted_by);
     }
 
+    if (year) {
+      paramCount++;
+      whereConditions.push(`wrt.year_created = $${paramCount}`);
+      params.push(parseInt(year));
+    }
+
     const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
 
     // Get total count
@@ -97,6 +103,23 @@ router.get('/', authenticateToken, async (req, res, next) => {
     });
   } catch (err) {
     next(err);
+  }
+});
+
+// GET available years (for year filter dropdown)
+router.get('/filter/years', authenticateToken, async (req, res, next) => {
+  try {
+    const query = `
+      SELECT DISTINCT year_created 
+      FROM warranty_repair_tickets 
+      WHERE year_created IS NOT NULL 
+      ORDER BY year_created DESC
+    `;
+    const result = await db.query(query);
+    const years = result.rows.map(row => row.year_created);
+    res.json({ data: years });
+  } catch (error) {
+    next(error);
   }
 });
 

@@ -112,7 +112,7 @@ router.get('/', authenticateToken, async (req, res, next) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const offset = (page - 1) * limit;
-  const { search, status, priority, technician_id, customer_id, machine_id } = req.query;
+  const { search, status, priority, technician_id, customer_id, machine_id, year } = req.query;
   
   try {
     let whereConditions = [];
@@ -152,6 +152,12 @@ router.get('/', authenticateToken, async (req, res, next) => {
     if (machine_id) {
       whereConditions.push(`wwo.machine_id = $${paramIndex}`);
       queryParams.push(machine_id);
+      paramIndex++;
+    }
+
+    if (year) {
+      whereConditions.push(`wwo.year_created = $${paramIndex}`);
+      queryParams.push(parseInt(year));
       paramIndex++;
     }
 
@@ -196,6 +202,23 @@ router.get('/', authenticateToken, async (req, res, next) => {
       }
     });
   } catch (err) { next(err); }
+});
+
+// GET available years (for year filter dropdown)
+router.get('/filter/years', authenticateToken, async (req, res, next) => {
+  try {
+    const query = `
+      SELECT DISTINCT year_created 
+      FROM warranty_work_orders 
+      WHERE year_created IS NOT NULL 
+      ORDER BY year_created DESC
+    `;
+    const result = await db.query(query);
+    const years = result.rows.map(row => row.year_created);
+    res.json({ data: years });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // GET single warranty work order by ID
