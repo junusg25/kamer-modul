@@ -209,9 +209,16 @@ export default function Machines() {
 
       const response = await apiService.getMachineModels(searchParams) as any
       
+      console.log('Raw API response:', response)
+      console.log('Response.data:', response.data)
+      console.log('First model from response:', response.data?.[0])
+      
       // Backend returns { data: [...], pagination: {...} }
       const modelsData = response.data || []
       const pagination = response.pagination || {}
+      
+      console.log('Models data being set to state:', modelsData)
+      console.log('First model being set to state:', modelsData[0])
       
       setMachineModels(modelsData)
       setTotalPages(pagination.pages || 1)
