@@ -495,9 +495,9 @@ router.get('/trends', authenticateToken, async (req, res, next) => {
         ${groupByClause.replace('am.sale_date', 'l.created_at')} as date,
         COUNT(*) as leads
       FROM leads l
-      WHERE l.created_at >= $${params.length + 1}
-        AND l.created_at <= $${params.length + 2}
-        ${sales_person ? 'AND l.assigned_to = $' + (params.length + 3) : ''}
+      WHERE l.created_at >= $1
+        AND l.created_at <= $2
+        ${sales_person ? 'AND l.assigned_to = $3' : ''}
       GROUP BY ${groupByClause.replace('am.sale_date', 'l.created_at')}
       ORDER BY date ASC
     `;
@@ -508,24 +508,27 @@ router.get('/trends', authenticateToken, async (req, res, next) => {
         ${groupByClause.replace('am.sale_date', 'q.created_at')} as date,
         COUNT(*) as quotes
       FROM quotes q
-      WHERE q.created_at >= $${params.length + 1}
-        AND q.created_at <= $${params.length + 2}
-        ${sales_person ? 'AND q.created_by = $' + (params.length + 3) : ''}
+      WHERE q.created_at >= $1
+        AND q.created_at <= $2
+        ${sales_person ? 'AND q.created_by = $3' : ''}
       GROUP BY ${groupByClause.replace('am.sale_date', 'q.created_at')}
       ORDER BY date ASC
     `;
     
-    // Add date range parameters
-    const queryParams = [...params, startDate.toISOString(), endDate.toISOString()];
+    // Create separate parameter arrays for leads and quotes queries
+    const leadsParams = [startDate.toISOString(), endDate.toISOString()];
+    const quotesParams = [startDate.toISOString(), endDate.toISOString()];
+    
     if (sales_person) {
-      queryParams.push(sales_person);
+      leadsParams.push(sales_person);
+      quotesParams.push(sales_person);
     }
 
     // Execute all queries
     const [salesResult, leadsResult, quotesResult] = await Promise.all([
       db.query(salesQuery, params),
-      db.query(leadsQuery, queryParams),
-      db.query(quotesQuery, queryParams)
+      db.query(leadsQuery, leadsParams),
+      db.query(quotesQuery, quotesParams)
     ]);
     
     // Create a map for leads and quotes by date
