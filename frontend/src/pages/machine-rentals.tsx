@@ -19,6 +19,7 @@ import { formatCurrency } from '../lib/currency'
 import { useAuth } from '../contexts/auth-context'
 import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '@/hooks/useColumnVisibility'
 import { ColumnVisibilityDropdown } from '@/components/ui/column-visibility-dropdown'
+import { Pagination } from '../components/ui/pagination'
 
 interface MachineRental {
   id: string
@@ -93,12 +94,10 @@ export default function MachineRentals() {
     start_date: '',
     end_date: ''
   })
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 20,
-    total: 0,
-    pages: 0
-  })
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [pageSize] = useState(25)
 
   // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -141,7 +140,7 @@ export default function MachineRentals() {
     fetchMachineRentals()
     fetchCustomers()
     fetchAvailableMachines()
-  }, [pagination.page, searchTerm, filters])
+  }, [currentPage, searchTerm, filters])
 
   // Reset form when create dialog opens
   useEffect(() => {
@@ -191,17 +190,23 @@ export default function MachineRentals() {
     try {
       setLoading(true)
       const response = await apiService.getMachineRentals({
-        page: pagination.page,
-        limit: pagination.limit,
+        page: currentPage,
+        limit: pageSize,
         search: searchTerm,
         ...filters
       })
       setRentals(response.rentals || [])
-      setPagination(response.pagination || { page: 1, limit: 20, total: 0, totalPages: 0 })
+      
+      // Update pagination state
+      if (response.pagination) {
+        setTotalPages(response.pagination.pages || 1)
+        setTotalCount(response.pagination.total || 0)
+      }
     } catch (error) {
       console.error('Error fetching machine rentals:', error)
       setRentals([])
-      setPagination({ page: 1, limit: 20, total: 0, totalPages: 0 })
+      setTotalPages(1)
+      setTotalCount(0)
     } finally {
       setLoading(false)
     }
@@ -923,6 +928,16 @@ export default function MachineRentals() {
                   ))}
                 </TableBody>
               </Table>
+              
+              {/* Pagination */}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalCount={totalCount}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                itemName="rentals"
+              />
             )}
           </CardContent>
         </Card>

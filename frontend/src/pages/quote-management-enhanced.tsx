@@ -1535,6 +1535,16 @@ export default function QuoteManagementEnhanced() {
                     )}
                   </TableBody>
                 </Table>
+                
+                {/* Pagination */}
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalCount={totalCount}
+                  pageSize={pageSize}
+                  onPageChange={setCurrentPage}
+                  itemName="quotes"
+                />
               </CardContent>
             </Card>
           </TabsContent>
