@@ -86,19 +86,39 @@ sudo apt-get install -y chromium-browser
 
 ---
 
-### Step 3: Restart Backend
+### Step 3: Restart Backend (FORCE RESTART)
+
+**IMPORTANT**: Regular `pm2 restart` may not reload routes. Use this aggressive restart:
 
 ```bash
 cd /var/www/kamerba
 
-# Restart PM2 to load new routes
-pm2 restart backend
+# Stop and DELETE all processes (clears PM2 cache)
+pm2 stop all
+pm2 delete all
 
-# Or restart all
-pm2 restart all
+# Clear PM2 cache and dumps
+pm2 flush
+pm2 cleardump
 
-# Check logs
+# Start fresh from ecosystem config
+pm2 start deployment/ecosystem.config.js
+
+# Save PM2 config
+pm2 save
+
+# Check status
+pm2 status
+
+# View logs
 pm2 logs backend --lines 50
+```
+
+**OR** use the provided script:
+```bash
+cd /var/www/kamerba
+chmod +x FORCE_BACKEND_RESTART.sh
+./FORCE_BACKEND_RESTART.sh
 ```
 
 ---
