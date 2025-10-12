@@ -104,13 +104,26 @@ export default function AddMachineModelPage() {
   const fetchSuppliers = async () => {
     try {
       setLoadingSuppliers(true)
-      const response = await apiService.getSuppliers({ limit: 100 })
-      const suppliersData = response.data || []
+      const [suppliersResponse, modelsResponse] = await Promise.all([
+        apiService.getSuppliers({ limit: 100 }),
+        apiService.getMachineModels({ limit: 100 })
+      ])
+      
+      const suppliersData = suppliersResponse.data || []
       setSuppliers(suppliersData)
       
       // Extract manufacturer names from suppliers
       const supplierNames = suppliersData.map((supplier: Supplier) => supplier.name)
-      setManufacturerOptions(supplierNames)
+      
+      // Extract manufacturer names from existing machine models
+      const modelsData = (modelsResponse as any).data || []
+      const modelManufacturers = modelsData
+        .map((m: any) => m.manufacturer)
+        .filter((m: string) => m && m.trim())
+      
+      // Combine and deduplicate manufacturers from both sources
+      const allManufacturers = [...new Set([...supplierNames, ...modelManufacturers])]
+      setManufacturerOptions(allManufacturers.sort())
     } catch (error) {
       console.error('Error fetching suppliers:', error)
       toast.error('Failed to load suppliers')
