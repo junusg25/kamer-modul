@@ -210,6 +210,7 @@ export default function CreateWarrantyRepairTicket() {
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false)
   const [isCreatingMachine, setIsCreatingMachine] = useState(false)
   const [isCreatingModel, setIsCreatingModel] = useState(false)
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false)
   
   // Popover states
   const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false)
@@ -419,6 +420,32 @@ export default function CreateWarrantyRepairTicket() {
     }
   }
 
+  const createNewCategory = async (categoryName: string) => {
+    try {
+      setIsCreatingCategory(true)
+      const response = await apiService.createMachineCategory({ name: categoryName })
+      const newCategory = (response as any).data
+      
+      // Add to local state
+      setMachineCategories(prev => [...prev, newCategory])
+      
+      // Select the newly created category
+      setFormData(prev => ({
+        ...prev,
+        newModel: { ...prev.newModel, category_id: newCategory.id.toString() }
+      }))
+      
+      setCategoryPopoverOpen(false)
+      setCategorySearch('')
+      toast.success(`Category "${categoryName}" created successfully`)
+    } catch (err: any) {
+      console.error('Error creating category:', err)
+      toast.error(err.message || 'Failed to create category')
+    } finally {
+      setIsCreatingCategory(false)
+    }
+  }
+
   const createNewModel = async () => {
     try {
       setIsCreatingModel(true)
@@ -434,9 +461,11 @@ export default function CreateWarrantyRepairTicket() {
         }
       }))
       setShowNewModelDialog(false)
+      toast.success('Machine model created successfully')
     } catch (err) {
       console.error('Error creating machine model:', err)
       setError('Failed to create machine model')
+      toast.error('Failed to create machine model')
     } finally {
       setIsCreatingModel(false)
     }
@@ -1888,6 +1917,7 @@ export default function CreateWarrantyRepairTicket() {
                                   newModel: { ...prev.newModel, category_id: '' }
                                 }))
                                 setCategoryPopoverOpen(false)
+                                setCategorySearch('')
                               }}
                               className="flex items-center gap-3 p-2 rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
                             >
@@ -1898,6 +1928,33 @@ export default function CreateWarrantyRepairTicket() {
                                 <p className="font-medium">No category</p>
                               </div>
                             </div>
+                            
+                            {/* Create new category option */}
+                            {categorySearch && !machineCategories.some(cat => 
+                              cat.name.toLowerCase() === categorySearch.toLowerCase()
+                            ) && (
+                              <div className="p-1 border-b">
+                                <div
+                                  onClick={() => createNewCategory(categorySearch)}
+                                  className="flex items-center gap-3 p-2 rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+                                >
+                                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100">
+                                    {isCreatingCategory ? (
+                                      <Loader2 className="h-4 w-4 text-green-600 animate-spin" />
+                                    ) : (
+                                      <span className="text-green-600 text-sm font-bold">+</span>
+                                    )}
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="font-medium">Create "{categorySearch}"</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {isCreatingCategory ? 'Creating category...' : 'Add new category'}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            
                             {/* Existing categories */}
                             {machineCategories
                               .filter(cat => 
@@ -1913,6 +1970,7 @@ export default function CreateWarrantyRepairTicket() {
                                     newModel: { ...prev.newModel, category_id: category.id.toString() }
                                   }))
                                   setCategoryPopoverOpen(false)
+                                  setCategorySearch('')
                                 }}
                                 className={cn(
                                   "flex items-center gap-3 p-2 rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors",
