@@ -199,6 +199,7 @@ export default function CreateRepairTicket() {
   const [machines, setMachines] = useState<Machine[]>([])
   const [machineModels, setMachineModels] = useState<MachineModel[]>([])
   const [machineCategories, setMachineCategories] = useState<MachineCategory[]>([])
+  const [manufacturerOptions, setManufacturerOptions] = useState<string[]>([])
   const [users, setUsers] = useState<any[]>([])
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false)
   const [isLoadingMachines, setIsLoadingMachines] = useState(false)
@@ -221,11 +222,13 @@ export default function CreateRepairTicket() {
   const [machinePopoverOpen, setMachinePopoverOpen] = useState(false)
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false)
   const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false)
+  const [manufacturerPopoverOpen, setManufacturerPopoverOpen] = useState(false)
   // Removed supplierPopoverOpen - using purchasedAtPopoverOpen instead
   
   // Search states
   const [machineSearchTerm, setMachineSearchTerm] = useState('')
   const [categorySearch, setCategorySearch] = useState('')
+  const [manufacturerSearch, setManufacturerSearch] = useState('')
   
 
   useEffect(() => {
@@ -254,17 +257,23 @@ export default function CreateRepairTicket() {
       setIsLoadingCustomers(true)
       setIsLoadingModels(true)
       
-      const [customersRes, modelsRes, usersRes, categoriesRes] = await Promise.all([
+      const [customersRes, modelsRes, usersRes, categoriesRes, suppliersRes] = await Promise.all([
         apiService.getCustomers({ limit: 100 }),
         apiService.getMachineModels({ limit: 100 }),
         apiService.getUsers({ limit: 100 }),
-        apiService.getMachineCategories()
+        apiService.getMachineCategories(),
+        apiService.getSuppliers({ limit: 100 })
       ])
       
       setCustomers((customersRes as any).data || [])
       setMachineModels((modelsRes as any).data || [])
       setUsers((usersRes as any).data || [])
       setMachineCategories((categoriesRes as any).data || [])
+      
+      // Extract manufacturer options from suppliers
+      const suppliersData = (suppliersRes as any).data || []
+      const supplierNames = suppliersData.map((s: any) => s.name)
+      setManufacturerOptions(supplierNames)
       
       // Fetch purchased_at options
       await fetchPurchasedAtOptions()
@@ -1714,15 +1723,104 @@ export default function CreateRepairTicket() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="model-manufacturer">Manufacturer *</Label>
-                      <Input
-                        id="model-manufacturer"
-                        value={formData.newModel.manufacturer}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          newModel: { ...prev.newModel, manufacturer: e.target.value }
-                        }))}
-                        placeholder="Enter manufacturer"
-                      />
+                      <Popover open={manufacturerPopoverOpen} onOpenChange={setManufacturerPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={manufacturerPopoverOpen}
+                            className="w-full justify-between h-11"
+                          >
+                            {formData.newModel.manufacturer || "Select manufacturer..."}
+                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[400px] p-0" align="start">
+                          <div className="border-b p-3">
+                            <div className="relative">
+                              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input
+                                placeholder="Search or type new manufacturer..."
+                                className="pl-10"
+                                value={manufacturerSearch}
+                                onChange={(e) => setManufacturerSearch(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <div className="max-h-[300px] overflow-y-auto">
+                            {/* Manual entry option */}
+                            {manufacturerSearch && !manufacturerOptions.some(opt => opt.toLowerCase() === manufacturerSearch.toLowerCase()) && (
+                              <div className="p-1 border-b">
+                                <div
+                                  onClick={() => {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      newModel: { ...prev.newModel, manufacturer: manufacturerSearch }
+                                    }))
+                                    setManufacturerPopoverOpen(false)
+                                    setManufacturerSearch('')
+                                  }}
+                                  className="flex items-center gap-3 p-2 rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+                                >
+                                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100">
+                                    <span className="text-green-600 text-sm font-bold">+</span>
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="font-medium">Add "{manufacturerSearch}"</p>
+                                    <p className="text-sm text-muted-foreground">Create new manufacturer</p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Existing options */}
+                            {manufacturerOptions.filter(opt => 
+                              manufacturerSearch === '' || 
+                              opt.toLowerCase().includes(manufacturerSearch.toLowerCase())
+                            ).length === 0 ? (
+                              <div className="p-4 text-center text-muted-foreground">No manufacturers found.</div>
+                            ) : (
+                              <div className="p-1">
+                                {manufacturerOptions
+                                  .filter(opt => 
+                                    manufacturerSearch === '' || 
+                                    opt.toLowerCase().includes(manufacturerSearch.toLowerCase())
+                                  )
+                                  .map((option) => (
+                                  <div
+                                    key={option}
+                                    onClick={() => {
+                                      setFormData(prev => ({
+                                        ...prev,
+                                        newModel: { ...prev.newModel, manufacturer: option }
+                                      }))
+                                      setManufacturerPopoverOpen(false)
+                                      setManufacturerSearch('')
+                                    }}
+                                    className={cn(
+                                      "flex items-center gap-3 p-2 rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors",
+                                      formData.newModel.manufacturer === option && "bg-accent"
+                                    )}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "h-4 w-4",
+                                        formData.newModel.manufacturer === option ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-orange-100">
+                                      <Building2 className="w-4 h-4 text-orange-600" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="font-medium">{option}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="model-catalogue-number">Catalogue Number</Label>
