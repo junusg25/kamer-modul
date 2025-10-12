@@ -822,6 +822,7 @@ export default function MachineRentals() {
             {loading ? (
               <div className="text-center py-8">Loading...</div>
             ) : (
+              <>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -938,6 +939,7 @@ export default function MachineRentals() {
                 onPageChange={setCurrentPage}
                 itemName="rentals"
               />
+              </>
             )}
           </CardContent>
         </Card>
