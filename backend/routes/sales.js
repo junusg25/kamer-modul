@@ -473,7 +473,8 @@ router.get('/trends', authenticateToken, async (req, res, next) => {
       dateFormat = 'YYYY-"Q"Q';
     }
 
-    const query = `
+    // Get sales (deals) data
+    const salesQuery = `
       SELECT 
         ${groupByClause} as date,
         COUNT(*) as sales,
@@ -488,20 +489,70 @@ router.get('/trends', authenticateToken, async (req, res, next) => {
       ORDER BY date ASC
     `;
 
-    const result = await db.query(query, params);
+    // Get leads data for the same period
+    const leadsQuery = `
+      SELECT 
+        ${groupByClause.replace('am.sale_date', 'l.created_at')} as date,
+        COUNT(*) as leads
+      FROM leads l
+      WHERE l.created_at >= $${params.length + 1}
+        AND l.created_at <= $${params.length + 2}
+        ${sales_person ? 'AND l.assigned_to = $' + (params.length + 3) : ''}
+      GROUP BY ${groupByClause.replace('am.sale_date', 'l.created_at')}
+      ORDER BY date ASC
+    `;
     
-    // Process results based on grouping
-    const trends = result.rows.map(row => ({
-      date: row.date,
-      month: group_by === 'month' ? new Date(row.date).toLocaleDateString('en-US', { month: 'short' }) : null,
-      sales: parseInt(row.sales),
-      revenue: parseFloat(row.revenue),
-      customers: parseInt(row.customers),
-      // Calculate leads and quotes from existing data (these would need separate queries in a real implementation)
-      leads: parseInt(row.sales) * 2, // Estimated ratio
-      quotes: Math.round(parseInt(row.sales) * 1.5), // Estimated ratio
-      deals: parseInt(row.sales)
-    }));
+    // Get quotes data for the same period
+    const quotesQuery = `
+      SELECT 
+        ${groupByClause.replace('am.sale_date', 'q.created_at')} as date,
+        COUNT(*) as quotes
+      FROM quotes q
+      WHERE q.created_at >= $${params.length + 1}
+        AND q.created_at <= $${params.length + 2}
+        ${sales_person ? 'AND q.created_by = $' + (params.length + 3) : ''}
+      GROUP BY ${groupByClause.replace('am.sale_date', 'q.created_at')}
+      ORDER BY date ASC
+    `;
+    
+    // Add date range parameters
+    const queryParams = [...params, startDate.toISOString(), endDate.toISOString()];
+    if (sales_person) {
+      queryParams.push(sales_person);
+    }
+
+    // Execute all queries
+    const [salesResult, leadsResult, quotesResult] = await Promise.all([
+      db.query(salesQuery, params),
+      db.query(leadsQuery, queryParams),
+      db.query(quotesQuery, queryParams)
+    ]);
+    
+    // Create a map for leads and quotes by date
+    const leadsMap = new Map();
+    leadsResult.rows.forEach(row => {
+      leadsMap.set(row.date.toISOString(), parseInt(row.leads));
+    });
+    
+    const quotesMap = new Map();
+    quotesResult.rows.forEach(row => {
+      quotesMap.set(row.date.toISOString(), parseInt(row.quotes));
+    });
+    
+    // Process results and combine data
+    const trends = salesResult.rows.map(row => {
+      const dateKey = row.date.toISOString();
+      return {
+        date: row.date,
+        month: group_by === 'month' ? new Date(row.date).toLocaleDateString('en-US', { month: 'short' }) : null,
+        sales: parseInt(row.sales),
+        revenue: parseFloat(row.revenue),
+        customers: parseInt(row.customers),
+        leads: leadsMap.get(dateKey) || 0, // Real leads data
+        quotes: quotesMap.get(dateKey) || 0, // Real quotes data
+        deals: parseInt(row.sales) // Deals = sales
+      };
+    });
     
     res.json({
       status: 'success',
