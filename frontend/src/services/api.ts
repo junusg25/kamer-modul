@@ -1825,6 +1825,23 @@ class ApiService {
     return this.request('/manager-dashboard/inventory-alerts')
   }
 
+  // ==================== USER MANAGEMENT ====================
+  
+  async updateUser(userId: string, updates: {
+    name?: string
+    email?: string
+    role?: string
+    phone?: string
+    department?: string
+    status?: string
+    password?: string
+  }) {
+    return this.request(`/users/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates)
+    })
+  }
+
   // ==================== YEAR FILTERS ====================
   
   async getRepairTicketYears() {

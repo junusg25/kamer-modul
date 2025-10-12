@@ -63,6 +63,9 @@ export default function Settings() {
   const [availablePermissions, setAvailablePermissions] = useState<AvailablePermissions>({})
   const [showPermissionDialog, setShowPermissionDialog] = useState(false)
   const [showAddUserDialog, setShowAddUserDialog] = useState(false)
+  const [showEditUserDialog, setShowEditUserDialog] = useState(false)
+  const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false)
+  const [editingUser, setEditingUser] = useState<User | null>(null)
   const [permissionForm, setPermissionForm] = useState({
     permission_key: '',
     expires_at: '',
@@ -75,6 +78,18 @@ export default function Settings() {
     role: 'technician',
     phone: '',
     department: ''
+  })
+  const [editUserForm, setEditUserForm] = useState({
+    name: '',
+    email: '',
+    role: '',
+    phone: '',
+    department: '',
+    status: ''
+  })
+  const [changePasswordForm, setChangePasswordForm] = useState({
+    newPassword: '',
+    confirmPassword: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -168,6 +183,79 @@ export default function Settings() {
   const handleUserSelect = async (user: User) => {
     setSelectedUser(user)
     await loadUserPermissions(user.id)
+  }
+
+  const handleEditUser = (user: User) => {
+    setEditingUser(user)
+    setEditUserForm({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: (user as any).phone || '',
+      department: (user as any).department || '',
+      status: user.status
+    })
+    setShowEditUserDialog(true)
+  }
+
+  const handleSaveEditUser = async () => {
+    if (!editingUser || !editUserForm.name || !editUserForm.email) {
+      toast.error('Please fill in required fields')
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      await apiService.updateUser(editingUser.id.toString(), editUserForm)
+      toast.success('User updated successfully')
+      setShowEditUserDialog(false)
+      setEditingUser(null)
+      await loadUsers()
+      // Refresh selected user if it was the edited one
+      if (selectedUser?.id === editingUser.id) {
+        const updated = users.find(u => u.id === editingUser.id)
+        if (updated) setSelectedUser(updated)
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update user')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleChangePassword = (user: User) => {
+    setEditingUser(user)
+    setChangePasswordForm({ newPassword: '', confirmPassword: '' })
+    setShowChangePasswordDialog(true)
+  }
+
+  const handleSavePassword = async () => {
+    if (!editingUser) return
+
+    if (!changePasswordForm.newPassword || changePasswordForm.newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters')
+      return
+    }
+
+    if (changePasswordForm.newPassword !== changePasswordForm.confirmPassword) {
+      toast.error('Passwords do not match')
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      await apiService.updateUser(editingUser.id.toString(), {
+        password: changePasswordForm.newPassword
+      })
+      toast.success('Password changed successfully')
+      setShowChangePasswordDialog(false)
+      setEditingUser(null)
+      setChangePasswordForm({ newPassword: '', confirmPassword: '' })
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to change password')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleGrantPermission = () => {
@@ -326,25 +414,52 @@ export default function Settings() {
                       {users.map((user) => (
                         <div
                           key={user.id}
-                          className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                          className={`p-3 rounded-lg border transition-colors ${
                             selectedUser?.id === user.id 
                               ? 'bg-primary/10 border-primary' 
                               : 'bg-card border-border hover:bg-muted'
                           }`}
-                          onClick={() => handleUserSelect(user)}
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex-1 cursor-pointer" onClick={() => handleUserSelect(user)}>
                               <p className="font-medium text-foreground">{user.name}</p>
                               <p className="text-sm text-muted-foreground">{user.email}</p>
                             </div>
-                            <div className="flex flex-col items-end gap-1">
-                              <Badge variant={getRoleBadgeColor(user.role) as any}>
-                                {user.role}
-                              </Badge>
-                              <Badge variant={getStatusBadgeColor(user.status) as any} className="text-xs">
-                                {user.status}
-                              </Badge>
+                            <div className="flex items-center gap-2">
+                              <div className="flex flex-col items-end gap-1">
+                                <Badge variant={getRoleBadgeColor(user.role) as any}>
+                                  {user.role}
+                                </Badge>
+                                <Badge variant={getStatusBadgeColor(user.status) as any} className="text-xs">
+                                  {user.status}
+                                </Badge>
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleEditUser(user)
+                                  }}
+                                  className="h-7 text-xs"
+                                >
+                                  <Edit2 className="h-3 w-3 mr-1" />
+                                  Edit
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleChangePassword(user)
+                                  }}
+                                  className="h-7 text-xs"
+                                >
+                                  <Key className="h-3 w-3 mr-1" />
+                                  Password
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -690,6 +805,178 @@ export default function Settings() {
               </Button>
               <Button onClick={handleAddUser} disabled={isSubmitting}>
                 {isSubmitting ? 'Creating...' : 'Create User'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit User Dialog */}
+        <Dialog open={showEditUserDialog} onOpenChange={setShowEditUserDialog}>
+          <DialogContent className="bg-background border-border max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">Edit User</DialogTitle>
+              <DialogDescription>
+                Update user information for {editingUser?.name}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-name" className="text-foreground">Full Name *</Label>
+                <Input
+                  id="edit-name"
+                  value={editUserForm.name}
+                  onChange={(e) => setEditUserForm({ ...editUserForm, name: e.target.value })}
+                  placeholder="Enter full name"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-email" className="text-foreground">Email *</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editUserForm.email}
+                  onChange={(e) => setEditUserForm({ ...editUserForm, email: e.target.value })}
+                  placeholder="user@example.com"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-role" className="text-foreground">Role *</Label>
+                <Select
+                  value={editUserForm.role}
+                  onValueChange={(value) => setEditUserForm({ ...editUserForm, role: value })}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="technician">Technician</SelectItem>
+                    <SelectItem value="sales">Sales</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-status" className="text-foreground">Status *</Label>
+                <Select
+                  value={editUserForm.status}
+                  onValueChange={(value) => setEditUserForm({ ...editUserForm, status: value })}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-phone" className="text-foreground">Phone (Optional)</Label>
+                <Input
+                  id="edit-phone"
+                  value={editUserForm.phone}
+                  onChange={(e) => setEditUserForm({ ...editUserForm, phone: e.target.value })}
+                  placeholder="+387 XX XXX XXX"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-department" className="text-foreground">Department (Optional)</Label>
+                <Input
+                  id="edit-department"
+                  value={editUserForm.department}
+                  onChange={(e) => setEditUserForm({ ...editUserForm, department: e.target.value })}
+                  placeholder="e.g. Technical Support"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowEditUserDialog(false)
+                  setEditingUser(null)
+                }}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEditUser} disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Change Password Dialog */}
+        <Dialog open={showChangePasswordDialog} onOpenChange={setShowChangePasswordDialog}>
+          <DialogContent className="bg-background border-border max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">Change Password</DialogTitle>
+              <DialogDescription>
+                Set a new password for {editingUser?.name}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="new-password" className="text-foreground">New Password *</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={changePasswordForm.newPassword}
+                  onChange={(e) => setChangePasswordForm({ ...changePasswordForm, newPassword: e.target.value })}
+                  placeholder="Enter new password"
+                  className="mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Password must be at least 8 characters
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="confirm-password" className="text-foreground">Confirm Password *</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  value={changePasswordForm.confirmPassword}
+                  onChange={(e) => setChangePasswordForm({ ...changePasswordForm, confirmPassword: e.target.value })}
+                  placeholder="Confirm new password"
+                  className="mt-1"
+                />
+                {changePasswordForm.confirmPassword && changePasswordForm.newPassword !== changePasswordForm.confirmPassword && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Passwords do not match
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowChangePasswordDialog(false)
+                  setEditingUser(null)
+                  setChangePasswordForm({ newPassword: '', confirmPassword: '' })
+                }}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSavePassword} disabled={isSubmitting}>
+                {isSubmitting ? 'Changing...' : 'Change Password'}
               </Button>
             </DialogFooter>
           </DialogContent>
