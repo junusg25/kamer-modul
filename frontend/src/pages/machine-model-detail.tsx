@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Table,
   TableBody,
@@ -112,6 +114,10 @@ export default function MachineModelDetail() {
   const [error, setError] = useState('')
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false)
   
+  // Edit model state
+  const [showEditDialog, setShowEditDialog] = useState(false)
+  const [editingModel, setEditingModel] = useState<MachineModel | null>(null)
+  
   // Delete confirmation state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -189,6 +195,31 @@ export default function MachineModelDetail() {
   const handleAssignSuccess = () => {
     // Refresh the data after successful assignment
     fetchModelDetails()
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingModel) return
+    
+    try {
+      // Update the machine model via API
+      await apiService.updateMachineModel(editingModel.id, {
+        name: editingModel.name,
+        manufacturer: editingModel.manufacturer,
+        catalogue_number: editingModel.catalogue_number,
+        warranty_months: editingModel.warranty_months,
+        description: editingModel.description
+      })
+      
+      toast.success('Machine model updated successfully')
+      
+      // Refresh the data
+      await fetchModelDetails()
+      setShowEditDialog(false)
+      setEditingModel(null)
+    } catch (err: any) {
+      console.error('Error updating machine model:', err)
+      toast.error(err.message || 'Failed to update machine model')
+    }
   }
 
   const handleDeleteClick = (machine: AssignedMachine) => {
@@ -276,12 +307,21 @@ export default function MachineModelDetail() {
               </p>
             </div>
           </div>
-          {hasPermission('machines:assign') && (
-            <Button onClick={() => setIsAssignModalOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Assign Machine
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" onClick={() => {
+              setEditingModel(model)
+              setShowEditDialog(true)
+            }}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Model
             </Button>
-          )}
+            {hasPermission('machines:assign') && (
+              <Button onClick={() => setIsAssignModalOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Assign Machine
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Model Information */}
@@ -522,6 +562,83 @@ export default function MachineModelDetail() {
             warrantyMonths={model.warranty_months}
           />
         )}
+
+        {/* Edit Machine Model Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Machine Model</DialogTitle>
+              <DialogDescription>
+                Update the machine model information below.
+              </DialogDescription>
+            </DialogHeader>
+            {editingModel && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-name">Model Name *</Label>
+                    <Input
+                      id="edit-name"
+                      value={editingModel.name}
+                      onChange={(e) => setEditingModel({ ...editingModel, name: e.target.value })}
+                      placeholder="Enter model name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-manufacturer">Manufacturer *</Label>
+                    <Input
+                      id="edit-manufacturer"
+                      value={editingModel.manufacturer}
+                      onChange={(e) => setEditingModel({ ...editingModel, manufacturer: e.target.value })}
+                      placeholder="Enter manufacturer"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-catalogue">Catalogue Number</Label>
+                    <Input
+                      id="edit-catalogue"
+                      value={editingModel.catalogue_number || ''}
+                      onChange={(e) => setEditingModel({ ...editingModel, catalogue_number: e.target.value })}
+                      placeholder="Enter catalogue number"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-warranty">Warranty (months)</Label>
+                    <Input
+                      id="edit-warranty"
+                      type="number"
+                      min="0"
+                      max="120"
+                      value={editingModel.warranty_months}
+                      onChange={(e) => setEditingModel({ ...editingModel, warranty_months: parseInt(e.target.value) || 0 })}
+                      placeholder="12"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="edit-description">Description</Label>
+                  <Textarea
+                    id="edit-description"
+                    value={editingModel.description || ''}
+                    onChange={(e) => setEditingModel({ ...editingModel, description: e.target.value })}
+                    placeholder="Enter machine model description..."
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit} disabled={!editingModel?.name || !editingModel?.manufacturer}>
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

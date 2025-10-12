@@ -6,6 +6,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
@@ -50,6 +59,7 @@ import { apiService } from '@/services/api'
 import { useAuth } from '@/contexts/auth-context'
 import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '@/hooks/useColumnVisibility'
 import { ColumnVisibilityDropdown } from '@/components/ui/column-visibility-dropdown'
+import { toast } from 'sonner'
 
 interface MachineModel {
   id: string
@@ -106,6 +116,10 @@ export default function Machines() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [pageSize] = useState(20)
+  
+  // Edit model state
+  const [editingModel, setEditingModel] = useState<MachineModel | null>(null)
+  const [showEditDialog, setShowEditDialog] = useState(false)
 
   // Fetch machine models when applied search term or filters change
   useEffect(() => {
@@ -154,6 +168,36 @@ export default function Machines() {
 
   const handleViewModel = (modelId: string) => {
     navigate(`/machines/model/${modelId}`)
+  }
+
+  const handleEditModel = (model: MachineModel) => {
+    setEditingModel(model)
+    setShowEditDialog(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingModel) return
+    
+    try {
+      // Update the machine model via API
+      await apiService.updateMachineModel(editingModel.id, {
+        name: editingModel.name,
+        manufacturer: editingModel.manufacturer,
+        catalogue_number: editingModel.catalogue_number,
+        warranty_months: editingModel.warranty_months,
+        description: editingModel.description
+      })
+      
+      toast.success('Machine model updated successfully')
+      
+      // Refresh the list
+      await fetchMachineModels()
+      setShowEditDialog(false)
+      setEditingModel(null)
+    } catch (err: any) {
+      console.error('Error updating machine model:', err)
+      toast.error(err.message || 'Failed to update machine model')
+    }
   }
 
   // Get unique categories and manufacturers for filter dropdowns
@@ -470,7 +514,10 @@ export default function Machines() {
                             <Eye className="mr-2 h-4 w-4" />
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => {
+                            e.stopPropagation()
+                            handleEditModel(model)
+                          }}>
                             <Edit className="mr-2 h-4 w-4" />
                             Edit Model
                           </DropdownMenuItem>
@@ -548,6 +595,83 @@ export default function Machines() {
             )}
           </CardContent>
         </Card>
+
+        {/* Edit Machine Model Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Machine Model</DialogTitle>
+              <DialogDescription>
+                Update the machine model information below.
+              </DialogDescription>
+            </DialogHeader>
+            {editingModel && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-name">Model Name *</Label>
+                    <Input
+                      id="edit-name"
+                      value={editingModel.name}
+                      onChange={(e) => setEditingModel({ ...editingModel, name: e.target.value })}
+                      placeholder="Enter model name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-manufacturer">Manufacturer *</Label>
+                    <Input
+                      id="edit-manufacturer"
+                      value={editingModel.manufacturer}
+                      onChange={(e) => setEditingModel({ ...editingModel, manufacturer: e.target.value })}
+                      placeholder="Enter manufacturer"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-catalogue">Catalogue Number</Label>
+                    <Input
+                      id="edit-catalogue"
+                      value={editingModel.catalogue_number || ''}
+                      onChange={(e) => setEditingModel({ ...editingModel, catalogue_number: e.target.value })}
+                      placeholder="Enter catalogue number"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-warranty">Warranty (months)</Label>
+                    <Input
+                      id="edit-warranty"
+                      type="number"
+                      min="0"
+                      max="120"
+                      value={editingModel.warranty_months}
+                      onChange={(e) => setEditingModel({ ...editingModel, warranty_months: parseInt(e.target.value) || 0 })}
+                      placeholder="12"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="edit-description">Description</Label>
+                  <Textarea
+                    id="edit-description"
+                    value={editingModel.description || ''}
+                    onChange={(e) => setEditingModel({ ...editingModel, description: e.target.value })}
+                    placeholder="Enter machine model description..."
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit} disabled={!editingModel?.name || !editingModel?.manufacturer}>
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   )

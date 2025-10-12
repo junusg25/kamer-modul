@@ -61,6 +61,7 @@ import { Badge } from '../components/ui/badge'
 import { Separator } from '../components/ui/separator'
 import { cn } from '../lib/utils'
 import { formatDate } from '../lib/dateTime'
+import { useAuth } from '../contexts/auth-context'
 
 interface Customer {
   id: string
@@ -104,6 +105,12 @@ interface MachineModel {
   warranty_months?: number
 }
 
+interface MachineCategory {
+  id: number
+  name: string
+  description?: string
+}
+
 // Removed Supplier interface - using dynamic purchased_at options instead
 
 const STEPS = [
@@ -115,6 +122,7 @@ const STEPS = [
 
 export default function CreateWarrantyRepairTicket() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [currentStep, setCurrentStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -166,7 +174,8 @@ export default function CreateWarrantyRepairTicket() {
       manufacturer: '',
       catalogue_number: '',
       warranty_months: 12,
-      category_id: ''
+      category_id: '',
+      description: ''
     },
     
     // Ticket details
@@ -183,6 +192,7 @@ export default function CreateWarrantyRepairTicket() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [machines, setMachines] = useState<Machine[]>([])
   const [machineModels, setMachineModels] = useState<MachineModel[]>([])
+  const [machineCategories, setMachineCategories] = useState<MachineCategory[]>([])
   const [users, setUsers] = useState<any[]>([])
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false)
   const [isLoadingMachines, setIsLoadingMachines] = useState(false)
@@ -204,10 +214,12 @@ export default function CreateWarrantyRepairTicket() {
   const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false)
   const [machinePopoverOpen, setMachinePopoverOpen] = useState(false)
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false)
+  const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false)
   // Removed supplierPopoverOpen - using purchasedAtPopoverOpen instead
   
   // Search states
   const [machineSearchTerm, setMachineSearchTerm] = useState('')
+  const [categorySearch, setCategorySearch] = useState('')
   
 
   useEffect(() => {
@@ -236,15 +248,17 @@ export default function CreateWarrantyRepairTicket() {
       setIsLoadingCustomers(true)
       setIsLoadingModels(true)
       
-      const [customersRes, modelsRes, usersRes] = await Promise.all([
+      const [customersRes, modelsRes, usersRes, categoriesRes] = await Promise.all([
         apiService.getCustomers({ limit: 100 }),
         apiService.getMachineModels({ limit: 100 }),
-        apiService.getUsers({ limit: 100 })
+        apiService.getUsers({ limit: 100 }),
+        apiService.getMachineCategories()
       ])
       
       setCustomers((customersRes as any).data || [])
       setMachineModels((modelsRes as any).data || [])
       setUsers((usersRes as any).data || [])
+      setMachineCategories((categoriesRes as any).data || [])
       
       // Fetch purchased_at options
       await fetchPurchasedAtOptions()
@@ -428,7 +442,8 @@ export default function CreateWarrantyRepairTicket() {
         sale_price: formData.newMachine.sale_price ? parseFloat(formData.newMachine.sale_price) : null,
         machine_condition: formData.newMachine.machine_condition,
         description: formData.newMachine.description,
-        warranty_expiry_date: formData.newMachine.warranty_expiry_date
+        warranty_expiry_date: formData.newMachine.warranty_expiry_date,
+        added_by_user_id: user?.id // Track who added the machine
       }
       
       
@@ -1667,7 +1682,7 @@ export default function CreateWarrantyRepairTicket() {
                   Create New Model
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Package className="w-5 h-5" />
@@ -1688,42 +1703,152 @@ export default function CreateWarrantyRepairTicket() {
                           ...prev,
                           newModel: { ...prev.newModel, name: e.target.value }
                         }))}
+                        placeholder="Enter model name"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="manufacturer">Manufacturer</Label>
+                      <Label htmlFor="model-manufacturer">Manufacturer *</Label>
                       <Input
-                        id="manufacturer"
+                        id="model-manufacturer"
                         value={formData.newModel.manufacturer}
                         onChange={(e) => setFormData(prev => ({
                           ...prev,
                           newModel: { ...prev.newModel, manufacturer: e.target.value }
                         }))}
+                        placeholder="Enter manufacturer"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="catalogue-number">Catalogue Number</Label>
+                      <Label htmlFor="model-catalogue-number">Catalogue Number</Label>
                       <Input
-                        id="catalogue-number"
+                        id="model-catalogue-number"
                         value={formData.newModel.catalogue_number}
                         onChange={(e) => setFormData(prev => ({
                           ...prev,
                           newModel: { ...prev.newModel, catalogue_number: e.target.value }
                         }))}
+                        placeholder="Enter catalogue number"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="warranty-months">Warranty (months)</Label>
+                      <Label htmlFor="model-warranty-months">Warranty (months)</Label>
                       <Input
-                        id="warranty-months"
+                        id="model-warranty-months"
                         type="number"
+                        min="0"
+                        max="120"
                         value={formData.newModel.warranty_months}
                         onChange={(e) => setFormData(prev => ({
                           ...prev,
                           newModel: { ...prev.newModel, warranty_months: parseInt(e.target.value) || 12 }
                         }))}
+                        placeholder="12"
                       />
                     </div>
+                    
+                    {/* Category Selection */}
+                    <div className="space-y-2 col-span-2">
+                      <Label htmlFor="model-category">Category</Label>
+                      <Popover open={categoryPopoverOpen} onOpenChange={setCategoryPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={categoryPopoverOpen}
+                            className="w-full justify-between h-11"
+                          >
+                            {formData.newModel.category_id 
+                              ? machineCategories.find(cat => cat.id.toString() === formData.newModel.category_id)?.name 
+                              : "Select category (optional)"}
+                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[400px] p-0" align="start">
+                          <div className="border-b p-3">
+                            <div className="relative">
+                              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input
+                                placeholder="Search categories..."
+                                className="pl-10"
+                                value={categorySearch}
+                                onChange={(e) => setCategorySearch(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <div className="max-h-[300px] overflow-y-auto p-1">
+                            {/* No category option */}
+                            <div
+                              onClick={() => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  newModel: { ...prev.newModel, category_id: '' }
+                                }))
+                                setCategoryPopoverOpen(false)
+                              }}
+                              className="flex items-center gap-3 p-2 rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+                            >
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100">
+                                <span className="text-gray-600 text-sm">-</span>
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium">No category</p>
+                              </div>
+                            </div>
+                            {/* Existing categories */}
+                            {machineCategories
+                              .filter(cat => 
+                                categorySearch === '' || 
+                                cat.name.toLowerCase().includes(categorySearch.toLowerCase())
+                              )
+                              .map((category) => (
+                              <div
+                                key={category.id}
+                                onClick={() => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    newModel: { ...prev.newModel, category_id: category.id.toString() }
+                                  }))
+                                  setCategoryPopoverOpen(false)
+                                }}
+                                className={cn(
+                                  "flex items-center gap-3 p-2 rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors",
+                                  formData.newModel.category_id === category.id.toString() && "bg-accent"
+                                )}
+                              >
+                                <Check
+                                  className={cn(
+                                    "h-4 w-4",
+                                    formData.newModel.category_id === category.id.toString() ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
+                                  <Package className="w-4 h-4 text-primary" />
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-medium">{category.name}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                  
+                  {/* Description */}
+                  <div className="space-y-2">
+                    <Label htmlFor="model-description">Description</Label>
+                    <Textarea
+                      id="model-description"
+                      value={formData.newModel.description}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        newModel: { ...prev.newModel, description: e.target.value }
+                      }))}
+                      placeholder="Enter machine model description..."
+                      rows={3}
+                      className="resize-none"
+                    />
                   </div>
                 </div>
                 <DialogFooter>
@@ -1732,7 +1857,7 @@ export default function CreateWarrantyRepairTicket() {
                   </Button>
                   <Button 
                     onClick={createNewModel} 
-                    disabled={isCreatingModel || !formData.newModel.name}
+                    disabled={isCreatingModel || !formData.newModel.name || !formData.newModel.manufacturer}
                   >
                     {isCreatingModel && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Create Model
