@@ -270,10 +270,16 @@ export default function CreateRepairTicket() {
       setUsers((usersRes as any).data || [])
       setMachineCategories((categoriesRes as any).data || [])
       
-      // Extract manufacturer options from suppliers
+      // Extract manufacturer options from both suppliers and existing machine models
       const suppliersData = (suppliersRes as any).data || []
       const supplierNames = suppliersData.map((s: any) => s.name)
-      setManufacturerOptions(supplierNames)
+      const modelManufacturers = ((modelsRes as any).data || [])
+        .map((m: any) => m.manufacturer)
+        .filter((m: string) => m && m.trim())
+      
+      // Combine and deduplicate manufacturers from both sources
+      const allManufacturers = [...new Set([...supplierNames, ...modelManufacturers])]
+      setManufacturerOptions(allManufacturers.sort())
       
       // Fetch purchased_at options
       await fetchPurchasedAtOptions()
