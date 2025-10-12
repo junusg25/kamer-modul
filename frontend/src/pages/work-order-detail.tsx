@@ -46,6 +46,7 @@ import {
   Truck
 } from 'lucide-react'
 import apiService from '../services/api'
+import { API_ROOT } from '../config/api'
 import { useAuth } from '../contexts/auth-context'
 import { toast } from 'sonner'
 import { formatDate, formatDateTime } from '../lib/dateTime'
@@ -433,7 +434,7 @@ export default function WorkOrderDetail() {
     try {
             
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:3000/api/print/work-order/${workOrder.id}`, {
+      const response = await fetch(`${API_ROOT}/api/print/work-order/${workOrder.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -473,7 +474,7 @@ export default function WorkOrderDetail() {
     try {
             
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:3000/api/print/work-order/${workOrder.id}`, {
+      const response = await fetch(`${API_ROOT}/api/print/work-order/${workOrder.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`

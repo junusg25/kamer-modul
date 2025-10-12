@@ -46,6 +46,7 @@ import {
   Truck
 } from 'lucide-react'
 import apiService from '../services/api'
+import { API_ROOT } from '../config/api'
 import { useAuth } from '../contexts/auth-context'
 import { formatCurrency } from '../lib/currency'
 import { formatDate, formatDateTime } from '../lib/dateTime'
@@ -451,7 +452,7 @@ export default function WarrantyWorkOrderDetail() {
     try {
             
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:3000/api/print/warranty-work-order/${warrantyWorkOrder.id}`, {
+      const response = await fetch(`${API_ROOT}/api/print/warranty-work-order/${warrantyWorkOrder.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -491,7 +492,7 @@ export default function WarrantyWorkOrderDetail() {
     try {
             
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:3000/api/print/warranty-work-order/${warrantyWorkOrder.id}`, {
+      const response = await fetch(`${API_ROOT}/api/print/warranty-work-order/${warrantyWorkOrder.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`

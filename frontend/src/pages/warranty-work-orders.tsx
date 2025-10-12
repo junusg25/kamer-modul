@@ -45,6 +45,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { DeleteConfirmationDialog } from '../components/ui/delete-confirmation-dialog'
 import { CompletedItemAlertDialog } from '../components/ui/completed-item-alert-dialog'
 import apiService from '../services/api'
+import { API_ROOT } from '../config/api'
 import { useAuth } from '@/contexts/auth-context'
 import { toast } from 'sonner'
 import { formatStatus, getStatusBadgeVariant, getStatusBadgeColor } from '@/lib/status'
@@ -304,7 +305,7 @@ export default function WarrantyWorkOrders() {
 
   const handlePrintWorkOrder = async (workOrder: WarrantyWorkOrder) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/print/warranty-work-order/${workOrder.id}`, {
+      const response = await fetch(`${API_ROOT}/api/print/warranty-work-order/${workOrder.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -330,7 +331,7 @@ export default function WarrantyWorkOrders() {
 
   const handleDownloadWorkOrder = async (workOrder: WarrantyWorkOrder) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/print/warranty-work-order/${workOrder.id}`, {
+      const response = await fetch(`${API_ROOT}/api/print/warranty-work-order/${workOrder.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

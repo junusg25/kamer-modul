@@ -48,6 +48,7 @@ import { Label } from '@/components/ui/label'
 import { DeleteConfirmationDialog } from '@/components/ui/delete-confirmation-dialog'
 import { CompletedItemAlertDialog } from '@/components/ui/completed-item-alert-dialog'
 import { apiService } from '@/services/api'
+import { API_ROOT } from '@/config/api'
 import { useAuth } from '@/contexts/auth-context'
 import { toast } from 'sonner'
 import { formatDate } from '@/lib/dateTime'
@@ -358,7 +359,7 @@ export default function WarrantyRepairTickets() {
 
   const handlePrintTicket = async (ticket: WarrantyRepairTicket) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/print/warranty-repair-ticket/${ticket.id}`, {
+      const response = await fetch(`${API_ROOT}/api/print/warranty-ticket/${ticket.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -384,7 +385,7 @@ export default function WarrantyRepairTickets() {
 
   const handleDownloadTicket = async (ticket: WarrantyRepairTicket) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/print/warranty-repair-ticket/${ticket.id}`, {
+      const response = await fetch(`${API_ROOT}/api/print/warranty-ticket/${ticket.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

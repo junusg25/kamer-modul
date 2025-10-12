@@ -56,6 +56,7 @@ import {
 } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import apiService from '../services/api'
+import { API_ROOT } from '../config/api'
 import { useAuth } from '../contexts/auth-context'
 import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
@@ -253,7 +254,7 @@ export default function RepairTicketDetail() {
 
   const handlePrint = async () => {
     try {
-            const response = await fetch(`http://localhost:3000/api/print/repair-ticket/${repairTicket.id}`, {
+            const response = await fetch(`${API_ROOT}/api/print/repair-ticket/${repairTicket.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -279,7 +280,7 @@ export default function RepairTicketDetail() {
 
   const handleDownloadPDF = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/print/repair-ticket/${repairTicket.id}`, {
+      const response = await fetch(`${API_ROOT}/api/print/repair-ticket/${repairTicket.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

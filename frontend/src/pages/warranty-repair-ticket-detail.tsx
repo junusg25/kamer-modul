@@ -57,6 +57,7 @@ import {
 } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { apiService } from '@/services/api'
+import { API_ROOT } from '@/config/api'
 import { useAuth } from '@/contexts/auth-context'
 import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -240,7 +241,7 @@ export default function WarrantyRepairTicketDetail() {
 
   const handlePrint = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/print/warranty-ticket/${warrantyRepairTicket.id}`, {
+      const response = await fetch(`${API_ROOT}/api/print/warranty-ticket/${warrantyRepairTicket.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -263,7 +264,7 @@ export default function WarrantyRepairTicketDetail() {
 
   const handleDownloadPDF = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/print/warranty-ticket/${warrantyRepairTicket.id}`, {
+      const response = await fetch(`${API_ROOT}/api/print/warranty-ticket/${warrantyRepairTicket.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
