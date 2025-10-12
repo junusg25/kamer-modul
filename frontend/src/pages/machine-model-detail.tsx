@@ -236,15 +236,22 @@ export default function MachineModelDetail() {
     if (!editingModel) return
     
     try {
-      // Update the machine model via API
-      await apiService.updateMachineModel(editingModel.id, {
+      // Prepare update payload
+      const updateData: any = {
         name: editingModel.name,
         manufacturer: editingModel.manufacturer,
-        catalogue_number: editingModel.catalogue_number,
+        catalogue_number: editingModel.catalogue_number || null,
         warranty_months: editingModel.warranty_months,
-        category_id: editingModel.category_id || null,
-        description: editingModel.description
-      })
+        description: editingModel.description || null
+      }
+      
+      // Only include category_id if it's a valid number
+      if (editingModel.category_id && typeof editingModel.category_id === 'number') {
+        updateData.category_id = editingModel.category_id
+      }
+      
+      // Update the machine model via API
+      await apiService.updateMachineModel(editingModel.id, updateData)
       
       toast.success('Machine model updated successfully')
       
