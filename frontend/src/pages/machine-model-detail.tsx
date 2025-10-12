@@ -135,6 +135,9 @@ export default function MachineModelDetail() {
   const [machineCategories, setMachineCategories] = useState<MachineCategory[]>([])
   const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false)
   const [categorySearch, setCategorySearch] = useState('')
+  const [manufacturerPopoverOpen, setManufacturerPopoverOpen] = useState(false)
+  const [manufacturerSearch, setManufacturerSearch] = useState('')
+  const [manufacturerOptions, setManufacturerOptions] = useState<string[]>([])
   
   // Delete machine confirmation state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -153,6 +156,7 @@ export default function MachineModelDetail() {
 
   useEffect(() => {
     fetchCategories()
+    fetchManufacturers()
   }, [])
 
   const fetchCategories = async () => {
@@ -161,6 +165,19 @@ export default function MachineModelDetail() {
       setMachineCategories((response as any).data || [])
     } catch (err) {
       console.error('Error fetching categories:', err)
+    }
+  }
+
+  const fetchManufacturers = async () => {
+    try {
+      const response = await apiService.getSuppliers({ limit: 100 })
+      const suppliersData = (response as any).data || []
+      // Extract unique manufacturer names from suppliers
+      const supplierNames = suppliersData.map((s: any) => s.name)
+      setManufacturerOptions(supplierNames)
+    } catch (err) {
+      console.error('Error fetching manufacturers:', err)
+      setManufacturerOptions([])
     }
   }
 
@@ -233,7 +250,11 @@ export default function MachineModelDetail() {
   }
 
   const handleSaveEdit = async () => {
-    if (!editingModel) return
+    if (!editingModel || !editingModel.id) {
+      toast.error('Invalid model data')
+      console.error('editingModel is missing or has no id:', editingModel)
+      return
+    }
     
     try {
       // Prepare update payload
@@ -250,6 +271,8 @@ export default function MachineModelDetail() {
         updateData.category_id = editingModel.category_id
       }
       
+      console.log('Updating model:', editingModel.id, updateData)
+      
       // Update the machine model via API
       await apiService.updateMachineModel(editingModel.id, updateData)
       
@@ -260,6 +283,7 @@ export default function MachineModelDetail() {
       setShowEditDialog(false)
       setEditingModel(null)
       setCategorySearch('')
+      setManufacturerSearch('')
     } catch (err: any) {
       console.error('Error updating machine model:', err)
       toast.error(err.message || 'Failed to update machine model')
@@ -369,7 +393,9 @@ export default function MachineModelDetail() {
           </div>
           <div className="flex items-center space-x-2">
             <Button variant="outline" onClick={() => {
-              setEditingModel(model)
+              // Create a copy of the model to avoid mutating the original
+              console.log('Opening edit dialog for model:', model)
+              setEditingModel({ ...model })
               setShowEditDialog(true)
             }}>
               <Edit className="mr-2 h-4 w-4" />
@@ -653,12 +679,98 @@ export default function MachineModelDetail() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="edit-manufacturer">Manufacturer *</Label>
-                    <Input
-                      id="edit-manufacturer"
-                      value={editingModel.manufacturer}
-                      onChange={(e) => setEditingModel({ ...editingModel, manufacturer: e.target.value })}
-                      placeholder="Enter manufacturer"
-                    />
+                    <Popover open={manufacturerPopoverOpen} onOpenChange={setManufacturerPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={manufacturerPopoverOpen}
+                          className="w-full justify-between h-11"
+                        >
+                          {editingModel.manufacturer || "Select manufacturer..."}
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0" align="start">
+                        <div className="border-b p-3">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              placeholder="Search or type new manufacturer..."
+                              className="pl-10"
+                              value={manufacturerSearch}
+                              onChange={(e) => setManufacturerSearch(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <div className="max-h-[300px] overflow-y-auto">
+                          {/* Manual entry option */}
+                          {manufacturerSearch && !manufacturerOptions.some(opt => opt.toLowerCase() === manufacturerSearch.toLowerCase()) && (
+                            <div className="p-1 border-b">
+                              <div
+                                onClick={() => {
+                                  setEditingModel({ ...editingModel, manufacturer: manufacturerSearch })
+                                  setManufacturerPopoverOpen(false)
+                                  setManufacturerSearch('')
+                                }}
+                                className="flex items-center gap-3 p-2 rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+                              >
+                                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100">
+                                  <span className="text-green-600 text-sm font-bold">+</span>
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-medium">Add "{manufacturerSearch}"</p>
+                                  <p className="text-sm text-muted-foreground">Create new manufacturer</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Existing options */}
+                          {manufacturerOptions.filter(opt => 
+                            manufacturerSearch === '' || 
+                            opt.toLowerCase().includes(manufacturerSearch.toLowerCase())
+                          ).length === 0 ? (
+                            <div className="p-4 text-center text-muted-foreground">No manufacturers found.</div>
+                          ) : (
+                            <div className="p-1">
+                              {manufacturerOptions
+                                .filter(opt => 
+                                  manufacturerSearch === '' || 
+                                  opt.toLowerCase().includes(manufacturerSearch.toLowerCase())
+                                )
+                                .map((option) => (
+                                <div
+                                  key={option}
+                                  onClick={() => {
+                                    setEditingModel({ ...editingModel, manufacturer: option })
+                                    setManufacturerPopoverOpen(false)
+                                    setManufacturerSearch('')
+                                  }}
+                                  className={cn(
+                                    "flex items-center gap-3 p-2 rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors",
+                                    editingModel.manufacturer === option && "bg-accent"
+                                  )}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "h-4 w-4",
+                                      editingModel.manufacturer === option ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-orange-100">
+                                    <Building className="w-4 h-4 text-orange-600" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="font-medium">{option}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="edit-catalogue">Catalogue Number</Label>
