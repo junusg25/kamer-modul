@@ -1,4 +1,23 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+// API Configuration - Dynamic based on current host
+const getApiUrl = () => {
+  // In browser, use the current hostname
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol
+    const hostname = window.location.hostname
+    
+    // If running on localhost, use port 3000
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `${protocol}//${hostname}:3000/api`
+    }
+    
+    // For production/server, use the same hostname with /api path
+    return `${protocol}//${hostname}/api`
+  }
+  // Fallback for build time
+  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+}
+
+const API_BASE_URL = getApiUrl();
 
 interface TrackingData {
   tracking_number: string;
