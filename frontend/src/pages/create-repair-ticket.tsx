@@ -429,7 +429,39 @@ export default function CreateRepairTicket() {
   const createNewCategory = async (categoryName: string) => {
     try {
       setIsCreatingCategory(true)
-      const response = await apiService.createMachineCategory({ name: categoryName })
+      
+      // Trim whitespace and normalize the name
+      const trimmedName = categoryName.trim()
+      
+      // More thorough check for existing categories
+      const existingCategory = machineCategories.find(cat => {
+        const existingName = cat.name.toLowerCase().trim()
+        const newName = trimmedName.toLowerCase().trim()
+        
+        // Check for exact match
+        if (existingName === newName) return true
+        
+        // Check for similar names (in case of typos or variations)
+        if (existingName.includes(newName) || newName.includes(existingName)) {
+          return true
+        }
+        
+        return false
+      })
+      
+      if (existingCategory) {
+        // If category exists, just select it instead of creating a new one
+        setFormData(prev => ({
+          ...prev,
+          newModel: { ...prev.newModel, category_id: existingCategory.id.toString() }
+        }))
+        setCategoryPopoverOpen(false)
+        setCategorySearch('')
+        toast.info(`Category "${trimmedName}" is similar to existing "${existingCategory.name}" and has been selected`)
+        return
+      }
+      
+      const response = await apiService.createMachineCategory({ name: trimmedName })
       const newCategory = (response as any).data
       
       // Add to local state
@@ -443,10 +475,26 @@ export default function CreateRepairTicket() {
       
       setCategoryPopoverOpen(false)
       setCategorySearch('')
-      toast.success(`Category "${categoryName}" created successfully`)
+      toast.success(`Category "${trimmedName}" created successfully`)
     } catch (err: any) {
       console.error('Error creating category:', err)
-      toast.error(err.message || 'Failed to create category')
+      
+      if (err.message && err.message.includes('already exists')) {
+        // Try to find the similar category and suggest it
+        const similarCategory = machineCategories.find(cat => {
+          const existingName = cat.name.toLowerCase().trim()
+          const newName = categoryName.trim().toLowerCase()
+          return existingName.includes(newName) || newName.includes(existingName)
+        })
+        
+        if (similarCategory) {
+          toast.error(`Category "${categoryName.trim()}" is too similar to existing "${similarCategory.name}". Please select the existing category or use a different name.`)
+        } else {
+          toast.error(`Category "${categoryName.trim()}" already exists. Please select it from the list.`)
+        }
+      } else {
+        toast.error(err.message || 'Failed to create category')
+      }
     } finally {
       setIsCreatingCategory(false)
     }
@@ -1936,9 +1984,11 @@ export default function CreateRepairTicket() {
                             </div>
                             
                             {/* Create new category option */}
-                            {categorySearch && !machineCategories.some(cat => 
-                              cat.name.toLowerCase() === categorySearch.toLowerCase()
-                            ) && (
+                            {categorySearch && !machineCategories.some(cat => {
+                              const existingName = cat.name.toLowerCase().trim()
+                              const newName = categorySearch.trim().toLowerCase()
+                              return existingName === newName || existingName.includes(newName) || newName.includes(existingName)
+                            }) && (
                               <div className="p-1 border-b">
                                 <div
                                   onClick={() => createNewCategory(categorySearch)}
