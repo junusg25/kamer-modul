@@ -553,14 +553,7 @@ export default function Machines() {
                   >
                     {isColumnVisible('name') && (
                       <TableCell>
-                        <div>
-                          <div className="font-medium">{model.name}</div>
-                          {model.description && (
-                            <div className="text-sm text-muted-foreground">
-                              {model.description}
-                            </div>
-                          )}
-                        </div>
+                        <div className="font-medium">{model.name}</div>
                       </TableCell>
                     )}
                     {isColumnVisible('manufacturer') && (
