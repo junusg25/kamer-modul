@@ -141,6 +141,11 @@ export default function WorkOrders() {
   const [workOrderToDelete, setWorkOrderToDelete] = useState<WorkOrder | null>(null)
   const [completedAlertOpen, setCompletedAlertOpen] = useState(false)
   const [completedWorkOrder, setCompletedWorkOrder] = useState<WorkOrder | null>(null)
+  
+  // Year filter state
+  const currentYear = new Date().getFullYear()
+  const [selectedYear, setSelectedYear] = useState(currentYear)
+  const [availableYears, setAvailableYears] = useState<number[]>([currentYear])
 
   // Column visibility hook
   const {
@@ -161,16 +166,32 @@ export default function WorkOrders() {
     }
   }, [searchParams])
 
+  // Fetch available years on mount
+  useEffect(() => {
+    const fetchYears = async () => {
+      try {
+        const response = await apiService.getWorkOrderYears()
+        const years = response.data || []
+        setAvailableYears(years.length > 0 ? years : [currentYear])
+      } catch (error) {
+        console.error('Error fetching years:', error)
+        setAvailableYears([currentYear])
+      }
+    }
+    fetchYears()
+  }, [])
+
   useEffect(() => {
     fetchWorkOrders()
-  }, [appliedSearchTerm, filters, currentPage])
+  }, [appliedSearchTerm, filters, currentPage, selectedYear])
 
   const fetchWorkOrders = async () => {
     try {
       setIsLoading(true)
       const searchParams: any = {
         page: currentPage,
-        limit: pageSize
+        limit: pageSize,
+        year: selectedYear
       }
       
       if (appliedSearchTerm) {
@@ -563,6 +584,26 @@ export default function WorkOrders() {
                           {getUniqueTechnicians().map(tech => (
                             <SelectItem key={tech.id} value={tech.id}>
                               {tech.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Year Filter */}
+                    <div className="p-2">
+                      <label className="text-sm font-medium mb-2 block">Year</label>
+                      <Select value={selectedYear.toString()} onValueChange={(value) => {
+                        setSelectedYear(parseInt(value))
+                        setCurrentPage(1)
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableYears.map((year) => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
                             </SelectItem>
                           ))}
                         </SelectContent>

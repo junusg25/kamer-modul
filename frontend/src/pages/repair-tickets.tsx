@@ -146,6 +146,11 @@ export default function RepairTickets() {
   const [pageSize] = useState(25)
   const [error, setError] = useState('')
   
+  // Year filter state
+  const currentYear = new Date().getFullYear()
+  const [selectedYear, setSelectedYear] = useState(currentYear)
+  const [availableYears, setAvailableYears] = useState<number[]>([currentYear])
+  
   // Convert to work order state
   const [convertModalOpen, setConvertModalOpen] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState<RepairTicket | null>(null)
@@ -159,16 +164,32 @@ export default function RepairTickets() {
   const [convertedAlertOpen, setConvertedAlertOpen] = useState(false)
   const [convertedTicket, setConvertedTicket] = useState<RepairTicket | null>(null)
 
+  // Fetch available years on mount
+  useEffect(() => {
+    const fetchYears = async () => {
+      try {
+        const response = await apiService.getRepairTicketYears()
+        const years = response.data || []
+        setAvailableYears(years.length > 0 ? years : [currentYear])
+      } catch (error) {
+        console.error('Error fetching years:', error)
+        setAvailableYears([currentYear])
+      }
+    }
+    fetchYears()
+  }, [])
+
   useEffect(() => {
     fetchTickets()
-  }, [appliedSearchTerm, filters, currentPage])
+  }, [appliedSearchTerm, filters, currentPage, selectedYear])
 
   const fetchTickets = async () => {
     try {
       setIsLoading(true)
       const searchParams: any = {
         page: currentPage,
-        limit: pageSize
+        limit: pageSize,
+        year: selectedYear
       }
       
       if (appliedSearchTerm) {
@@ -614,6 +635,26 @@ export default function RepairTickets() {
                           {getUniqueTechnicians().map((tech) => (
                             <SelectItem key={tech.id} value={tech.id}>
                               {tech.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Year Filter */}
+                    <div className="p-2">
+                      <Label className="text-sm font-medium mb-2 block">Year</Label>
+                      <Select value={selectedYear.toString()} onValueChange={(value) => {
+                        setSelectedYear(parseInt(value))
+                        setCurrentPage(1)
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableYears.map((year) => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
                             </SelectItem>
                           ))}
                         </SelectContent>

@@ -123,6 +123,11 @@ export default function WarrantyWorkOrders() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [pageSize] = useState(25)
+  
+  // Year filter state
+  const currentYear = new Date().getFullYear()
+  const [selectedYear, setSelectedYear] = useState(currentYear)
+  const [availableYears, setAvailableYears] = useState<number[]>([currentYear])
 
   // Delete state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -149,9 +154,24 @@ export default function WarrantyWorkOrders() {
     }
   }, [searchParams])
 
+  // Fetch available years on mount
+  useEffect(() => {
+    const fetchYears = async () => {
+      try {
+        const response = await apiService.getWarrantyWorkOrderYears()
+        const years = response.data || []
+        setAvailableYears(years.length > 0 ? years : [currentYear])
+      } catch (error) {
+        console.error('Error fetching years:', error)
+        setAvailableYears([currentYear])
+      }
+    }
+    fetchYears()
+  }, [])
+
   useEffect(() => {
     fetchWarrantyWorkOrders()
-  }, [appliedSearchTerm, filters, currentPage])
+  }, [appliedSearchTerm, filters, currentPage, selectedYear])
 
   const fetchWarrantyWorkOrders = async () => {
     try {
@@ -159,7 +179,8 @@ export default function WarrantyWorkOrders() {
       setError(null)
       const searchParams: any = {
         page: currentPage,
-        limit: pageSize
+        limit: pageSize,
+        year: selectedYear
       }
       
       if (appliedSearchTerm) {
@@ -576,6 +597,26 @@ export default function WarrantyWorkOrders() {
                           {getUniqueTechnicians().map(tech => (
                             <SelectItem key={tech.id} value={tech.id}>
                               {tech.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Year Filter */}
+                    <div className="p-2">
+                      <label className="text-sm font-medium mb-2 block">Year</label>
+                      <Select value={selectedYear.toString()} onValueChange={(value) => {
+                        setSelectedYear(parseInt(value))
+                        setCurrentPage(1)
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableYears.map((year) => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
                             </SelectItem>
                           ))}
                         </SelectContent>

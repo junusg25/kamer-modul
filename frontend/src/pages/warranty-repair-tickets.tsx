@@ -117,6 +117,11 @@ export default function WarrantyRepairTickets() {
   const [totalCount, setTotalCount] = useState(0)
   const [pageSize] = useState(25)
   
+  // Year filter state
+  const currentYear = new Date().getFullYear()
+  const [selectedYear, setSelectedYear] = useState(currentYear)
+  const [availableYears, setAvailableYears] = useState<number[]>([currentYear])
+  
   // Convert to work order state
   const [convertModalOpen, setConvertModalOpen] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState<WarrantyRepairTicket | null>(null)
@@ -141,10 +146,25 @@ export default function WarrantyRepairTickets() {
     isSyncing
   } = useColumnVisibility('warranty_repair_tickets', getDefaultColumnKeys(WARRANTY_REPAIR_TICKET_COLUMNS))
 
+  // Fetch available years on mount
+  useEffect(() => {
+    const fetchYears = async () => {
+      try {
+        const response = await apiService.getWarrantyRepairTicketYears()
+        const years = response.data || []
+        setAvailableYears(years.length > 0 ? years : [currentYear])
+      } catch (error) {
+        console.error('Error fetching years:', error)
+        setAvailableYears([currentYear])
+      }
+    }
+    fetchYears()
+  }, [])
+
   useEffect(() => {
     fetchWarrantyRepairTickets()
     fetchUsers()
-  }, [appliedSearchTerm, filters, currentPage])
+  }, [appliedSearchTerm, filters, currentPage, selectedYear])
 
   const fetchWarrantyRepairTickets = async () => {
     try {
@@ -152,7 +172,8 @@ export default function WarrantyRepairTickets() {
       setError(null)
       const searchParams: any = {
         page: currentPage,
-        limit: pageSize
+        limit: pageSize,
+        year: selectedYear
       }
       
       if (appliedSearchTerm) {
@@ -635,6 +656,26 @@ export default function WarrantyRepairTickets() {
                           {getUniqueTechnicians().map(tech => (
                             <SelectItem key={tech.id} value={tech.id}>
                               {tech.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Year Filter */}
+                    <div className="p-2">
+                      <label className="text-sm font-medium mb-2 block">Year</label>
+                      <Select value={selectedYear.toString()} onValueChange={(value) => {
+                        setSelectedYear(parseInt(value))
+                        setCurrentPage(1)
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableYears.map((year) => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
                             </SelectItem>
                           ))}
                         </SelectContent>
