@@ -805,7 +805,7 @@ export default function MachineRentals() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Machine Rentals ({pagination.total})</CardTitle>
+              <CardTitle>Machine Rentals ({totalCount})</CardTitle>
               {/* Column Visibility */}
               <ColumnVisibilityDropdown
                 columns={ACTIVE_RENTAL_COLUMNS}
