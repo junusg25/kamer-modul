@@ -370,6 +370,13 @@ export default function Settings() {
               Manage users, permissions, and system configuration
             </p>
           </div>
+          <Button
+            onClick={() => setShowAddUserDialog(true)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Add User
+          </Button>
         </div>
 
         {/* Settings Tabs */}
@@ -391,20 +398,8 @@ export default function Settings() {
               {/* Users List */}
               <Card className="lg:col-span-1">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-foreground">All Users</CardTitle>
-                      <CardDescription>Select a user to manage their permissions</CardDescription>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => setShowAddUserDialog(true)}
-                      className="flex items-center gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add User
-                    </Button>
-                  </div>
+                  <CardTitle className="text-foreground">All Users</CardTitle>
+                  <CardDescription>Select a user to manage their permissions</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {usersLoading ? (
