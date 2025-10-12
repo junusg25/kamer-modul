@@ -377,8 +377,7 @@ router.delete('/:id', async (req, res, next) => {
         (SELECT COUNT(*) FROM repair_tickets WHERE machine_id = $1) as repair_tickets_count,
         (SELECT COUNT(*) FROM warranty_repair_tickets WHERE machine_id = $1) as warranty_repair_tickets_count,
         (SELECT COUNT(*) FROM work_orders WHERE machine_id = $1) as work_orders_count,
-        (SELECT COUNT(*) FROM warranty_work_orders WHERE machine_id = $1) as warranty_work_orders_count,
-        (SELECT COUNT(*) FROM machine_rentals WHERE assigned_machine_id = $1) as machine_rentals_count`,
+        (SELECT COUNT(*) FROM warranty_work_orders WHERE machine_id = $1) as warranty_work_orders_count`,
       [id]
     );
     
@@ -386,8 +385,7 @@ router.delete('/:id', async (req, res, next) => {
     const totalDependencies = parseInt(dependencies.repair_tickets_count) + 
                              parseInt(dependencies.warranty_repair_tickets_count) + 
                              parseInt(dependencies.work_orders_count) + 
-                             parseInt(dependencies.warranty_work_orders_count) + 
-                             parseInt(dependencies.machine_rentals_count);
+                             parseInt(dependencies.warranty_work_orders_count);
     
     if (totalDependencies > 0) {
       await client.query('ROLLBACK');
@@ -405,9 +403,6 @@ router.delete('/:id', async (req, res, next) => {
       }
       if (parseInt(dependencies.warranty_work_orders_count) > 0) {
         dependencyDetails.push(`${dependencies.warranty_work_orders_count} warranty work order(s)`);
-      }
-      if (parseInt(dependencies.machine_rentals_count) > 0) {
-        dependencyDetails.push(`${dependencies.machine_rentals_count} rental(s)`);
       }
       
       return res.status(400).json({
