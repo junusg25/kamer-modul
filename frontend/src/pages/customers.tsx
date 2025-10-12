@@ -240,7 +240,7 @@ export default function Customers() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
-  const [pageSize] = useState(20)
+  const [pageSize] = useState(25)
 
   // Fetch customers when applied search term or filters change
   useEffect(() => {

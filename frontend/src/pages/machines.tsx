@@ -131,7 +131,7 @@ export default function Machines() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
-  const [pageSize] = useState(20)
+  const [pageSize] = useState(25)
   
   // Edit model state
   const [editingModel, setEditingModel] = useState<MachineModel | null>(null)

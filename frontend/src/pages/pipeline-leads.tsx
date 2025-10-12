@@ -89,6 +89,7 @@ import {
 import { apiService } from '../services/api'
 import { useAuth } from '../contexts/auth-context'
 import { DeleteConfirmationDialog } from '../components/ui/delete-confirmation-dialog'
+import { Pagination } from '../components/ui/pagination'
 import { MainLayout } from '../components/layout/main-layout'
 import { formatCurrency } from '../lib/currency'
 import { formatDate, formatDateTime, isOverdue } from '../lib/dateTime'
@@ -208,6 +209,12 @@ export default function PipelineLeads() {
     assigned_to: '',
     created_by: ''
   })
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [pageSize] = useState(25)
 
   // Column visibility hooks
   const leadsColumnVisibility = useColumnVisibility('leads', getDefaultColumnKeys(LEAD_COLUMNS))
@@ -250,16 +257,27 @@ export default function PipelineLeads() {
 
   // Queries
   const { data: leadsData, isLoading: leadsLoading, refetch: refetchLeads } = useQuery({
-    queryKey: ['leads', searchTerm, filters],
-    queryFn: () => apiService.getLeads({
-      search: searchTerm || undefined,
-      stage: filters.stage || undefined,
-      quality: filters.quality || undefined,
-      source: filters.source || undefined,
-      assigned_to: filters.assigned_to || undefined,
-      created_by: filters.created_by || undefined,
-      limit: 50
-    }),
+    queryKey: ['leads', searchTerm, filters, currentPage],
+    queryFn: async () => {
+      const response = await apiService.getLeads({
+        search: searchTerm || undefined,
+        stage: filters.stage || undefined,
+        quality: filters.quality || undefined,
+        source: filters.source || undefined,
+        assigned_to: filters.assigned_to || undefined,
+        created_by: filters.created_by || undefined,
+        page: currentPage,
+        limit: pageSize
+      })
+      
+      // Update pagination state
+      if (response.pagination) {
+        setTotalPages(response.pagination.pages || 1)
+        setTotalCount(response.pagination.total || 0)
+      }
+      
+      return response
+    },
     staleTime: 2 * 60 * 1000, // 2 minutes
   })
 
@@ -754,6 +772,7 @@ export default function PipelineLeads() {
                           value={filters.stage}
                           onValueChange={(value) => {
                             setFilters(prev => ({ ...prev, stage: value === 'clear' ? '' : value }))
+                            setCurrentPage(1) // Reset to first page when filter changes
                           }}
                         >
                           <SelectTrigger className="h-8">
@@ -777,6 +796,7 @@ export default function PipelineLeads() {
                           value={filters.quality}
                           onValueChange={(value) => {
                             setFilters(prev => ({ ...prev, quality: value === 'clear' ? '' : value }))
+                            setCurrentPage(1) // Reset to first page when filter changes
                           }}
                         >
                           <SelectTrigger className="h-8">
@@ -1035,6 +1055,16 @@ export default function PipelineLeads() {
                   )}
                 </TableBody>
               </Table>
+              
+              {/* Pagination */}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalCount={totalCount}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                itemName="leads"
+              />
             </CardContent>
           </Card>
         </TabsContent>

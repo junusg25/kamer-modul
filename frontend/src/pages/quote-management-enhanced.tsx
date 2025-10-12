@@ -51,6 +51,7 @@ import {
 import { useAuth } from '../contexts/auth-context'
 import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '@/hooks/useColumnVisibility'
 import { ColumnVisibilityDropdown } from '@/components/ui/column-visibility-dropdown'
+import { Pagination } from '../components/ui/pagination'
 import apiService from '../services/api'
 import { formatCurrency } from '@/lib/currency'
 import { formatDate, isOverdue } from '@/lib/dateTime'
@@ -246,6 +247,12 @@ export default function QuoteManagementEnhanced() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [activeTab, setActiveTab] = useState('quotes')
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [pageSize] = useState(25)
+  
   // Dialogs
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
@@ -285,6 +292,10 @@ export default function QuoteManagementEnhanced() {
     fetchAllData()
   }, [])
 
+  useEffect(() => {
+    fetchQuotes()
+  }, [currentPage])
+
   const fetchAllData = async () => {
     setIsLoading(true)
     try {
@@ -303,8 +314,17 @@ export default function QuoteManagementEnhanced() {
 
   const fetchQuotes = async () => {
     try {
-      const response = await apiService.getQuotes({ limit: 100 })
+      const response = await apiService.getQuotes({ 
+        page: currentPage,
+        limit: pageSize 
+      })
       setQuotes(response.data || [])
+      
+      // Update pagination state
+      if (response.pagination) {
+        setTotalPages(response.pagination.pages || 1)
+        setTotalCount(response.pagination.total || 0)
+      }
     } catch (error) {
       console.error('Error fetching quotes:', error)
     }

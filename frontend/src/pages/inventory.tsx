@@ -122,7 +122,7 @@ export default function Inventory() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
-  const [pageSize] = useState(20)
+  const [pageSize] = useState(25)
   const [error, setError] = useState('')
   
   // Edit/Delete state

@@ -122,7 +122,7 @@ export default function WarrantyWorkOrders() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
-  const [pageSize] = useState(20)
+  const [pageSize] = useState(25)
 
   // Delete state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
