@@ -39,6 +39,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
   Plus,
   Search,
   MoreHorizontal,
@@ -53,13 +58,16 @@ import {
   Package,
   Shield,
   X,
-  Filter
+  Filter,
+  Check,
+  ChevronDown
 } from 'lucide-react'
 import { apiService } from '@/services/api'
 import { useAuth } from '@/contexts/auth-context'
 import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '@/hooks/useColumnVisibility'
 import { ColumnVisibilityDropdown } from '@/components/ui/column-visibility-dropdown'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 interface MachineModel {
   id: string
@@ -68,6 +76,7 @@ interface MachineModel {
   manufacturer: string
   description?: string
   warranty_months: number
+  category_id?: number
   category_name?: string
   total_serials: number
   total_assigned: number
@@ -76,6 +85,12 @@ interface MachineModel {
   expired_warranty: number
   created_at: string
   updated_at: string
+}
+
+interface MachineCategory {
+  id: number
+  name: string
+  description?: string
 }
 
 // Define columns for the machines table
@@ -120,11 +135,33 @@ export default function Machines() {
   // Edit model state
   const [editingModel, setEditingModel] = useState<MachineModel | null>(null)
   const [showEditDialog, setShowEditDialog] = useState(false)
+  const [machineCategories, setMachineCategories] = useState<MachineCategory[]>([])
+  const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false)
+  const [categorySearch, setCategorySearch] = useState('')
+  
+  // Delete model state
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [modelToDelete, setModelToDelete] = useState<MachineModel | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Fetch machine models when applied search term or filters change
   useEffect(() => {
     fetchMachineModels()
   }, [appliedSearchTerm, filters, currentPage])
+
+  // Fetch categories on mount
+  useEffect(() => {
+    fetchCategories()
+  }, [])
+
+  const fetchCategories = async () => {
+    try {
+      const response = await apiService.getMachineCategories()
+      setMachineCategories((response as any).data || [])
+    } catch (err) {
+      console.error('Error fetching categories:', err)
+    }
+  }
 
   const fetchMachineModels = async () => {
     try {
@@ -185,6 +222,7 @@ export default function Machines() {
         manufacturer: editingModel.manufacturer,
         catalogue_number: editingModel.catalogue_number,
         warranty_months: editingModel.warranty_months,
+        category_id: editingModel.category_id || null,
         description: editingModel.description
       })
       
@@ -194,9 +232,34 @@ export default function Machines() {
       await fetchMachineModels()
       setShowEditDialog(false)
       setEditingModel(null)
+      setCategorySearch('')
     } catch (err: any) {
       console.error('Error updating machine model:', err)
       toast.error(err.message || 'Failed to update machine model')
+    }
+  }
+
+  const handleDeleteClick = (model: MachineModel) => {
+    setModelToDelete(model)
+    setShowDeleteDialog(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!modelToDelete) return
+
+    try {
+      setIsDeleting(true)
+      await apiService.deleteMachineModel(modelToDelete.id)
+      toast.success('Machine model deleted successfully')
+      setShowDeleteDialog(false)
+      setModelToDelete(null)
+      // Refresh the list
+      await fetchMachineModels()
+    } catch (err: any) {
+      console.error('Error deleting machine model:', err)
+      toast.error(err.message || 'Failed to delete machine model')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -522,15 +585,24 @@ export default function Machines() {
                             Edit Model
                           </DropdownMenuItem>
                           {hasPermission('machines:assign') && (
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation()
+                              navigate(`/machines/model/${model.id}`)
+                            }}>
                               <Wrench className="mr-2 h-4 w-4" />
                               Assign Machine
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600">
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteClick(model)
+                            }}
+                          >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
+                            Delete Model
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -647,6 +719,88 @@ export default function Machines() {
                       placeholder="12"
                     />
                   </div>
+                  
+                  {/* Category Selection */}
+                  <div className="space-y-2 col-span-2">
+                    <Label htmlFor="edit-category">Category</Label>
+                    <Popover open={categoryPopoverOpen} onOpenChange={setCategoryPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={categoryPopoverOpen}
+                          className="w-full justify-between h-11"
+                        >
+                          {editingModel.category_id 
+                            ? machineCategories.find(cat => cat.id === editingModel.category_id)?.name 
+                            : editingModel.category_name || "Select category (optional)"}
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0" align="start">
+                        <div className="border-b p-3">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              placeholder="Search categories..."
+                              className="pl-10"
+                              value={categorySearch}
+                              onChange={(e) => setCategorySearch(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <div className="max-h-[300px] overflow-y-auto p-1">
+                          {/* No category option */}
+                          <div
+                            onClick={() => {
+                              setEditingModel({ ...editingModel, category_id: undefined, category_name: undefined })
+                              setCategoryPopoverOpen(false)
+                            }}
+                            className="flex items-center gap-3 p-2 rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+                          >
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100">
+                              <span className="text-gray-600 text-sm">-</span>
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium">No category</p>
+                            </div>
+                          </div>
+                          {/* Existing categories */}
+                          {machineCategories
+                            .filter(cat => 
+                              categorySearch === '' || 
+                              cat.name.toLowerCase().includes(categorySearch.toLowerCase())
+                            )
+                            .map((category) => (
+                            <div
+                              key={category.id}
+                              onClick={() => {
+                                setEditingModel({ ...editingModel, category_id: category.id, category_name: category.name })
+                                setCategoryPopoverOpen(false)
+                              }}
+                              className={cn(
+                                "flex items-center gap-3 p-2 rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors",
+                                editingModel.category_id === category.id && "bg-accent"
+                              )}
+                            >
+                              <Check
+                                className={cn(
+                                  "h-4 w-4",
+                                  editingModel.category_id === category.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
+                                <Package className="w-4 h-4 text-primary" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium">{category.name}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
@@ -668,6 +822,42 @@ export default function Machines() {
               </Button>
               <Button onClick={handleSaveEdit} disabled={!editingModel?.name || !editingModel?.manufacturer}>
                 Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Machine Model</DialogTitle>
+              <DialogDescription>
+                <div className="space-y-2">
+                  <p>Are you sure you want to delete this machine model? This action cannot be undone.</p>
+                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Warning:</strong> This will only delete the model if it has no associated machines, serials, or work orders.
+                    </p>
+                  </div>
+                  {modelToDelete && (
+                    <div className="mt-4 space-y-1">
+                      <p><strong>Model:</strong> {modelToDelete.name}</p>
+                      <p><strong>Manufacturer:</strong> {modelToDelete.manufacturer}</p>
+                      <p><strong>Total Serials:</strong> {modelToDelete.total_serials}</p>
+                      <p><strong>Assigned:</strong> {modelToDelete.total_assigned}</p>
+                    </div>
+                  )}
+                </div>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)} disabled={isDeleting}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteConfirm} disabled={isDeleting}>
+                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isDeleting ? 'Deleting...' : 'Delete Model'}
               </Button>
             </DialogFooter>
           </DialogContent>
