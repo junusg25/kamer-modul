@@ -769,6 +769,19 @@ class ApiService {
     })
   }
 
+  async updateMachineModel(id: string, model: any) {
+    return this.request(`/machines/models/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(model),
+    })
+  }
+
+  async deleteMachineModel(id: string) {
+    return this.request(`/machines/models/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
   async getMachineCategories() {
     return this.request('/machine-categories')
   }
