@@ -256,11 +256,15 @@ router.get('/models/:modelId', async (req, res, next) => {
     // Get model info with sales metrics
     const modelQuery = `
       SELECT 
+        mm.id,
         mm.name,
         mm.catalogue_number,
         mm.manufacturer,
+        mm.category_id,
         mm.description,
         mm.warranty_months,
+        mm.created_at,
+        mm.updated_at,
         mc.name as category_name,
         COUNT(ms.id) as total_serials,
         COUNT(CASE WHEN am.id IS NOT NULL THEN 1 END) as total_assigned,
@@ -279,7 +283,7 @@ router.get('/models/:modelId', async (req, res, next) => {
       LEFT JOIN machine_serials ms ON mm.id = ms.model_id
       LEFT JOIN assigned_machines am ON ms.id = am.serial_id
       WHERE mm.id = $1
-      GROUP BY mm.name, mm.catalogue_number, mm.manufacturer, mm.description, mm.warranty_months, mc.name
+      GROUP BY mm.id, mm.name, mm.catalogue_number, mm.manufacturer, mm.category_id, mm.description, mm.warranty_months, mm.created_at, mm.updated_at, mc.name
     `;
     
     const modelResult = await db.query(modelQuery, params);
