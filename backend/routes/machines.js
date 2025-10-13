@@ -4,6 +4,7 @@ const router = express.Router();
 const db = require('../db');
 const { createMachineNotification, createAssignedMachineNotification } = require('../utils/notificationHelpers');
 const websocketService = require('../services/websocketService');
+const { buildSmartSearchConditions } = require('../utils/searchUtils');
 
 // GET machine models (grouped by name/catalogue_number) - NEW ENDPOINT
 router.get('/models', async (req, res, next) => {
@@ -16,9 +17,12 @@ router.get('/models', async (req, res, next) => {
     let paramIndex = 1;
     
     if (search) {
-      params.push(`%${search}%`)
-      where = `WHERE unaccent(mm.name) ILIKE unaccent($${paramIndex}) OR COALESCE(mm.catalogue_number,'') ILIKE $${paramIndex} OR unaccent(COALESCE(mm.manufacturer,'')) ILIKE unaccent($${paramIndex})`
-      paramIndex++;
+      const { condition, params: searchParams } = buildSmartSearchConditions(search, 'machines', paramIndex);
+      if (condition) {
+        where = `WHERE ${condition}`;
+        params.push(...searchParams);
+        paramIndex += searchParams.length;
+      }
     }
     
     if (category) {
@@ -781,39 +785,11 @@ router.get('/', async (req, res, next) => {
       const params = []
       let where = ''
     if (search) {
-      // Create fuzzy search patterns for machine names and serial numbers
-      const searchLower = search.toLowerCase().trim()
-      const searchPatterns = []
-      
-      // Original search pattern
-      searchPatterns.push(`%${search}%`)
-      
-      // Fuzzy patterns for machine names and serial numbers
-      const machinePatterns = [
-        `%${searchLower}%`,           // Direct match
-        `%${searchLower.replace(/\s+/g, '%')}%`,  // Handle spaces as wildcards
-        `%${searchLower.replace(/[^a-z0-9]/g, '')}%`, // Remove special chars
-      ]
-      
-      // Add patterns for common machine name variations
-      if (searchLower.match(/^[a-z\s]+$/)) {
-        // If it's just letters/spaces, add variations
-        const words = searchLower.split(/\s+/).filter(w => w.length > 1)
-        words.forEach(word => {
-          searchPatterns.push(`%${word}%`)
-        })
+      const { condition, params: searchParams } = buildSmartSearchConditions(search, 'machines', 1);
+      if (condition) {
+        where = `WHERE ${condition}`;
+        params.push(...searchParams);
       }
-      
-      // Remove duplicates
-      const uniquePatterns = [...new Set([...searchPatterns, ...machinePatterns])]
-      
-      // Create search conditions for each pattern
-      const searchConditions = uniquePatterns.map((pattern, index) => 
-        `(unaccent(m.name) ILIKE unaccent($${index + 1}) OR COALESCE(m.serial_number,'') ILIKE $${index + 1})`
-      )
-      
-      where = `WHERE ${searchConditions.join(' OR ')}`
-      uniquePatterns.forEach(pattern => params.push(pattern))
     }
       const result = await db.query(
         `SELECT m.id, m.name, m.serial_number, m.description, m.customer_id, c.name as customer_name
@@ -838,39 +814,11 @@ router.get('/', async (req, res, next) => {
     const params = []
     let where = ''
     if (search) {
-      // Create fuzzy search patterns for machine names, catalogue numbers, and serial numbers
-      const searchLower = search.toLowerCase().trim()
-      const searchPatterns = []
-      
-      // Original search pattern
-      searchPatterns.push(`%${search}%`)
-      
-      // Fuzzy patterns for machine names, catalogue numbers, and serial numbers
-      const machinePatterns = [
-        `%${searchLower}%`,           // Direct match
-        `%${searchLower.replace(/\s+/g, '%')}%`,  // Handle spaces as wildcards
-        `%${searchLower.replace(/[^a-z0-9]/g, '')}%`, // Remove special chars
-      ]
-      
-      // Add patterns for common machine name variations
-      if (searchLower.match(/^[a-z\s]+$/)) {
-        // If it's just letters/spaces, add variations
-        const words = searchLower.split(/\s+/).filter(w => w.length > 1)
-        words.forEach(word => {
-          searchPatterns.push(`%${word}%`)
-        })
+      const { condition, params: searchParams } = buildSmartSearchConditions(search, 'machines', 1);
+      if (condition) {
+        where = `WHERE ${condition}`;
+        params.push(...searchParams);
       }
-      
-      // Remove duplicates
-      const uniquePatterns = [...new Set([...searchPatterns, ...machinePatterns])]
-      
-      // Create search conditions for each pattern
-      const searchConditions = uniquePatterns.map((pattern, index) => 
-        `(unaccent(m.name) ILIKE unaccent($${index + 1}) OR COALESCE(m.catalogue_number,'') ILIKE $${index + 1} OR COALESCE(m.serial_number,'') ILIKE $${index + 1})`
-      )
-      
-      where = `WHERE ${searchConditions.join(' OR ')}`
-      uniquePatterns.forEach(pattern => params.push(pattern))
     }
     
     // Get total count

@@ -7,6 +7,7 @@ const { createCustomerNotification } = require('../utils/notificationHelpers');
 const websocketService = require('../services/websocketService');
 const { cacheConfigs, keyGenerators, cacheConditions, invalidateCache } = require('../middleware/cache');
 const { logCustomAction } = require('../utils/actionLogger');
+const { buildSmartSearchConditions } = require('../utils/searchUtils');
 
 // GET all customers (optional search)
 router.get('/', 
@@ -22,17 +23,12 @@ router.get('/',
     let paramIndex = 1;
     
     if (search) {
-      const like = `%${search}%`;
-      whereConditions.push(`(
-        unaccent(c.name) ILIKE unaccent($${paramIndex}) OR 
-        COALESCE(c.email,'') ILIKE $${paramIndex} OR 
-        COALESCE(c.phone,'') ILIKE $${paramIndex} OR 
-        unaccent(COALESCE(c.company_name,'')) ILIKE unaccent($${paramIndex}) OR 
-        unaccent(COALESCE(c.city,'')) ILIKE unaccent($${paramIndex}) OR 
-        COALESCE(c.vat_number,'') ILIKE $${paramIndex}
-      )`);
-      params.push(like);
-      paramIndex++;
+      const { condition, params: searchParams } = buildSmartSearchConditions(search, 'customers', paramIndex);
+      if (condition) {
+        whereConditions.push(`(${condition})`);
+        params.push(...searchParams);
+        paramIndex += searchParams.length;
+      }
     }
     
     if (status) {

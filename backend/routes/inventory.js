@@ -5,6 +5,7 @@ const { body, validationResult } = require('express-validator');
 const { authenticateToken } = require('../middleware/auth');
 const { createInventoryNotification } = require('../utils/notificationHelpers');
 const { logCustomAction } = require('../utils/actionLogger');
+const { buildSmartSearchConditions } = require('../utils/searchUtils');
 
 // GET all inventory items (with pagination and optional search/filters)
 router.get('/', async (req, res, next) => {
@@ -20,60 +21,12 @@ router.get('/', async (req, res, next) => {
     
     // Search filter
     if (search) {
-      // Create fuzzy search patterns for inventory items
-      const searchLower = search.toLowerCase().trim()
-      const searchPatterns = []
-      
-      // Original search pattern
-      searchPatterns.push(`%${search}%`)
-      
-      // Fuzzy patterns for inventory items
-      const inventoryPatterns = [
-        `%${searchLower}%`,           // Direct match
-        `%${searchLower.replace(/\s+/g, '%')}%`,  // Handle spaces as wildcards
-        `%${searchLower.replace(/[^a-z0-9]/g, '')}%`, // Remove special chars
-      ]
-      
-      // Add accent-insensitive patterns (četka = cekta)
-      const accentInsensitivePatterns = [
-        searchLower.replace(/č/g, 'c').replace(/ć/g, 'c').replace(/š/g, 's').replace(/ž/g, 'z').replace(/đ/g, 'd'),
-        searchLower.replace(/c/g, 'č').replace(/c/g, 'ć').replace(/s/g, 'š').replace(/z/g, 'ž').replace(/d/g, 'đ')
-      ]
-      
-      accentInsensitivePatterns.forEach(pattern => {
-        if (pattern !== searchLower) {
-          searchPatterns.push(`%${pattern}%`)
-        }
-      })
-      
-      // Add patterns for common inventory name variations
-      if (searchLower.match(/^[a-z\s]+$/)) {
-        // If it's just letters/spaces, add variations
-        const words = searchLower.split(/\s+/).filter(w => w.length > 1)
-        words.forEach(word => {
-          searchPatterns.push(`%${word}%`)
-          // Also add accent-insensitive versions of individual words
-          const accentInsensitiveWord = word.replace(/č/g, 'c').replace(/ć/g, 'c').replace(/š/g, 's').replace(/ž/g, 'z').replace(/đ/g, 'd')
-          if (accentInsensitiveWord !== word) {
-            searchPatterns.push(`%${accentInsensitiveWord}%`)
-          }
-        })
+      const { condition, params: searchParams } = buildSmartSearchConditions(search, 'inventory', paramIndex);
+      if (condition) {
+        whereConditions.push(`(${condition})`);
+        params.push(...searchParams);
+        paramIndex += searchParams.length;
       }
-      
-      // Remove duplicates
-      const uniquePatterns = [...new Set([...searchPatterns, ...inventoryPatterns])]
-      
-      // Create search conditions for each pattern
-      const searchConditions = uniquePatterns.map((pattern, index) => 
-        `(unaccent(name) ILIKE unaccent($${paramIndex + index}) OR 
-         unaccent(COALESCE(description,'')) ILIKE unaccent($${paramIndex + index}) OR 
-         COALESCE(sku,'') ILIKE $${paramIndex + index} OR 
-         unaccent(COALESCE(supplier,'')) ILIKE unaccent($${paramIndex + index}))`
-      )
-      
-      whereConditions.push(`(${searchConditions.join(' OR ')})`)
-      uniquePatterns.forEach(pattern => params.push(pattern))
-      paramIndex += uniquePatterns.length
     }
     
     // Category filter
