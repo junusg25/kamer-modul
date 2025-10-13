@@ -259,15 +259,14 @@ export function CommandPalette() {
         })
       }
 
-      // Add machines - Enhanced machine search
+      // Add machines - FIXED FIELD MAPPING based on actual API response
       if (machinesRes.data && Array.isArray(machinesRes.data)) {
         machinesRes.data.forEach((machine: any) => {
-          // Try multiple possible field names for machine name
-          const modelName = machine.model_name || machine.model || machine.name || machine.manufacturer || `Machine #${machine.id}`
+          // Based on console log: {id: 1, name: HD 5/15 C Plus, catalogue_number: 1520931, manufactur...
+          const modelName = machine.name || machine.model_name || machine.model || 'Unknown Machine'
           const manufacturer = machine.manufacturer || ''
-          const serialNumber = machine.serial_number || machine.serial || ''
           const catalogueNumber = machine.catalogue_number || machine.catalogue || machine.catalog_number || ''
-          const machineType = machine.type || machine.category || ''
+          const category = machine.category || ''
           
           // Enhanced machine search logic
           let searchMatch = 'name'
@@ -276,22 +275,19 @@ export function CommandPalette() {
           // Build subtitle with available information
           const subtitleParts = []
           if (manufacturer) subtitleParts.push(manufacturer)
-          if (serialNumber) subtitleParts.push(`S/N: ${serialNumber}`)
           if (catalogueNumber) subtitleParts.push(`Cat: ${catalogueNumber}`)
-          if (machineType) subtitleParts.push(machineType)
+          if (category) subtitleParts.push(category)
           
           subtitle = subtitleParts.join(' • ')
           
           // Check what matched the search
           const queryLower = query.toLowerCase()
-          if (serialNumber && serialNumber.toLowerCase().includes(queryLower)) {
-            searchMatch = 'serial'
-          } else if (catalogueNumber && catalogueNumber.toLowerCase().includes(queryLower)) {
+          if (catalogueNumber && catalogueNumber.toLowerCase().includes(queryLower)) {
             searchMatch = 'catalogue'
           } else if (manufacturer && manufacturer.toLowerCase().includes(queryLower)) {
             searchMatch = 'manufacturer'
-          } else if (machineType && machineType.toLowerCase().includes(queryLower)) {
-            searchMatch = 'type'
+          } else if (category && category.toLowerCase().includes(queryLower)) {
+            searchMatch = 'category'
           } else {
             // Check if query matches machine model patterns (HD5, HD 5/15, etc.)
             const normalizedModel = (modelName || '').toLowerCase().replace(/[^a-z0-9]/g, '')
@@ -316,8 +312,8 @@ export function CommandPalette() {
       results.sort((a, b) => {
         if (a.searchMatch === 'number' && b.searchMatch !== 'number') return -1
         if (b.searchMatch === 'number' && a.searchMatch !== 'number') return 1
-        if (a.searchMatch === 'serial' && b.searchMatch !== 'serial') return -1
-        if (b.searchMatch === 'serial' && a.searchMatch !== 'serial') return 1
+        if (a.searchMatch === 'catalogue' && b.searchMatch !== 'catalogue') return -1
+        if (b.searchMatch === 'catalogue' && a.searchMatch !== 'catalogue') return 1
         return a.name.localeCompare(b.name)
       })
 
