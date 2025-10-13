@@ -96,44 +96,47 @@ export function CommandPalette() {
         apiService.getMachines({ search: query, limit: 5 }).catch(() => ({ data: [] })),
       ])
 
+      console.log('Search results:', { customersRes, ticketsRes, machinesRes }) // Debug
+
       const results: SearchResult[] = []
 
       // Add customers
-      if (customersRes.data) {
+      if (customersRes.data && Array.isArray(customersRes.data)) {
         customersRes.data.forEach((customer: any) => {
           results.push({
             id: `customer-${customer.id}`,
             type: 'customer',
-            name: customer.name || customer.company_name,
-            subtitle: customer.email || customer.phone,
+            name: customer.name || customer.company_name || 'Unknown',
+            subtitle: customer.email || customer.phone || '',
           })
         })
       }
 
       // Add tickets
-      if (ticketsRes.data) {
+      if (ticketsRes.data && Array.isArray(ticketsRes.data)) {
         ticketsRes.data.forEach((ticket: any) => {
           results.push({
             id: `ticket-${ticket.id}`,
             type: 'ticket',
-            name: `${ticket.ticket_number} - ${ticket.customer_name}`,
-            subtitle: ticket.description?.substring(0, 50) || '',
+            name: `${ticket.ticket_number || 'N/A'} - ${ticket.customer_name || 'Unknown'}`,
+            subtitle: ticket.description?.substring(0, 50) || ticket.machine_name || '',
           })
         })
       }
 
       // Add machines
-      if (machinesRes.data) {
+      if (machinesRes.data && Array.isArray(machinesRes.data)) {
         machinesRes.data.forEach((machine: any) => {
           results.push({
             id: `machine-${machine.id}`,
             type: 'machine',
-            name: machine.model_name || machine.manufacturer,
-            subtitle: `${machine.manufacturer} - ${machine.serial_number || 'No serial'}`,
+            name: machine.model_name || machine.manufacturer || 'Unknown',
+            subtitle: `${machine.manufacturer || ''} ${machine.serial_number ? '- ' + machine.serial_number : ''}`.trim(),
           })
         })
       }
 
+      console.log('Processed results:', results) // Debug
       setSearchResults(results)
     } catch (error) {
       console.error('Search error:', error)
@@ -472,6 +475,9 @@ export function CommandPalette() {
     }
   }
 
+  // Determine if we should show commands or only search results
+  const showCommands = searchQuery.length < 2 || searchResults.length === 0
+
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
       <CommandInput 
@@ -491,15 +497,18 @@ export function CommandPalette() {
           )}
         </CommandEmpty>
 
-        {/* Search Results (only show when there's a search query and results) */}
+        {/* Search Results - Always shown when available, regardless of search filter */}
         {searchResults.length > 0 && (
           <>
             <CommandGroup heading="Search Results">
               {searchResults.map((result) => (
                 <CommandItem
                   key={result.id}
-                  value={result.id}
+                  // Use a value that won't be filtered out
+                  value={`__search__${result.id}`}
                   onSelect={() => handleSearchResultClick(result)}
+                  // Force match to always show this item
+                  keywords={[searchQuery]}
                 >
                   <div className="flex items-center gap-2 w-full">
                     {getResultIcon(result.type)}
@@ -519,60 +528,65 @@ export function CommandPalette() {
           </>
         )}
         
-        <CommandGroup heading="Navigation">
-          {allCommands
-            .filter(cmd => cmd.category === 'navigation')
-            .map((cmd) => (
-              <CommandItem
-                key={cmd.id}
-                value={`${cmd.label} ${cmd.keywords?.join(' ')}`}
-                onSelect={cmd.action}
-              >
-                <div className="flex items-center gap-2">
-                  {cmd.icon}
-                  <span>{cmd.label}</span>
-                </div>
-              </CommandItem>
-            ))}
-        </CommandGroup>
+        {/* Commands - Only show when search is empty or no search results */}
+        {showCommands && (
+          <>
+            <CommandGroup heading="Navigation">
+              {allCommands
+                .filter(cmd => cmd.category === 'navigation')
+                .map((cmd) => (
+                  <CommandItem
+                    key={cmd.id}
+                    value={`${cmd.label} ${cmd.keywords?.join(' ')}`}
+                    onSelect={cmd.action}
+                  >
+                    <div className="flex items-center gap-2">
+                      {cmd.icon}
+                      <span>{cmd.label}</span>
+                    </div>
+                  </CommandItem>
+                ))}
+            </CommandGroup>
 
-        <CommandSeparator />
+            <CommandSeparator />
 
-        <CommandGroup heading="Quick Actions">
-          {allCommands
-            .filter(cmd => cmd.category === 'actions')
-            .map((cmd) => (
-              <CommandItem
-                key={cmd.id}
-                value={`${cmd.label} ${cmd.keywords?.join(' ')}`}
-                onSelect={cmd.action}
-              >
-                <div className="flex items-center gap-2">
-                  {cmd.icon}
-                  <span>{cmd.label}</span>
-                </div>
-              </CommandItem>
-            ))}
-        </CommandGroup>
+            <CommandGroup heading="Quick Actions">
+              {allCommands
+                .filter(cmd => cmd.category === 'actions')
+                .map((cmd) => (
+                  <CommandItem
+                    key={cmd.id}
+                    value={`${cmd.label} ${cmd.keywords?.join(' ')}`}
+                    onSelect={cmd.action}
+                  >
+                    <div className="flex items-center gap-2">
+                      {cmd.icon}
+                      <span>{cmd.label}</span>
+                    </div>
+                  </CommandItem>
+                ))}
+            </CommandGroup>
 
-        <CommandSeparator />
+            <CommandSeparator />
 
-        <CommandGroup heading="Settings">
-          {allCommands
-            .filter(cmd => cmd.category === 'settings')
-            .map((cmd) => (
-              <CommandItem
-                key={cmd.id}
-                value={`${cmd.label} ${cmd.keywords?.join(' ')}`}
-                onSelect={cmd.action}
-              >
-                <div className="flex items-center gap-2">
-                  {cmd.icon}
-                  <span>{cmd.label}</span>
-                </div>
-              </CommandItem>
-            ))}
-        </CommandGroup>
+            <CommandGroup heading="Settings">
+              {allCommands
+                .filter(cmd => cmd.category === 'settings')
+                .map((cmd) => (
+                  <CommandItem
+                    key={cmd.id}
+                    value={`${cmd.label} ${cmd.keywords?.join(' ')}`}
+                    onSelect={cmd.action}
+                  >
+                    <div className="flex items-center gap-2">
+                      {cmd.icon}
+                      <span>{cmd.label}</span>
+                    </div>
+                  </CommandItem>
+                ))}
+            </CommandGroup>
+          </>
+        )}
       </CommandList>
     </CommandDialog>
   )
