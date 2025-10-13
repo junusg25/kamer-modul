@@ -198,12 +198,12 @@ function buildSearchConditions(searchTerm, fields, patterns, paramStartIndex = 1
  */
 const searchFieldConfigs = {
   customers: [
-    { field: 'name', accentInsensitive: true },
-    { field: 'company_name', accentInsensitive: true },
-    { field: 'contact_person', accentInsensitive: true },
-    { field: 'email', accentInsensitive: false },
-    { field: 'phone', accentInsensitive: false },
-    { field: 'vat_number', accentInsensitive: false }
+    { field: 'c.name', accentInsensitive: true },
+    { field: 'c.company_name', accentInsensitive: true },
+    { field: 'c.contact_person', accentInsensitive: true },
+    { field: 'c.email', accentInsensitive: false },
+    { field: 'c.phone', accentInsensitive: false },
+    { field: 'c.vat_number', accentInsensitive: false }
   ],
   
   machines: [
