@@ -9,6 +9,7 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command'
+import { DialogTitle } from '@/components/ui/dialog'
 import {
   Home,
   Users,
@@ -126,7 +127,8 @@ export function CommandPalette() {
       const results: SearchResult[] = []
 
       // Helper function to check if query matches ticket/order numbers
-      const matchesTicketPattern = (ticketNumber: string, query: string) => {
+      const matchesTicketPattern = (ticketNumber: string | null | undefined, query: string) => {
+        if (!ticketNumber || typeof ticketNumber !== 'string') return false
         const normalizedTicket = ticketNumber.toLowerCase().replace(/[^a-z0-9]/g, '')
         const normalizedQuery = query.toLowerCase().replace(/[^a-z0-9]/g, '')
         
@@ -259,13 +261,13 @@ export function CommandPalette() {
           const manufacturer = machine.manufacturer || ''
           
           // Check if query matches machine patterns (HD5, HD 5/15, etc.)
-          const normalizedModel = modelName.toLowerCase().replace(/[^a-z0-9]/g, '')
+          const normalizedModel = (modelName || '').toLowerCase().replace(/[^a-z0-9]/g, '')
           const normalizedQuery = query.toLowerCase().replace(/[^a-z0-9]/g, '')
           
           let searchMatch = 'name'
-          if (serialNumber.toLowerCase().includes(query.toLowerCase())) {
+          if (serialNumber && serialNumber.toLowerCase().includes(query.toLowerCase())) {
             searchMatch = 'serial'
-          } else if (catalogueNumber.toLowerCase().includes(query.toLowerCase())) {
+          } else if (catalogueNumber && catalogueNumber.toLowerCase().includes(query.toLowerCase())) {
             searchMatch = 'catalogue'
           } else if (normalizedModel.includes(normalizedQuery)) {
             searchMatch = 'model'
@@ -679,6 +681,7 @@ export function CommandPalette() {
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
+      <DialogTitle className="sr-only">Command Palette</DialogTitle>
       <CommandInput 
         placeholder="Search tickets (TK-01/25), machines (HD5), customers, quotes..." 
         value={searchQuery}
