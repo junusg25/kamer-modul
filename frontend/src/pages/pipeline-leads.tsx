@@ -47,6 +47,7 @@ import {
 import { 
   Input 
 } from '../components/ui/input'
+import { SmartSearch } from '../components/ui/smart-search'
 import { 
   Label 
 } from '../components/ui/label'
@@ -74,7 +75,6 @@ import {
   Building, 
   DollarSign,
   Filter,
-  Search,
   RefreshCw,
   Eye,
   Users,
@@ -201,7 +201,7 @@ export default function PipelineLeads() {
   const queryClient = useQueryClient()
 
   // State
-  const [searchTerm, setSearchTerm] = useState('')
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState('')
   const [filters, setFilters] = useState({
     stage: '',
     quality: '',
@@ -257,10 +257,10 @@ export default function PipelineLeads() {
 
   // Queries
   const { data: leadsData, isLoading: leadsLoading, refetch: refetchLeads } = useQuery({
-    queryKey: ['leads', searchTerm, filters, currentPage],
+    queryKey: ['leads', appliedSearchTerm, filters, currentPage],
     queryFn: async () => {
       const response = await apiService.getLeads({
-        search: searchTerm || undefined,
+        search: appliedSearchTerm || undefined,
         stage: filters.stage || undefined,
         quality: filters.quality || undefined,
         source: filters.source || undefined,
@@ -438,7 +438,7 @@ export default function PipelineLeads() {
 
 
   const clearAllFilters = () => {
-    setSearchTerm('')
+    setAppliedSearchTerm('')
     setFilters({
       stage: '',
       quality: '',
@@ -450,7 +450,7 @@ export default function PipelineLeads() {
 
   const getActiveFiltersCount = () => {
     let count = 0
-    if (searchTerm) count++
+    if (appliedSearchTerm) count++
     if (filters.stage) count++
     if (filters.quality) count++
     if (filters.source) count++
@@ -738,15 +738,20 @@ export default function PipelineLeads() {
 
                 <div className="flex items-center space-x-4">
                   {/* Search */}
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      placeholder="Search leads..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 w-[300px]"
-                    />
-                  </div>
+                  <SmartSearch
+                    placeholder="Search leads..."
+                    onSearch={(term) => {
+                      setAppliedSearchTerm(term)
+                      setCurrentPage(1) // Reset to first page when searching
+                    }}
+                    onClear={() => {
+                      setAppliedSearchTerm('')
+                      setCurrentPage(1)
+                    }}
+                    debounceMs={300}
+                    className="w-80"
+                    disabled={leadsLoading}
+                  />
 
                   {/* Filter Dropdown */}
                   <DropdownMenu>

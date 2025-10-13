@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { MainLayout } from '../components/layout/main-layout'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
+import { SmartSearch } from '../components/ui/smart-search'
 import { Badge } from '../components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
@@ -12,7 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Label } from '../components/ui/label'
 import { Textarea } from '../components/ui/textarea'
 import { DatePickerInput } from '../components/ui/date-picker'
-import { Plus, Search, Filter, Eye, Edit, Trash2, Calendar, Truck, Calculator, MoreHorizontal } from 'lucide-react'
+import { Plus, Filter, Eye, Edit, Trash2, Calendar, Truck, Calculator, MoreHorizontal } from 'lucide-react'
 import apiService from '../services/api'
 import { formatDate, formatDateTime, parseEuropeanDate, formatDateForInput } from '../lib/dateTime'
 import { formatCurrency } from '../lib/currency'
@@ -86,7 +87,7 @@ export default function MachineRentals() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [availableMachines, setAvailableMachines] = useState<RentalMachine[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState('')
   const [filters, setFilters] = useState({
     status: 'all',
     customer_id: 'all',
@@ -140,7 +141,7 @@ export default function MachineRentals() {
     fetchMachineRentals()
     fetchCustomers()
     fetchAvailableMachines()
-  }, [currentPage, searchTerm, filters])
+  }, [currentPage, appliedSearchTerm, filters])
 
   // Reset form when create dialog opens
   useEffect(() => {
@@ -192,7 +193,7 @@ export default function MachineRentals() {
       const response = await apiService.getMachineRentals({
         page: currentPage,
         limit: pageSize,
-        search: searchTerm,
+        search: appliedSearchTerm,
         ...filters
       })
       setRentals(response.rentals || [])
@@ -248,10 +249,6 @@ export default function MachineRentals() {
     }
   }
 
-  const handleSearch = () => {
-    setPagination(prev => ({ ...prev, page: 1 }))
-    fetchMachineRentals()
-  }
 
   const handleFilterChange = (filterType: string, value: string) => {
     // Convert "all" to empty string for API filtering
@@ -277,7 +274,7 @@ export default function MachineRentals() {
       start_date: '',
       end_date: ''
     })
-    setSearchTerm('')
+    setAppliedSearchTerm('')
     setPagination(prev => ({ ...prev, page: 1 }))
   }
 
@@ -730,17 +727,20 @@ export default function MachineRentals() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
               <div>
                 <Label>Search</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Search rentals..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  />
-                  <Button onClick={handleSearch} size="sm">
-                    <Search className="h-4 w-4" />
-                  </Button>
-                </div>
+                <SmartSearch
+                  placeholder="Search rentals..."
+                  onSearch={(term) => {
+                    setAppliedSearchTerm(term)
+                    setPagination(prev => ({ ...prev, page: 1 })) // Reset to first page when searching
+                  }}
+                  onClear={() => {
+                    setAppliedSearchTerm('')
+                    setPagination(prev => ({ ...prev, page: 1 }))
+                  }}
+                  debounceMs={300}
+                  className="w-full"
+                  disabled={loading}
+                />
               </div>
               <div>
                 <Label>Status</Label>

@@ -253,6 +253,38 @@ const searchFieldConfigs = {
     { field: 'wwo.description', accentInsensitive: true },
     { field: 'c.name', accentInsensitive: true },
     { field: 'mm.name', accentInsensitive: true }
+  ],
+  
+  pipelineLeads: [
+    { field: 'c.name', accentInsensitive: true },
+    { field: 'l.description', accentInsensitive: true },
+    { field: 'l.status', accentInsensitive: true },
+    { field: 'l.source', accentInsensitive: true },
+    { field: 'l.priority', accentInsensitive: true }
+  ],
+  
+  quoteManagement: [
+    { field: 'c.name', accentInsensitive: true },
+    { field: 'q.description', accentInsensitive: true },
+    { field: 'q.quote_number', accentInsensitive: false },
+    { field: 'q.status', accentInsensitive: true },
+    { field: 'mm.name', accentInsensitive: true }
+  ],
+  
+  rentalFleet: [
+    { field: 'mm.name', accentInsensitive: true },
+    { field: 'ms.serial_number', accentInsensitive: false },
+    { field: 'c.name', accentInsensitive: true },
+    { field: 'ms.status', accentInsensitive: true },
+    { field: 'mm.manufacturer', accentInsensitive: true }
+  ],
+  
+  activeRentals: [
+    { field: 'mm.name', accentInsensitive: true },
+    { field: 'ms.serial_number', accentInsensitive: false },
+    { field: 'c.name', accentInsensitive: true },
+    { field: 'ra.rental_agreement_number', accentInsensitive: false },
+    { field: 'ra.status', accentInsensitive: true }
   ]
 };
 
@@ -267,7 +299,11 @@ function getSearchConfig(pageType) {
     repairTickets: { patterns: ['partial', 'spaces', 'special_chars', 'ticket_numbers', 'accent_variations'] },
     workOrders: { patterns: ['partial', 'spaces', 'special_chars', 'ticket_numbers', 'accent_variations'] },
     warrantyRepairTickets: { patterns: ['partial', 'spaces', 'special_chars', 'ticket_numbers', 'accent_variations'] },
-    warrantyWorkOrders: { patterns: ['partial', 'spaces', 'special_chars', 'ticket_numbers', 'accent_variations'] }
+    warrantyWorkOrders: { patterns: ['partial', 'spaces', 'special_chars', 'ticket_numbers', 'accent_variations'] },
+    pipelineLeads: { patterns: ['partial', 'spaces', 'special_chars', 'accent_variations'] },
+    quoteManagement: { patterns: ['partial', 'spaces', 'special_chars', 'accent_variations'] },
+    rentalFleet: { patterns: ['partial', 'spaces', 'special_chars', 'accent_variations'] },
+    activeRentals: { patterns: ['partial', 'spaces', 'special_chars', 'accent_variations'] }
   };
   
   return {

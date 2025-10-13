@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { Avatar, AvatarFallback } from '../components/ui/avatar'
 import { Input } from '../components/ui/input'
+import { SmartSearch } from '../components/ui/smart-search'
 import { Label } from '../components/ui/label'
 import { Textarea } from '../components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
@@ -17,7 +18,6 @@ import { Progress } from '../components/ui/progress'
 import { DatePicker } from '../components/ui/date-picker'
 import { 
   Plus, 
-  Search, 
   RefreshCw, 
   Edit, 
   Trash2, 
@@ -243,7 +243,7 @@ export default function QuoteManagementEnhanced() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [quoteStats, setQuoteStats] = useState<QuoteStats | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [activeTab, setActiveTab] = useState('quotes')
   
@@ -743,10 +743,10 @@ export default function QuoteManagementEnhanced() {
   // ============================================
 
   const filteredQuotes = quotes.filter(quote => {
-    const matchesSearch = (quote.formatted_number?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-                         (quote.quote_number?.toString().toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-                         quote.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (quote.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false)
+    const matchesSearch = (quote.formatted_number?.toLowerCase().includes(appliedSearchTerm.toLowerCase()) || false) ||
+                         (quote.quote_number?.toString().toLowerCase().includes(appliedSearchTerm.toLowerCase()) || false) ||
+                         quote.customer_name.toLowerCase().includes(appliedSearchTerm.toLowerCase()) ||
+                         (quote.company_name?.toLowerCase().includes(appliedSearchTerm.toLowerCase()) || false)
     const matchesStatus = filterStatus === 'all' || quote.status === filterStatus
     return matchesSearch && matchesStatus
   })
@@ -1321,15 +1321,20 @@ export default function QuoteManagementEnhanced() {
               <CardContent className="p-4">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-1">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        placeholder="Search quotes..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
+                    <SmartSearch
+                      placeholder="Search quotes..."
+                      onSearch={(term) => {
+                        setAppliedSearchTerm(term)
+                        setCurrentPage(1) // Reset to first page when searching
+                      }}
+                      onClear={() => {
+                        setAppliedSearchTerm('')
+                        setCurrentPage(1)
+                      }}
+                      debounceMs={300}
+                      className="w-full"
+                      disabled={isLoading}
+                    />
                   </div>
                   <Select value={filterStatus} onValueChange={setFilterStatus}>
                     <SelectTrigger className="w-[160px]">

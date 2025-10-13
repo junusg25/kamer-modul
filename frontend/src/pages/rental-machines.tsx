@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { MainLayout } from '../components/layout/main-layout'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
+import { SmartSearch } from '../components/ui/smart-search'
 import { Badge } from '../components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
@@ -11,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../components/ui/dropdown-menu'
 import { Label } from '../components/ui/label'
 import { Textarea } from '../components/ui/textarea'
-import { Plus, Search, Filter, Eye, Edit, Trash2, Truck, Calendar, MoreHorizontal } from 'lucide-react'
+import { Plus, Filter, Eye, Edit, Trash2, Truck, Calendar, MoreHorizontal } from 'lucide-react'
 import apiService from '../services/api'
 import { formatDate, formatDateTime } from '../lib/dateTime'
 import { useAuth } from '../contexts/auth-context'
@@ -59,7 +60,7 @@ export default function RentalMachines() {
   const [machines, setMachines] = useState<RentalMachine[]>([])
   const [models, setModels] = useState<MachineModel[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState('')
   const [filters, setFilters] = useState({
     status: 'all',
     condition: 'all',
@@ -104,7 +105,7 @@ export default function RentalMachines() {
   useEffect(() => {
     fetchRentalMachines()
     fetchMachineModels()
-  }, [pagination.page, searchTerm, filters])
+  }, [pagination.page, appliedSearchTerm, filters])
 
   // Reset form when create dialog opens
   useEffect(() => {
@@ -119,7 +120,7 @@ export default function RentalMachines() {
       const response = await apiService.getRentalMachines({
         page: pagination.page,
         limit: pagination.limit,
-        search: searchTerm,
+        search: appliedSearchTerm,
         ...filters
       })
       setMachines(response.machines || [])
@@ -153,10 +154,6 @@ export default function RentalMachines() {
     }
   }
 
-  const handleSearch = () => {
-    setPagination(prev => ({ ...prev, page: 1 }))
-    fetchRentalMachines()
-  }
 
   const handleFilterChange = (filterType: string, value: string) => {
     // Convert "all" to empty string for API filtering
@@ -172,7 +169,7 @@ export default function RentalMachines() {
       model_id: 'all',
       manufacturer: 'all'
     })
-    setSearchTerm('')
+    setAppliedSearchTerm('')
     setPagination(prev => ({ ...prev, page: 1 }))
   }
 
@@ -384,17 +381,20 @@ export default function RentalMachines() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
                 <Label>Search</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Search machines..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  />
-                  <Button onClick={handleSearch} size="sm">
-                    <Search className="h-4 w-4" />
-                  </Button>
-                </div>
+                <SmartSearch
+                  placeholder="Search machines..."
+                  onSearch={(term) => {
+                    setAppliedSearchTerm(term)
+                    setPagination(prev => ({ ...prev, page: 1 })) // Reset to first page when searching
+                  }}
+                  onClear={() => {
+                    setAppliedSearchTerm('')
+                    setPagination(prev => ({ ...prev, page: 1 }))
+                  }}
+                  debounceMs={300}
+                  className="w-full"
+                  disabled={loading}
+                />
               </div>
               <div>
                 <Label>Status</Label>
