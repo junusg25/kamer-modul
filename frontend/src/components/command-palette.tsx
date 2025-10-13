@@ -105,16 +105,16 @@ export function CommandPalette() {
         quotesRes,
         machinesRes
       ] = await Promise.all([
-        apiService.getCustomers({ search: query, limit: 5 }).catch(() => ({ data: [] })),
-        apiService.getRepairTickets({ search: query, limit: 5 }).catch(() => ({ data: [] })),
-        apiService.getWorkOrders({ search: query, limit: 5 }).catch(() => ({ data: [] })),
-        apiService.getWarrantyRepairTickets({ search: query, limit: 5 }).catch(() => ({ data: [] })),
-        apiService.getWarrantyWorkOrders({ search: query, limit: 5 }).catch(() => ({ data: [] })),
-        apiService.getQuotes({ search: query, limit: 5 }).catch(() => ({ data: [] })),
-        apiService.getMachines({ search: query, limit: 5 }).catch(() => ({ data: [] })),
+        apiService.getCustomers({ search: query, limit: 10 }).catch(() => ({ data: [] })),
+        apiService.getRepairTickets({ search: query, limit: 10 }).catch(() => ({ data: [] })),
+        apiService.getWorkOrders({ search: query, limit: 10 }).catch(() => ({ data: [] })),
+        apiService.getWarrantyRepairTickets({ search: query, limit: 10 }).catch(() => ({ data: [] })),
+        apiService.getWarrantyWorkOrders({ search: query, limit: 10 }).catch(() => ({ data: [] })),
+        apiService.getQuotes({ search: query, limit: 10 }).catch(() => ({ data: [] })),
+        apiService.getMachines({ search: query, limit: 10 }).catch(() => ({ data: [] })),
       ])
 
-      console.log('Search results for query:', query, {
+      console.log('🔍 Search results for query:', query, {
         customers: customersRes.data,
         tickets: ticketsRes.data,
         workOrders: workOrdersRes.data,
@@ -146,12 +146,15 @@ export function CommandPalette() {
       // Add customers
       if (customersRes.data && Array.isArray(customersRes.data)) {
         customersRes.data.forEach((customer: any) => {
+          const name = customer.name || customer.company_name || `Customer #${customer.id}`
+          const subtitle = customer.email || customer.phone || ''
+          
           results.push({
             id: `customer-${customer.id}`,
             type: 'customer',
-            name: customer.name || customer.company_name || 'Unknown Customer',
-            subtitle: customer.email || customer.phone || '',
-            searchMatch: 'name'
+            name,
+            subtitle,
+            searchMatch: 'customer'
           })
         })
       }
@@ -159,9 +162,10 @@ export function CommandPalette() {
       // Add repair tickets
       if (ticketsRes.data && Array.isArray(ticketsRes.data)) {
         ticketsRes.data.forEach((ticket: any) => {
-          const ticketNumber = ticket.ticket_number || ''
-          const customerName = ticket.customer_name || 'Unknown'
-          const machineName = ticket.machine_name || ticket.machine_model || ''
+          const ticketNumber = ticket.ticket_number || `TK-${ticket.id}`
+          const customerName = ticket.customer_name || ticket.customer_id || 'Unknown Customer'
+          const machineName = ticket.machine_name || ticket.machine_model || ticket.machine_id || ''
+          const description = ticket.description || ''
           
           // Check if query matches ticket number pattern
           const matchesNumber = matchesTicketPattern(ticketNumber, query)
@@ -170,7 +174,7 @@ export function CommandPalette() {
             id: `ticket-${ticket.id}`,
             type: 'ticket',
             name: `${ticketNumber} - ${customerName}`,
-            subtitle: machineName || ticket.description?.substring(0, 50) || '',
+            subtitle: machineName || description.substring(0, 50) || `Ticket #${ticket.id}`,
             searchMatch: matchesNumber ? 'number' : 'customer'
           })
         })
@@ -179,9 +183,10 @@ export function CommandPalette() {
       // Add work orders
       if (workOrdersRes.data && Array.isArray(workOrdersRes.data)) {
         workOrdersRes.data.forEach((order: any) => {
-          const orderNumber = order.order_number || ''
-          const customerName = order.customer_name || 'Unknown'
-          const machineName = order.machine_name || order.machine_model || ''
+          const orderNumber = order.order_number || order.ticket_number || `WO-${order.id}`
+          const customerName = order.customer_name || order.customer_id || 'Unknown Customer'
+          const machineName = order.machine_name || order.machine_model || order.machine_id || ''
+          const description = order.description || ''
           
           const matchesNumber = matchesTicketPattern(orderNumber, query)
           
@@ -189,7 +194,7 @@ export function CommandPalette() {
             id: `workorder-${order.id}`,
             type: 'workorder',
             name: `${orderNumber} - ${customerName}`,
-            subtitle: machineName || order.description?.substring(0, 50) || '',
+            subtitle: machineName || description.substring(0, 50) || `Work Order #${order.id}`,
             searchMatch: matchesNumber ? 'number' : 'customer'
           })
         })
@@ -198,9 +203,10 @@ export function CommandPalette() {
       // Add warranty repair tickets
       if (warrantyTicketsRes.data && Array.isArray(warrantyTicketsRes.data)) {
         warrantyTicketsRes.data.forEach((ticket: any) => {
-          const ticketNumber = ticket.ticket_number || ''
-          const customerName = ticket.customer_name || 'Unknown'
-          const machineName = ticket.machine_name || ticket.machine_model || ''
+          const ticketNumber = ticket.ticket_number || `WT-${ticket.id}`
+          const customerName = ticket.customer_name || ticket.customer_id || 'Unknown Customer'
+          const machineName = ticket.machine_name || ticket.machine_model || ticket.machine_id || ''
+          const description = ticket.description || ''
           
           const matchesNumber = matchesTicketPattern(ticketNumber, query)
           
@@ -208,7 +214,7 @@ export function CommandPalette() {
             id: `warrantyticket-${ticket.id}`,
             type: 'warrantyticket',
             name: `${ticketNumber} - ${customerName}`,
-            subtitle: machineName || ticket.description?.substring(0, 50) || '',
+            subtitle: machineName || description.substring(0, 50) || `Warranty Ticket #${ticket.id}`,
             searchMatch: matchesNumber ? 'number' : 'customer'
           })
         })
@@ -217,9 +223,10 @@ export function CommandPalette() {
       // Add warranty work orders
       if (warrantyOrdersRes.data && Array.isArray(warrantyOrdersRes.data)) {
         warrantyOrdersRes.data.forEach((order: any) => {
-          const orderNumber = order.order_number || ''
-          const customerName = order.customer_name || 'Unknown'
-          const machineName = order.machine_name || order.machine_model || ''
+          const orderNumber = order.order_number || order.ticket_number || `WW-${order.id}`
+          const customerName = order.customer_name || order.customer_id || 'Unknown Customer'
+          const machineName = order.machine_name || order.machine_model || order.machine_id || ''
+          const description = order.description || ''
           
           const matchesNumber = matchesTicketPattern(orderNumber, query)
           
@@ -227,7 +234,7 @@ export function CommandPalette() {
             id: `warrantyorder-${order.id}`,
             type: 'warrantyorder',
             name: `${orderNumber} - ${customerName}`,
-            subtitle: machineName || order.description?.substring(0, 50) || '',
+            subtitle: machineName || description.substring(0, 50) || `Warranty Order #${order.id}`,
             searchMatch: matchesNumber ? 'number' : 'customer'
           })
         })
@@ -236,8 +243,8 @@ export function CommandPalette() {
       // Add quotes
       if (quotesRes.data && Array.isArray(quotesRes.data)) {
         quotesRes.data.forEach((quote: any) => {
-          const quoteNumber = quote.quote_number || ''
-          const customerName = quote.customer_name || 'Unknown'
+          const quoteNumber = quote.quote_number || `QT-${quote.id}`
+          const customerName = quote.customer_name || quote.customer_id || 'Unknown Customer'
           const title = quote.title || quote.description || ''
           
           const matchesNumber = matchesTicketPattern(quoteNumber, query)
@@ -246,38 +253,60 @@ export function CommandPalette() {
             id: `quote-${quote.id}`,
             type: 'quote',
             name: `${quoteNumber} - ${customerName}`,
-            subtitle: title.substring(0, 50) || '',
+            subtitle: title.substring(0, 50) || `Quote #${quote.id}`,
             searchMatch: matchesNumber ? 'number' : 'customer'
           })
         })
       }
 
-      // Add machines
+      // Add machines - Enhanced machine search
       if (machinesRes.data && Array.isArray(machinesRes.data)) {
         machinesRes.data.forEach((machine: any) => {
-          const modelName = machine.model_name || machine.manufacturer || 'Unknown Machine'
-          const serialNumber = machine.serial_number || ''
-          const catalogueNumber = machine.catalogue_number || ''
+          // Try multiple possible field names for machine name
+          const modelName = machine.model_name || machine.model || machine.name || machine.manufacturer || `Machine #${machine.id}`
           const manufacturer = machine.manufacturer || ''
+          const serialNumber = machine.serial_number || machine.serial || ''
+          const catalogueNumber = machine.catalogue_number || machine.catalogue || machine.catalog_number || ''
+          const machineType = machine.type || machine.category || ''
           
-          // Check if query matches machine patterns (HD5, HD 5/15, etc.)
-          const normalizedModel = (modelName || '').toLowerCase().replace(/[^a-z0-9]/g, '')
-          const normalizedQuery = query.toLowerCase().replace(/[^a-z0-9]/g, '')
-          
+          // Enhanced machine search logic
           let searchMatch = 'name'
-          if (serialNumber && serialNumber.toLowerCase().includes(query.toLowerCase())) {
+          let subtitle = ''
+          
+          // Build subtitle with available information
+          const subtitleParts = []
+          if (manufacturer) subtitleParts.push(manufacturer)
+          if (serialNumber) subtitleParts.push(`S/N: ${serialNumber}`)
+          if (catalogueNumber) subtitleParts.push(`Cat: ${catalogueNumber}`)
+          if (machineType) subtitleParts.push(machineType)
+          
+          subtitle = subtitleParts.join(' • ')
+          
+          // Check what matched the search
+          const queryLower = query.toLowerCase()
+          if (serialNumber && serialNumber.toLowerCase().includes(queryLower)) {
             searchMatch = 'serial'
-          } else if (catalogueNumber && catalogueNumber.toLowerCase().includes(query.toLowerCase())) {
+          } else if (catalogueNumber && catalogueNumber.toLowerCase().includes(queryLower)) {
             searchMatch = 'catalogue'
-          } else if (normalizedModel.includes(normalizedQuery)) {
-            searchMatch = 'model'
+          } else if (manufacturer && manufacturer.toLowerCase().includes(queryLower)) {
+            searchMatch = 'manufacturer'
+          } else if (machineType && machineType.toLowerCase().includes(queryLower)) {
+            searchMatch = 'type'
+          } else {
+            // Check if query matches machine model patterns (HD5, HD 5/15, etc.)
+            const normalizedModel = (modelName || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+            const normalizedQuery = queryLower.replace(/[^a-z0-9]/g, '')
+            
+            if (normalizedModel.includes(normalizedQuery)) {
+              searchMatch = 'model'
+            }
           }
           
           results.push({
             id: `machine-${machine.id}`,
             type: 'machine',
             name: modelName,
-            subtitle: `${manufacturer} ${serialNumber ? '- S/N: ' + serialNumber : ''} ${catalogueNumber ? '- Cat: ' + catalogueNumber : ''}`.trim(),
+            subtitle: subtitle || `Machine #${machine.id}`,
             searchMatch
           })
         })
@@ -292,10 +321,10 @@ export function CommandPalette() {
         return a.name.localeCompare(b.name)
       })
 
-      console.log('Processed results:', results)
+      console.log('✅ Processed results:', results)
       setSearchResults(results)
     } catch (error) {
-      console.error('Search error:', error)
+      console.error('❌ Search error:', error)
     } finally {
       setIsSearching(false)
     }
