@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Badge } from '../components/ui/badge'
+import { SmartSearch } from '../components/ui/smart-search'
 import {
   Table,
   TableBody,
@@ -30,7 +31,6 @@ import {
 } from '../components/ui/select'
 import {
   Plus,
-  Search,
   MoreHorizontal,
   Edit,
   Trash2,
@@ -112,7 +112,6 @@ export default function Inventory() {
   
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearchTerm, setAppliedSearchTerm] = useState('')
   const [filters, setFilters] = useState({
     category: '',
@@ -309,16 +308,7 @@ export default function Inventory() {
     }
   }
 
-  const handleSearch = () => {
-    setAppliedSearchTerm(searchTerm)
-    setCurrentPage(1)
-  }
 
-  const handleClearSearch = () => {
-    setSearchTerm('')
-    setAppliedSearchTerm('')
-    setCurrentPage(1)
-  }
 
   const handleFilterChange = (filterType: string, value: string) => {
     setFilters(prev => ({
@@ -459,33 +449,20 @@ export default function Inventory() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Search inventory..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSearch()
-                      }
-                    }}
-                    className="pl-10 w-80"
-                  />
-                  {searchTerm && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                      onClick={handleClearSearch}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  )}
-                </div>
-                <Button onClick={handleSearch} variant="outline">
-                  Search
-                </Button>
+                <SmartSearch
+                  placeholder="Search inventory..."
+                  onSearch={(term) => {
+                    setAppliedSearchTerm(term)
+                    setCurrentPage(1)
+                  }}
+                  onClear={() => {
+                    setAppliedSearchTerm('')
+                    setCurrentPage(1)
+                  }}
+                  debounceMs={300}
+                  className="w-80"
+                  disabled={isLoading}
+                />
                 
                 {/* Column Visibility */}
                 <ColumnVisibilityDropdown

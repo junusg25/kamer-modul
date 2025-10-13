@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { SmartSearch } from '@/components/ui/smart-search'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -45,7 +46,6 @@ import {
 } from '@/components/ui/popover'
 import {
   Plus,
-  Search,
   MoreHorizontal,
   Edit,
   Trash2,
@@ -121,7 +121,6 @@ export default function Machines() {
   const { hasPermission } = useAuth()
   const [machineModels, setMachineModels] = useState<MachineModel[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearchTerm, setAppliedSearchTerm] = useState('')
   const [error, setError] = useState('')
   const [filters, setFilters] = useState({
@@ -419,37 +418,20 @@ export default function Machines() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Search machine models... (press Enter to search)"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        setAppliedSearchTerm(searchTerm)
-                        setCurrentPage(1) // Reset to first page when searching
-                      }
-                    }}
-                    className="pl-10 pr-10 w-80"
-                    disabled={isLoading}
-                  />
-                  {searchTerm && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 p-0"
-                      onClick={() => {
-                        setSearchTerm('')
-                        setAppliedSearchTerm('')
-                        setCurrentPage(1)
-                      }}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  )}
-                </div>
+                <SmartSearch
+                  placeholder="Search machine models..."
+                  onSearch={(term) => {
+                    setAppliedSearchTerm(term)
+                    setCurrentPage(1) // Reset to first page when searching
+                  }}
+                  onClear={() => {
+                    setAppliedSearchTerm('')
+                    setCurrentPage(1)
+                  }}
+                  debounceMs={300}
+                  className="w-80"
+                  disabled={isLoading}
+                />
                 
                 {/* Column Visibility */}
                 <ColumnVisibilityDropdown

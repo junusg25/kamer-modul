@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Badge } from '../components/ui/badge'
+import { SmartSearch } from '../components/ui/smart-search'
 import {
   Table,
   TableBody,
@@ -35,7 +36,6 @@ import { toast } from 'sonner'
 import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '../hooks/useColumnVisibility'
 import { ColumnVisibilityDropdown } from '../components/ui/column-visibility-dropdown'
 import {
-  Search,
   MoreHorizontal,
   Edit,
   Trash2,
@@ -188,7 +188,6 @@ export default function Customers() {
   const navigate = useNavigate()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearchTerm, setAppliedSearchTerm] = useState('')
   const [error, setError] = useState('')
   const [filters, setFilters] = useState({
@@ -510,39 +509,20 @@ export default function Customers() {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <div className="relative">
-                  {isLoading ? (
-                    <Loader2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground animate-spin" />
-                  ) : (
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  )}
-                  <Input
-                    placeholder="Search customers... (press Enter to search)"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        setAppliedSearchTerm(searchTerm)
-                        setCurrentPage(1) // Reset to first page when searching
-                      }
+                  <SmartSearch
+                    placeholder="Search customers..."
+                    onSearch={(term) => {
+                      setAppliedSearchTerm(term)
+                      setCurrentPage(1) // Reset to first page when searching
                     }}
-                    className="pl-10 pr-10 w-80"
+                    onClear={() => {
+                      setAppliedSearchTerm('')
+                      setCurrentPage(1)
+                    }}
+                    debounceMs={300}
+                    className="w-80"
                     disabled={isLoading}
                   />
-                  
-                  {/* Clear Search Button */}
-                  {searchTerm && (
-                    <button
-                      onClick={() => {
-                        setSearchTerm('')
-                        setAppliedSearchTerm('')
-                        setCurrentPage(1)
-                      }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
                 </div>
                 
                 {/* Column Visibility */}
