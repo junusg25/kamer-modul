@@ -291,6 +291,62 @@ chmod +x FORCE_BACKEND_RESTART.sh
 - **Result**: TK-01/25, WT-01/25, WO-01/25, WW-01/25 (independent counters)
 - **Database**: yearly_sequences table with prefix column
 
+#### ✅ Global Command Palette (Ctrl+K)
+- **What**: Keyboard-first navigation and search
+- **Shortcut**: Ctrl+K (Cmd+K on Mac) from anywhere
+- **Features**: 20+ navigation commands, quick actions, live search
+- **Search**: Real-time search across customers, tickets, machines
+- **Smart**: Role-based commands, keyword fuzzy matching
+- **UI**: Visual trigger in header with keyboard hint
+
+---
+
+## ⌨️ Command Palette (Ctrl+K)
+
+### Quick Navigation & Search
+
+Press **Ctrl+K** (or **Cmd+K** on Mac) anywhere in the app to open the command palette:
+
+#### 🎯 **Features:**
+- **Instant Navigation** - Jump to any page quickly
+- **Global Search** - Search customers, tickets, and machines in real-time
+- **Quick Actions** - Create new items without navigating
+- **Keyboard First** - Full keyboard navigation (arrow keys, Enter, Esc)
+- **Smart Results** - Search by name, keywords, or descriptions
+- **Role-Based** - Shows commands based on your permissions
+
+#### 📋 **Available Commands:**
+
+**Navigation (20+ pages):**
+- Dashboard, My Work, Customers, Machines, Inventory
+- Repair Tickets, Work Orders, Warranty Tickets, Warranty Orders
+- Pipeline & Leads, Quotes, Sales Reports, Sales Targets
+- Rental Machines, Active Rentals, Rental Analytics, Dynamic Pricing
+- Notifications, Settings
+
+**Quick Actions:**
+- Add Customer, Add Machine Model, Add Inventory Item
+- Create Repair Ticket, Create Warranty Ticket
+
+**Live Search:**
+- Type 2+ characters to search across:
+  - Customers (by name, email, phone)
+  - Repair Tickets (by number, customer, description)
+  - Machines (by model, manufacturer, serial number)
+- Results update as you type (300ms debounce)
+- Click any result to navigate instantly
+
+**Settings & Admin:**
+- Settings, Logout
+- Admin Dashboard (admin only)
+- Manager Dashboard (manager/admin)
+
+#### 💡 **Pro Tips:**
+- Use keywords like "create customer", "new ticket", "dashboard"
+- Search partial names: "kar" finds "Karcher"
+- Navigate while typing - no mouse needed!
+- Press Esc to close
+
 ---
 
 ## 🔍 Search Features
@@ -634,9 +690,9 @@ All migrations are in `backend/migrations/` directory:
 - PDF printing with dynamic URLs
 - Customer portal tracking
 - Independent ticket sequences
+- **Global command palette (Ctrl+K)** - Quick navigation and search
 
 ### In Progress 🔄
-- Global command palette search (Ctrl+K)
 - Mobile PWA frontend
 
 ### Planned 📋
