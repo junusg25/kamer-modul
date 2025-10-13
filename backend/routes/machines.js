@@ -780,10 +780,41 @@ router.get('/', async (req, res, next) => {
     if (all === 'true') {
       const params = []
       let where = ''
-      if (search) {
-        params.push(`%${search}%`)
-        where = `WHERE m.name ILIKE $1 OR COALESCE(m.serial_number,'') ILIKE $1`
+    if (search) {
+      // Create fuzzy search patterns for machine names and serial numbers
+      const searchLower = search.toLowerCase().trim()
+      const searchPatterns = []
+      
+      // Original search pattern
+      searchPatterns.push(`%${search}%`)
+      
+      // Fuzzy patterns for machine names and serial numbers
+      const machinePatterns = [
+        `%${searchLower}%`,           // Direct match
+        `%${searchLower.replace(/\s+/g, '%')}%`,  // Handle spaces as wildcards
+        `%${searchLower.replace(/[^a-z0-9]/g, '')}%`, // Remove special chars
+      ]
+      
+      // Add patterns for common machine name variations
+      if (searchLower.match(/^[a-z\s]+$/)) {
+        // If it's just letters/spaces, add variations
+        const words = searchLower.split(/\s+/).filter(w => w.length > 1)
+        words.forEach(word => {
+          searchPatterns.push(`%${word}%`)
+        })
       }
+      
+      // Remove duplicates
+      const uniquePatterns = [...new Set([...searchPatterns, ...machinePatterns])]
+      
+      // Create search conditions for each pattern
+      const searchConditions = uniquePatterns.map((pattern, index) => 
+        `(unaccent(m.name) ILIKE unaccent($${index + 1}) OR COALESCE(m.serial_number,'') ILIKE $${index + 1})`
+      )
+      
+      where = `WHERE ${searchConditions.join(' OR ')}`
+      uniquePatterns.forEach(pattern => params.push(pattern))
+    }
       const result = await db.query(
         `SELECT m.id, m.name, m.serial_number, m.description, m.customer_id, c.name as customer_name
          FROM machines m
@@ -807,8 +838,39 @@ router.get('/', async (req, res, next) => {
     const params = []
     let where = ''
     if (search) {
-      params.push(`%${search}%`)
-      where = `WHERE m.name ILIKE $1 OR COALESCE(m.catalogue_number,'') ILIKE $1 OR COALESCE(m.serial_number,'') ILIKE $1`
+      // Create fuzzy search patterns for machine names, catalogue numbers, and serial numbers
+      const searchLower = search.toLowerCase().trim()
+      const searchPatterns = []
+      
+      // Original search pattern
+      searchPatterns.push(`%${search}%`)
+      
+      // Fuzzy patterns for machine names, catalogue numbers, and serial numbers
+      const machinePatterns = [
+        `%${searchLower}%`,           // Direct match
+        `%${searchLower.replace(/\s+/g, '%')}%`,  // Handle spaces as wildcards
+        `%${searchLower.replace(/[^a-z0-9]/g, '')}%`, // Remove special chars
+      ]
+      
+      // Add patterns for common machine name variations
+      if (searchLower.match(/^[a-z\s]+$/)) {
+        // If it's just letters/spaces, add variations
+        const words = searchLower.split(/\s+/).filter(w => w.length > 1)
+        words.forEach(word => {
+          searchPatterns.push(`%${word}%`)
+        })
+      }
+      
+      // Remove duplicates
+      const uniquePatterns = [...new Set([...searchPatterns, ...machinePatterns])]
+      
+      // Create search conditions for each pattern
+      const searchConditions = uniquePatterns.map((pattern, index) => 
+        `(unaccent(m.name) ILIKE unaccent($${index + 1}) OR COALESCE(m.catalogue_number,'') ILIKE $${index + 1} OR COALESCE(m.serial_number,'') ILIKE $${index + 1})`
+      )
+      
+      where = `WHERE ${searchConditions.join(' OR ')}`
+      uniquePatterns.forEach(pattern => params.push(pattern))
     }
     
     // Get total count
