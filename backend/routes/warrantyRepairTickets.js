@@ -23,7 +23,9 @@ router.get('/', authenticateToken, async (req, res, next) => {
         unaccent(wrt.customer_name) ILIKE unaccent($${paramCount}) OR 
         unaccent(wrt.model_name) ILIKE unaccent($${paramCount}) OR 
         unaccent(wrt.submitted_by_name) ILIKE unaccent($${paramCount}) OR 
-        unaccent(wrt.converted_by_technician_name) ILIKE unaccent($${paramCount})
+        unaccent(wrt.converted_by_technician_name) ILIKE unaccent($${paramCount}) OR
+        unaccent(wrt.formatted_number) ILIKE unaccent($${paramCount}) OR
+        wrt.ticket_number::text ILIKE $${paramCount}
       )`);
       params.push(`%${search}%`);
     }

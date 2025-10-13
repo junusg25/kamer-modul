@@ -30,7 +30,9 @@ router.get('/', authenticateToken, async (req, res, next) => {
         unaccent(rt.customer_name) ILIKE unaccent($${queryParams.length + 1}) OR 
         unaccent(rt.model_name) ILIKE unaccent($${queryParams.length + 1}) OR 
         unaccent(rt.submitted_by_name) ILIKE unaccent($${queryParams.length + 1}) OR 
-        unaccent(rt.converted_by_technician_name) ILIKE unaccent($${queryParams.length + 1})
+        unaccent(rt.converted_by_technician_name) ILIKE unaccent($${queryParams.length + 1}) OR
+        unaccent(rt.formatted_number) ILIKE unaccent($${queryParams.length + 1}) OR
+        rt.ticket_number::text ILIKE $${queryParams.length + 1}
       )`)
       queryParams.push(`%${search}%`)
     }

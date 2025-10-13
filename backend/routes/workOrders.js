@@ -126,7 +126,9 @@ router.get('/', authenticateToken, async (req, res, next) => {
       whereConditions.push(`(
         unaccent(wo.description) ILIKE unaccent($${paramIndex}) OR 
         unaccent(c.name) ILIKE unaccent($${paramIndex}) OR 
-        unaccent(mm.name) ILIKE unaccent($${paramIndex})
+        unaccent(mm.name) ILIKE unaccent($${paramIndex}) OR
+        unaccent(wo.formatted_number) ILIKE unaccent($${paramIndex}) OR
+        wo.ticket_number::text ILIKE $${paramIndex}
       )`);
       queryParams.push(`%${search}%`);
       paramIndex++;
