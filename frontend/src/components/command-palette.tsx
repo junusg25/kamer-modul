@@ -31,6 +31,7 @@ import {
   BarChart3,
   Briefcase,
   Loader2,
+  Quote,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { apiService } from '@/services/api'
@@ -46,9 +47,10 @@ interface Command {
 
 interface SearchResult {
   id: string
-  type: 'customer' | 'ticket' | 'machine'
+  type: 'customer' | 'ticket' | 'machine' | 'workorder' | 'quote' | 'warrantyticket' | 'warrantyorder'
   name: string
   subtitle?: string
+  searchMatch?: string
 }
 
 export function CommandPalette() {
@@ -80,7 +82,7 @@ export function CommandPalette() {
     }
   }, [open])
 
-  // Debounced search function
+  // Enhanced search function with multiple entity types
   const performSearch = useCallback(async (query: string) => {
     if (!query || query.length < 2) {
       setSearchResults([])
@@ -89,16 +91,55 @@ export function CommandPalette() {
 
     setIsSearching(true)
     try {
-      // Search customers, tickets, and machines in parallel
-      const [customersRes, ticketsRes, machinesRes] = await Promise.all([
+      // Clean and normalize the search query
+      const cleanQuery = query.toLowerCase().trim()
+      
+      // Search all entity types in parallel
+      const [
+        customersRes, 
+        ticketsRes, 
+        workOrdersRes,
+        warrantyTicketsRes,
+        warrantyOrdersRes,
+        quotesRes,
+        machinesRes
+      ] = await Promise.all([
         apiService.getCustomers({ search: query, limit: 5 }).catch(() => ({ data: [] })),
         apiService.getRepairTickets({ search: query, limit: 5 }).catch(() => ({ data: [] })),
+        apiService.getWorkOrders({ search: query, limit: 5 }).catch(() => ({ data: [] })),
+        apiService.getWarrantyRepairTickets({ search: query, limit: 5 }).catch(() => ({ data: [] })),
+        apiService.getWarrantyWorkOrders({ search: query, limit: 5 }).catch(() => ({ data: [] })),
+        apiService.getQuotes({ search: query, limit: 5 }).catch(() => ({ data: [] })),
         apiService.getMachines({ search: query, limit: 5 }).catch(() => ({ data: [] })),
       ])
 
-      console.log('Search results:', { customersRes, ticketsRes, machinesRes }) // Debug
+      console.log('Search results for query:', query, {
+        customers: customersRes.data,
+        tickets: ticketsRes.data,
+        workOrders: workOrdersRes.data,
+        warrantyTickets: warrantyTicketsRes.data,
+        warrantyOrders: warrantyOrdersRes.data,
+        quotes: quotesRes.data,
+        machines: machinesRes.data
+      })
 
       const results: SearchResult[] = []
+
+      // Helper function to check if query matches ticket/order numbers
+      const matchesTicketPattern = (ticketNumber: string, query: string) => {
+        const normalizedTicket = ticketNumber.toLowerCase().replace(/[^a-z0-9]/g, '')
+        const normalizedQuery = query.toLowerCase().replace(/[^a-z0-9]/g, '')
+        
+        // Check if query matches common patterns
+        const patterns = [
+          normalizedTicket, // Exact match
+          normalizedTicket.replace(/\d+\/\d+$/, ''), // Remove year (TK01 instead of TK01/25)
+          normalizedTicket.replace(/[^0-9]/g, ''), // Only numbers
+          normalizedTicket.replace(/[^a-z]/g, '') // Only letters
+        ]
+        
+        return patterns.some(pattern => pattern.includes(normalizedQuery))
+      }
 
       // Add customers
       if (customersRes.data && Array.isArray(customersRes.data)) {
@@ -106,20 +147,105 @@ export function CommandPalette() {
           results.push({
             id: `customer-${customer.id}`,
             type: 'customer',
-            name: customer.name || customer.company_name || 'Unknown',
+            name: customer.name || customer.company_name || 'Unknown Customer',
             subtitle: customer.email || customer.phone || '',
+            searchMatch: 'name'
           })
         })
       }
 
-      // Add tickets
+      // Add repair tickets
       if (ticketsRes.data && Array.isArray(ticketsRes.data)) {
         ticketsRes.data.forEach((ticket: any) => {
+          const ticketNumber = ticket.ticket_number || ''
+          const customerName = ticket.customer_name || 'Unknown'
+          const machineName = ticket.machine_name || ticket.machine_model || ''
+          
+          // Check if query matches ticket number pattern
+          const matchesNumber = matchesTicketPattern(ticketNumber, query)
+          
           results.push({
             id: `ticket-${ticket.id}`,
             type: 'ticket',
-            name: `${ticket.ticket_number || 'N/A'} - ${ticket.customer_name || 'Unknown'}`,
-            subtitle: ticket.description?.substring(0, 50) || ticket.machine_name || '',
+            name: `${ticketNumber} - ${customerName}`,
+            subtitle: machineName || ticket.description?.substring(0, 50) || '',
+            searchMatch: matchesNumber ? 'number' : 'customer'
+          })
+        })
+      }
+
+      // Add work orders
+      if (workOrdersRes.data && Array.isArray(workOrdersRes.data)) {
+        workOrdersRes.data.forEach((order: any) => {
+          const orderNumber = order.order_number || ''
+          const customerName = order.customer_name || 'Unknown'
+          const machineName = order.machine_name || order.machine_model || ''
+          
+          const matchesNumber = matchesTicketPattern(orderNumber, query)
+          
+          results.push({
+            id: `workorder-${order.id}`,
+            type: 'workorder',
+            name: `${orderNumber} - ${customerName}`,
+            subtitle: machineName || order.description?.substring(0, 50) || '',
+            searchMatch: matchesNumber ? 'number' : 'customer'
+          })
+        })
+      }
+
+      // Add warranty repair tickets
+      if (warrantyTicketsRes.data && Array.isArray(warrantyTicketsRes.data)) {
+        warrantyTicketsRes.data.forEach((ticket: any) => {
+          const ticketNumber = ticket.ticket_number || ''
+          const customerName = ticket.customer_name || 'Unknown'
+          const machineName = ticket.machine_name || ticket.machine_model || ''
+          
+          const matchesNumber = matchesTicketPattern(ticketNumber, query)
+          
+          results.push({
+            id: `warrantyticket-${ticket.id}`,
+            type: 'warrantyticket',
+            name: `${ticketNumber} - ${customerName}`,
+            subtitle: machineName || ticket.description?.substring(0, 50) || '',
+            searchMatch: matchesNumber ? 'number' : 'customer'
+          })
+        })
+      }
+
+      // Add warranty work orders
+      if (warrantyOrdersRes.data && Array.isArray(warrantyOrdersRes.data)) {
+        warrantyOrdersRes.data.forEach((order: any) => {
+          const orderNumber = order.order_number || ''
+          const customerName = order.customer_name || 'Unknown'
+          const machineName = order.machine_name || order.machine_model || ''
+          
+          const matchesNumber = matchesTicketPattern(orderNumber, query)
+          
+          results.push({
+            id: `warrantyorder-${order.id}`,
+            type: 'warrantyorder',
+            name: `${orderNumber} - ${customerName}`,
+            subtitle: machineName || order.description?.substring(0, 50) || '',
+            searchMatch: matchesNumber ? 'number' : 'customer'
+          })
+        })
+      }
+
+      // Add quotes
+      if (quotesRes.data && Array.isArray(quotesRes.data)) {
+        quotesRes.data.forEach((quote: any) => {
+          const quoteNumber = quote.quote_number || ''
+          const customerName = quote.customer_name || 'Unknown'
+          const title = quote.title || quote.description || ''
+          
+          const matchesNumber = matchesTicketPattern(quoteNumber, query)
+          
+          results.push({
+            id: `quote-${quote.id}`,
+            type: 'quote',
+            name: `${quoteNumber} - ${customerName}`,
+            subtitle: title.substring(0, 50) || '',
+            searchMatch: matchesNumber ? 'number' : 'customer'
           })
         })
       }
@@ -127,16 +253,44 @@ export function CommandPalette() {
       // Add machines
       if (machinesRes.data && Array.isArray(machinesRes.data)) {
         machinesRes.data.forEach((machine: any) => {
+          const modelName = machine.model_name || machine.manufacturer || 'Unknown Machine'
+          const serialNumber = machine.serial_number || ''
+          const catalogueNumber = machine.catalogue_number || ''
+          const manufacturer = machine.manufacturer || ''
+          
+          // Check if query matches machine patterns (HD5, HD 5/15, etc.)
+          const normalizedModel = modelName.toLowerCase().replace(/[^a-z0-9]/g, '')
+          const normalizedQuery = query.toLowerCase().replace(/[^a-z0-9]/g, '')
+          
+          let searchMatch = 'name'
+          if (serialNumber.toLowerCase().includes(query.toLowerCase())) {
+            searchMatch = 'serial'
+          } else if (catalogueNumber.toLowerCase().includes(query.toLowerCase())) {
+            searchMatch = 'catalogue'
+          } else if (normalizedModel.includes(normalizedQuery)) {
+            searchMatch = 'model'
+          }
+          
           results.push({
             id: `machine-${machine.id}`,
             type: 'machine',
-            name: machine.model_name || machine.manufacturer || 'Unknown',
-            subtitle: `${machine.manufacturer || ''} ${machine.serial_number ? '- ' + machine.serial_number : ''}`.trim(),
+            name: modelName,
+            subtitle: `${manufacturer} ${serialNumber ? '- S/N: ' + serialNumber : ''} ${catalogueNumber ? '- Cat: ' + catalogueNumber : ''}`.trim(),
+            searchMatch
           })
         })
       }
 
-      console.log('Processed results:', results) // Debug
+      // Sort results by relevance (number matches first, then alphabetical)
+      results.sort((a, b) => {
+        if (a.searchMatch === 'number' && b.searchMatch !== 'number') return -1
+        if (b.searchMatch === 'number' && a.searchMatch !== 'number') return 1
+        if (a.searchMatch === 'serial' && b.searchMatch !== 'serial') return -1
+        if (b.searchMatch === 'serial' && a.searchMatch !== 'serial') return 1
+        return a.name.localeCompare(b.name)
+      })
+
+      console.log('Processed results:', results)
       setSearchResults(results)
     } catch (error) {
       console.error('Search error:', error)
@@ -161,12 +315,28 @@ export function CommandPalette() {
 
   const handleSearchResultClick = (result: SearchResult) => {
     const id = result.id.split('-')[1]
-    if (result.type === 'customer') {
-      navigate(`/customers/${id}`)
-    } else if (result.type === 'ticket') {
-      navigate(`/repair-tickets/${id}`)
-    } else if (result.type === 'machine') {
-      navigate(`/machines/${id}`)
+    switch (result.type) {
+      case 'customer':
+        navigate(`/customers/${id}`)
+        break
+      case 'ticket':
+        navigate(`/repair-tickets/${id}`)
+        break
+      case 'workorder':
+        navigate(`/work-orders/${id}`)
+        break
+      case 'warrantyticket':
+        navigate(`/warranty-repair-tickets/${id}`)
+        break
+      case 'warrantyorder':
+        navigate(`/warranty-work-orders/${id}`)
+        break
+      case 'quote':
+        navigate(`/quote-management`) // You might need a specific quote detail route
+        break
+      case 'machine':
+        navigate(`/machines/${id}`)
+        break
     }
     setOpen(false)
   }
@@ -468,10 +638,39 @@ export function CommandPalette() {
         return <Users className="h-4 w-4" />
       case 'ticket':
         return <FileText className="h-4 w-4" />
+      case 'workorder':
+        return <ClipboardList className="h-4 w-4" />
+      case 'warrantyticket':
+        return <ShieldAlert className="h-4 w-4" />
+      case 'warrantyorder':
+        return <ShieldAlert className="h-4 w-4" />
+      case 'quote':
+        return <Quote className="h-4 w-4" />
       case 'machine':
         return <Wrench className="h-4 w-4" />
       default:
         return <Search className="h-4 w-4" />
+    }
+  }
+
+  const getTypeLabel = (type: SearchResult['type']) => {
+    switch (type) {
+      case 'customer':
+        return 'Customer'
+      case 'ticket':
+        return 'Repair Ticket'
+      case 'workorder':
+        return 'Work Order'
+      case 'warrantyticket':
+        return 'Warranty Ticket'
+      case 'warrantyorder':
+        return 'Warranty Order'
+      case 'quote':
+        return 'Quote'
+      case 'machine':
+        return 'Machine'
+      default:
+        return 'Item'
     }
   }
 
@@ -481,7 +680,7 @@ export function CommandPalette() {
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
       <CommandInput 
-        placeholder="Type a command or search..." 
+        placeholder="Search tickets (TK-01/25), machines (HD5), customers, quotes..." 
         value={searchQuery}
         onValueChange={setSearchQuery}
       />
@@ -514,11 +713,21 @@ export function CommandPalette() {
                     {getResultIcon(result.type)}
                     <div className="flex-1">
                       <div className="font-medium">{result.name}</div>
-                      {result.subtitle && (
-                        <div className="text-xs text-muted-foreground truncate">
-                          {result.subtitle}
-                        </div>
-                      )}
+                      <div className="text-xs text-muted-foreground truncate flex items-center gap-2">
+                        <span>{getTypeLabel(result.type)}</span>
+                        {result.subtitle && (
+                          <>
+                            <span>•</span>
+                            <span>{result.subtitle}</span>
+                          </>
+                        )}
+                        {result.searchMatch && (
+                          <>
+                            <span>•</span>
+                            <span className="text-blue-600">Matched: {result.searchMatch}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CommandItem>
