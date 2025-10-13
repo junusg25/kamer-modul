@@ -29,20 +29,12 @@ export function SmartSearch({
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
-  // Debounced search function
-  const debouncedSearch = useCallback(
-    debounce((term: string) => {
-      onSearch(term);
-      setIsSearching(false);
-    }, debounceMs),
-    [onSearch, debounceMs]
-  );
-
-  // Handle search term changes
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
+  // Handle search button click
+  const handleSearchClick = () => {
     setIsSearching(true);
-    debouncedSearch(value);
+    onSearch(searchTerm);
+    // Reset searching state after a short delay
+    setTimeout(() => setIsSearching(false), 500);
   };
 
   // Handle clear search
@@ -56,10 +48,7 @@ export function SmartSearch({
   // Handle Enter key press
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      // Cancel debounce and search immediately
-      debouncedSearch.cancel?.();
-      onSearch(searchTerm);
-      setIsSearching(false);
+      handleSearchClick();
     }
   };
 
@@ -71,14 +60,14 @@ export function SmartSearch({
   };
 
   return (
-    <div className={cn("relative flex items-center", className)}>
+    <div className={cn("flex items-center gap-2", className)}>
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="text"
           placeholder={placeholder}
           value={searchTerm}
-          onChange={(e) => handleSearchChange(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
           onKeyPress={handleKeyPress}
           onKeyDown={handleKeyDown}
           autoFocus={autoFocus}
@@ -97,12 +86,18 @@ export function SmartSearch({
             <X className="h-3 w-3" />
           </Button>
         )}
-        {isSearching && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-          </div>
-        )}
       </div>
+      <Button
+        onClick={handleSearchClick}
+        disabled={disabled || isSearching}
+        className="shrink-0"
+      >
+        {isSearching ? (
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : (
+          'Search'
+        )}
+      </Button>
     </div>
   );
 }

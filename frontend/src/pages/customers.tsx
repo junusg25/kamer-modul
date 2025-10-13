@@ -36,6 +36,7 @@ import { toast } from 'sonner'
 import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '../hooks/useColumnVisibility'
 import { ColumnVisibilityDropdown } from '../components/ui/column-visibility-dropdown'
 import {
+  Search,
   MoreHorizontal,
   Edit,
   Trash2,

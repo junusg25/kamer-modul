@@ -207,9 +207,8 @@ const searchFieldConfigs = {
   ],
   
   machines: [
-    { field: 'm.name', accentInsensitive: true },
-    { field: 'm.serial_number', accentInsensitive: false },
-    { field: 'm.catalogue_number', accentInsensitive: false },
+    { field: 'mm.name', accentInsensitive: true },
+    { field: 'mm.catalogue_number', accentInsensitive: false },
     { field: 'mm.manufacturer', accentInsensitive: true }
   ],
   
@@ -222,7 +221,7 @@ const searchFieldConfigs = {
   
   repairTickets: [
     { field: 'rt.formatted_number', accentInsensitive: false },
-    { field: 'rt.ticket_number', accentInsensitive: false },
+    { field: 'rt.ticket_number::text', accentInsensitive: false },
     { field: 'rt.problem_description', accentInsensitive: true },
     { field: 'rt.customer_name', accentInsensitive: true },
     { field: 'rt.model_name', accentInsensitive: true },
@@ -232,7 +231,7 @@ const searchFieldConfigs = {
   
   workOrders: [
     { field: 'wo.formatted_number', accentInsensitive: false },
-    { field: 'wo.ticket_number', accentInsensitive: false },
+    { field: 'wo.ticket_number::text', accentInsensitive: false },
     { field: 'wo.description', accentInsensitive: true },
     { field: 'c.name', accentInsensitive: true },
     { field: 'mm.name', accentInsensitive: true }
@@ -240,7 +239,7 @@ const searchFieldConfigs = {
   
   warrantyRepairTickets: [
     { field: 'wrt.formatted_number', accentInsensitive: false },
-    { field: 'wrt.ticket_number', accentInsensitive: false },
+    { field: 'wrt.ticket_number::text', accentInsensitive: false },
     { field: 'wrt.problem_description', accentInsensitive: true },
     { field: 'wrt.customer_name', accentInsensitive: true },
     { field: 'wrt.model_name', accentInsensitive: true },
@@ -250,7 +249,7 @@ const searchFieldConfigs = {
   
   warrantyWorkOrders: [
     { field: 'wwo.formatted_number', accentInsensitive: false },
-    { field: 'wwo.ticket_number', accentInsensitive: false },
+    { field: 'wwo.ticket_number::text', accentInsensitive: false },
     { field: 'wwo.description', accentInsensitive: true },
     { field: 'c.name', accentInsensitive: true },
     { field: 'mm.name', accentInsensitive: true }
