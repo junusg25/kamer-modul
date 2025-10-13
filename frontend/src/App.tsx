@@ -9,6 +9,7 @@ import { FeedbackProvider } from './contexts/feedback-context'
 import { ProtectedRoute } from './components/protected-route'
 import { PermissionProtectedRoute } from './components/permission-protected-route'
 import { RoleProtectedRoute } from './components/role-protected-route'
+import { CommandPalette } from './components/command-palette'
 import Login from './pages/login'
 import Customers from './pages/customers'
 import CustomerDetail from './pages/customer-detail'
@@ -58,6 +59,7 @@ function App() {
           <NotificationsProvider>
             <FeedbackProvider>
               <Toaster position="top-right" expand={false} richColors closeButton />
+              <CommandPalette />
               <Router>
             <Routes>
               <Route path="/login" element={<Login />} />
