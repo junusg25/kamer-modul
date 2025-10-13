@@ -48,10 +48,9 @@ interface Command {
 
 interface SearchResult {
   id: string
-  type: 'customer' | 'ticket' | 'machine' | 'workorder' | 'quote' | 'warrantyticket' | 'warrantyorder'
+  type: 'customer'
   name: string
   subtitle?: string
-  searchMatch?: string
 }
 
 export function CommandPalette() {
@@ -83,7 +82,7 @@ export function CommandPalette() {
     }
   }, [open])
 
-  // Enhanced search function with multiple entity types
+  // Simplified search function - only customers
   const performSearch = useCallback(async (query: string) => {
     if (!query || query.length < 2) {
       setSearchResults([])
@@ -92,58 +91,14 @@ export function CommandPalette() {
 
     setIsSearching(true)
     try {
-      // Clean and normalize the search query
-      const cleanQuery = query.toLowerCase().trim()
-      
-      // Search all entity types in parallel
-      const [
-        customersRes, 
-        ticketsRes, 
-        workOrdersRes,
-        warrantyTicketsRes,
-        warrantyOrdersRes,
-        quotesRes,
-        machinesRes
-      ] = await Promise.all([
-        apiService.getCustomers({ search: query, limit: 10 }).catch(() => ({ data: [] })),
-        apiService.getRepairTickets({ search: query, limit: 10 }).catch(() => ({ data: [] })),
-        apiService.getWorkOrders({ search: query, limit: 10 }).catch(() => ({ data: [] })),
-        apiService.getWarrantyRepairTickets({ search: query, limit: 10 }).catch(() => ({ data: [] })),
-        apiService.getWarrantyWorkOrders({ search: query, limit: 10 }).catch(() => ({ data: [] })),
-        apiService.getQuotes({ search: query, limit: 10 }).catch(() => ({ data: [] })),
-        apiService.getMachines({ search: query, limit: 10 }).catch(() => ({ data: [] })),
-      ])
+      // Only search customers
+      const customersRes = await apiService.getCustomers({ search: query, limit: 10 }).catch(() => ({ data: [] }))
 
-      console.log('🔍 Search results for query:', query, {
-        customers: customersRes.data,
-        tickets: ticketsRes.data,
-        workOrders: workOrdersRes.data,
-        warrantyTickets: warrantyTicketsRes.data,
-        warrantyOrders: warrantyOrdersRes.data,
-        quotes: quotesRes.data,
-        machines: machinesRes.data
-      })
+      console.log('🔍 Customer search results for query:', query, { customers: customersRes.data })
 
       const results: SearchResult[] = []
 
-      // Helper function to check if query matches ticket/order numbers
-      const matchesTicketPattern = (ticketNumber: string | null | undefined, query: string) => {
-        if (!ticketNumber || typeof ticketNumber !== 'string') return false
-        const normalizedTicket = ticketNumber.toLowerCase().replace(/[^a-z0-9]/g, '')
-        const normalizedQuery = query.toLowerCase().replace(/[^a-z0-9]/g, '')
-        
-        // Check if query matches common patterns
-        const patterns = [
-          normalizedTicket, // Exact match
-          normalizedTicket.replace(/\d+\/\d+$/, ''), // Remove year (TK01 instead of TK01/25)
-          normalizedTicket.replace(/[^0-9]/g, ''), // Only numbers
-          normalizedTicket.replace(/[^a-z]/g, '') // Only letters
-        ]
-        
-        return patterns.some(pattern => pattern.includes(normalizedQuery))
-      }
-
-      // Add customers
+      // Add customers only
       if (customersRes.data && Array.isArray(customersRes.data)) {
         customersRes.data.forEach((customer: any) => {
           const name = customer.name || customer.company_name || `Customer #${customer.id}`
@@ -153,174 +108,15 @@ export function CommandPalette() {
             id: `customer-${customer.id}`,
             type: 'customer',
             name,
-            subtitle,
-            searchMatch: 'customer'
+            subtitle
           })
         })
       }
 
-      // Add repair tickets
-      if (ticketsRes.data && Array.isArray(ticketsRes.data)) {
-        ticketsRes.data.forEach((ticket: any) => {
-          const ticketNumber = ticket.ticket_number || `TK-${ticket.id}`
-          const customerName = ticket.customer_name || ticket.customer_id || 'Unknown Customer'
-          const machineName = ticket.machine_name || ticket.machine_model || ticket.machine_id || ''
-          const description = ticket.description || ''
-          
-          // Check if query matches ticket number pattern
-          const matchesNumber = matchesTicketPattern(ticketNumber, query)
-          
-          results.push({
-            id: `ticket-${ticket.id}`,
-            type: 'ticket',
-            name: `${ticketNumber} - ${customerName}`,
-            subtitle: machineName || description.substring(0, 50) || `Ticket #${ticket.id}`,
-            searchMatch: matchesNumber ? 'number' : 'customer'
-          })
-        })
-      }
-
-      // Add work orders
-      if (workOrdersRes.data && Array.isArray(workOrdersRes.data)) {
-        workOrdersRes.data.forEach((order: any) => {
-          const orderNumber = order.order_number || order.ticket_number || `WO-${order.id}`
-          const customerName = order.customer_name || order.customer_id || 'Unknown Customer'
-          const machineName = order.machine_name || order.machine_model || order.machine_id || ''
-          const description = order.description || ''
-          
-          const matchesNumber = matchesTicketPattern(orderNumber, query)
-          
-          results.push({
-            id: `workorder-${order.id}`,
-            type: 'workorder',
-            name: `${orderNumber} - ${customerName}`,
-            subtitle: machineName || description.substring(0, 50) || `Work Order #${order.id}`,
-            searchMatch: matchesNumber ? 'number' : 'customer'
-          })
-        })
-      }
-
-      // Add warranty repair tickets
-      if (warrantyTicketsRes.data && Array.isArray(warrantyTicketsRes.data)) {
-        warrantyTicketsRes.data.forEach((ticket: any) => {
-          const ticketNumber = ticket.ticket_number || `WT-${ticket.id}`
-          const customerName = ticket.customer_name || ticket.customer_id || 'Unknown Customer'
-          const machineName = ticket.machine_name || ticket.machine_model || ticket.machine_id || ''
-          const description = ticket.description || ''
-          
-          const matchesNumber = matchesTicketPattern(ticketNumber, query)
-          
-          results.push({
-            id: `warrantyticket-${ticket.id}`,
-            type: 'warrantyticket',
-            name: `${ticketNumber} - ${customerName}`,
-            subtitle: machineName || description.substring(0, 50) || `Warranty Ticket #${ticket.id}`,
-            searchMatch: matchesNumber ? 'number' : 'customer'
-          })
-        })
-      }
-
-      // Add warranty work orders
-      if (warrantyOrdersRes.data && Array.isArray(warrantyOrdersRes.data)) {
-        warrantyOrdersRes.data.forEach((order: any) => {
-          const orderNumber = order.order_number || order.ticket_number || `WW-${order.id}`
-          const customerName = order.customer_name || order.customer_id || 'Unknown Customer'
-          const machineName = order.machine_name || order.machine_model || order.machine_id || ''
-          const description = order.description || ''
-          
-          const matchesNumber = matchesTicketPattern(orderNumber, query)
-          
-          results.push({
-            id: `warrantyorder-${order.id}`,
-            type: 'warrantyorder',
-            name: `${orderNumber} - ${customerName}`,
-            subtitle: machineName || description.substring(0, 50) || `Warranty Order #${order.id}`,
-            searchMatch: matchesNumber ? 'number' : 'customer'
-          })
-        })
-      }
-
-      // Add quotes
-      if (quotesRes.data && Array.isArray(quotesRes.data)) {
-        quotesRes.data.forEach((quote: any) => {
-          const quoteNumber = quote.quote_number || `QT-${quote.id}`
-          const customerName = quote.customer_name || quote.customer_id || 'Unknown Customer'
-          const title = quote.title || quote.description || ''
-          
-          const matchesNumber = matchesTicketPattern(quoteNumber, query)
-          
-          results.push({
-            id: `quote-${quote.id}`,
-            type: 'quote',
-            name: `${quoteNumber} - ${customerName}`,
-            subtitle: title.substring(0, 50) || `Quote #${quote.id}`,
-            searchMatch: matchesNumber ? 'number' : 'customer'
-          })
-        })
-      }
-
-      // Add machines - FIXED FIELD MAPPING based on actual API response
-      if (machinesRes.data && Array.isArray(machinesRes.data)) {
-        machinesRes.data.forEach((machine: any) => {
-          // Based on console log: {id: 1, name: HD 5/15 C Plus, catalogue_number: 1520931, manufactur...
-          const modelName = machine.name || machine.model_name || machine.model || 'Unknown Machine'
-          const manufacturer = machine.manufacturer || ''
-          const catalogueNumber = machine.catalogue_number || machine.catalogue || machine.catalog_number || ''
-          const category = machine.category || ''
-          
-          // Enhanced machine search logic
-          let searchMatch = 'name'
-          let subtitle = ''
-          
-          // Build subtitle with available information
-          const subtitleParts = []
-          if (manufacturer) subtitleParts.push(manufacturer)
-          if (catalogueNumber) subtitleParts.push(`Cat: ${catalogueNumber}`)
-          if (category) subtitleParts.push(category)
-          
-          subtitle = subtitleParts.join(' • ')
-          
-          // Check what matched the search
-          const queryLower = query.toLowerCase()
-          if (catalogueNumber && catalogueNumber.toLowerCase().includes(queryLower)) {
-            searchMatch = 'catalogue'
-          } else if (manufacturer && manufacturer.toLowerCase().includes(queryLower)) {
-            searchMatch = 'manufacturer'
-          } else if (category && category.toLowerCase().includes(queryLower)) {
-            searchMatch = 'category'
-          } else {
-            // Check if query matches machine model patterns (HD5, HD 5/15, etc.)
-            const normalizedModel = (modelName || '').toLowerCase().replace(/[^a-z0-9]/g, '')
-            const normalizedQuery = queryLower.replace(/[^a-z0-9]/g, '')
-            
-            if (normalizedModel.includes(normalizedQuery)) {
-              searchMatch = 'model'
-            }
-          }
-          
-          results.push({
-            id: `machine-${machine.id}`,
-            type: 'machine',
-            name: modelName,
-            subtitle: subtitle || `Machine #${machine.id}`,
-            searchMatch
-          })
-        })
-      }
-
-      // Sort results by relevance (number matches first, then alphabetical)
-      results.sort((a, b) => {
-        if (a.searchMatch === 'number' && b.searchMatch !== 'number') return -1
-        if (b.searchMatch === 'number' && a.searchMatch !== 'number') return 1
-        if (a.searchMatch === 'catalogue' && b.searchMatch !== 'catalogue') return -1
-        if (b.searchMatch === 'catalogue' && a.searchMatch !== 'catalogue') return 1
-        return a.name.localeCompare(b.name)
-      })
-
-      console.log('✅ Processed results:', results)
+      console.log('✅ Processed customer results:', results)
       setSearchResults(results)
     } catch (error) {
-      console.error('❌ Search error:', error)
+      console.error('❌ Customer search error:', error)
     } finally {
       setIsSearching(false)
     }
@@ -342,29 +138,7 @@ export function CommandPalette() {
 
   const handleSearchResultClick = (result: SearchResult) => {
     const id = result.id.split('-')[1]
-    switch (result.type) {
-      case 'customer':
-        navigate(`/customers/${id}`)
-        break
-      case 'ticket':
-        navigate(`/repair-tickets/${id}`)
-        break
-      case 'workorder':
-        navigate(`/work-orders/${id}`)
-        break
-      case 'warrantyticket':
-        navigate(`/warranty-repair-tickets/${id}`)
-        break
-      case 'warrantyorder':
-        navigate(`/warranty-work-orders/${id}`)
-        break
-      case 'quote':
-        navigate(`/quote-management`) // You might need a specific quote detail route
-        break
-      case 'machine':
-        navigate(`/machines/${id}`)
-        break
-    }
+    navigate(`/customers/${id}`)
     setOpen(false)
   }
 
@@ -659,48 +433,6 @@ export function CommandPalette() {
     ...settingsCommands,
   ]
 
-  const getResultIcon = (type: SearchResult['type']) => {
-    switch (type) {
-      case 'customer':
-        return <Users className="h-4 w-4" />
-      case 'ticket':
-        return <FileText className="h-4 w-4" />
-      case 'workorder':
-        return <ClipboardList className="h-4 w-4" />
-      case 'warrantyticket':
-        return <ShieldAlert className="h-4 w-4" />
-      case 'warrantyorder':
-        return <ShieldAlert className="h-4 w-4" />
-      case 'quote':
-        return <Quote className="h-4 w-4" />
-      case 'machine':
-        return <Wrench className="h-4 w-4" />
-      default:
-        return <Search className="h-4 w-4" />
-    }
-  }
-
-  const getTypeLabel = (type: SearchResult['type']) => {
-    switch (type) {
-      case 'customer':
-        return 'Customer'
-      case 'ticket':
-        return 'Repair Ticket'
-      case 'workorder':
-        return 'Work Order'
-      case 'warrantyticket':
-        return 'Warranty Ticket'
-      case 'warrantyorder':
-        return 'Warranty Order'
-      case 'quote':
-        return 'Quote'
-      case 'machine':
-        return 'Machine'
-      default:
-        return 'Item'
-    }
-  }
-
   // Determine if we should show commands or only search results
   const showCommands = searchQuery.length < 2 || searchResults.length === 0
 
@@ -708,7 +440,7 @@ export function CommandPalette() {
     <CommandDialog open={open} onOpenChange={setOpen}>
       <DialogTitle className="sr-only">Command Palette</DialogTitle>
       <CommandInput 
-        placeholder="Search tickets (TK-01/25), machines (HD5), customers, quotes..." 
+        placeholder="Search customers or type a command..." 
         value={searchQuery}
         onValueChange={setSearchQuery}
       />
@@ -717,45 +449,33 @@ export function CommandPalette() {
           {isSearching ? (
             <div className="flex items-center justify-center gap-2 py-6">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Searching...</span>
+              <span>Searching customers...</span>
             </div>
           ) : (
             <span>No results found.</span>
           )}
         </CommandEmpty>
 
-        {/* Search Results - Always shown when available, regardless of search filter */}
+        {/* Customer Search Results */}
         {searchResults.length > 0 && (
           <>
-            <CommandGroup heading="Search Results">
+            <CommandGroup heading="Customers">
               {searchResults.map((result) => (
                 <CommandItem
                   key={result.id}
-                  // Use a value that won't be filtered out
                   value={`__search__${result.id}`}
                   onSelect={() => handleSearchResultClick(result)}
-                  // Force match to always show this item
                   keywords={[searchQuery]}
                 >
                   <div className="flex items-center gap-2 w-full">
-                    {getResultIcon(result.type)}
+                    <Users className="h-4 w-4" />
                     <div className="flex-1">
                       <div className="font-medium">{result.name}</div>
-                      <div className="text-xs text-muted-foreground truncate flex items-center gap-2">
-                        <span>{getTypeLabel(result.type)}</span>
-                        {result.subtitle && (
-                          <>
-                            <span>•</span>
-                            <span>{result.subtitle}</span>
-                          </>
-                        )}
-                        {result.searchMatch && (
-                          <>
-                            <span>•</span>
-                            <span className="text-blue-600">Matched: {result.searchMatch}</span>
-                          </>
-                        )}
-                      </div>
+                      {result.subtitle && (
+                        <div className="text-xs text-muted-foreground truncate">
+                          {result.subtitle}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CommandItem>
