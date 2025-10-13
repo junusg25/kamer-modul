@@ -59,8 +59,8 @@ function App() {
           <NotificationsProvider>
             <FeedbackProvider>
               <Toaster position="top-right" expand={false} richColors closeButton />
-              <CommandPalette />
               <Router>
+                <CommandPalette />
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/" element={
