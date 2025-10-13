@@ -7,13 +7,11 @@ import { useTheme } from '@/contexts/theme-context'
 import { useAuth } from '@/contexts/auth-context'
 import { SimpleNotificationDropdown } from '@/components/notifications/simple-notification-dropdown'
 import {
-  Search,
   Settings,
   Menu,
   Sun,
   Moon,
-  LogOut,
-  Command
+  LogOut
 } from 'lucide-react'
 
 interface HeaderProps {
@@ -22,7 +20,7 @@ interface HeaderProps {
 }
 
 export function Header({ className, onMenuClick }: HeaderProps) {
-  const { theme, setTheme, actualTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
@@ -47,16 +45,6 @@ export function Header({ className, onMenuClick }: HeaderProps) {
     navigate('/login')
   }
 
-  const openCommandPalette = () => {
-    // Trigger Ctrl+K programmatically
-    const event = new KeyboardEvent('keydown', {
-      key: 'k',
-      ctrlKey: true,
-      bubbles: true
-    })
-    document.dispatchEvent(event)
-  }
-
   return (
     <header className={cn("sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-background px-6", className)}>
       {/* Left side */}
@@ -75,21 +63,6 @@ export function Header({ className, onMenuClick }: HeaderProps) {
             Welcome back, {user?.name || 'User'}
           </p>
         </div>
-      </div>
-
-      {/* Center - Command Palette Trigger */}
-      <div className="flex-1 max-w-md mx-4">
-        <button
-          onClick={openCommandPalette}
-          className="w-full flex items-center gap-3 rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground hover:bg-accent transition-colors"
-        >
-          <Search className="h-4 w-4" />
-          <span className="flex-1 text-left">Search or jump to...</span>
-          <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-            <Command className="h-3 w-3" />
-            <span>K</span>
-          </kbd>
-        </button>
       </div>
 
       {/* Right side */}
