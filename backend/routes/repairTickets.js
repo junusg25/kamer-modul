@@ -25,16 +25,61 @@ router.get('/', authenticateToken, async (req, res, next) => {
     let queryParams = []
 
     if (search) {
-      whereConditions.push(`(
-        unaccent(rt.problem_description) ILIKE unaccent($${queryParams.length + 1}) OR 
-        unaccent(rt.customer_name) ILIKE unaccent($${queryParams.length + 1}) OR 
-        unaccent(rt.model_name) ILIKE unaccent($${queryParams.length + 1}) OR 
-        unaccent(rt.submitted_by_name) ILIKE unaccent($${queryParams.length + 1}) OR 
-        unaccent(rt.converted_by_technician_name) ILIKE unaccent($${queryParams.length + 1}) OR
-        unaccent(rt.formatted_number) ILIKE unaccent($${queryParams.length + 1}) OR
-        rt.ticket_number::text ILIKE $${queryParams.length + 1}
-      )`)
-      queryParams.push(`%${search}%`)
+      // Create fuzzy search patterns for ticket numbers
+      const searchLower = search.toLowerCase().trim()
+      const searchPatterns = []
+      
+      // Original search pattern
+      searchPatterns.push(`%${search}%`)
+      
+      // Fuzzy patterns for ticket numbers
+      if (searchLower.match(/^(tk|ticket)?\s*(\d+)\s*(\/\d+)?\s*$/i)) {
+        // Extract numbers from patterns like: tk01, tk 01, tk01/25, ticket 01, 01/25, 01, 1
+        const numberMatch = searchLower.match(/(\d+)/)
+        if (numberMatch) {
+          const number = numberMatch[1]
+          const paddedNumber = number.padStart(2, '0') // Convert "1" to "01"
+          
+          // Pattern 1: Exact formatted number (TK-01/25)
+          searchPatterns.push(`%TK-${paddedNumber}/25%`)
+          searchPatterns.push(`%TK-${paddedNumber}/24%`)
+          searchPatterns.push(`%TK-${paddedNumber}/26%`)
+          
+          // Pattern 2: Without TK prefix (01/25)
+          searchPatterns.push(`%${paddedNumber}/25%`)
+          searchPatterns.push(`%${paddedNumber}/24%`)
+          searchPatterns.push(`%${paddedNumber}/26%`)
+          
+          // Pattern 3: Just the number (01, 1)
+          searchPatterns.push(`%${paddedNumber}%`)
+          searchPatterns.push(`%${number}%`)
+          
+          // Pattern 4: With TK prefix variations (TK01, TK-01)
+          searchPatterns.push(`%TK${paddedNumber}%`)
+          searchPatterns.push(`%TK-${paddedNumber}%`)
+          searchPatterns.push(`%tk${paddedNumber}%`)
+          searchPatterns.push(`%tk-${paddedNumber}%`)
+        }
+      }
+      
+      // Remove duplicates and create the search condition
+      const uniquePatterns = [...new Set(searchPatterns)]
+      const searchConditions = []
+      
+      uniquePatterns.forEach((pattern, index) => {
+        searchConditions.push(`(
+          unaccent(rt.problem_description) ILIKE unaccent($${queryParams.length + index + 1}) OR 
+          unaccent(rt.customer_name) ILIKE unaccent($${queryParams.length + index + 1}) OR 
+          unaccent(rt.model_name) ILIKE unaccent($${queryParams.length + index + 1}) OR 
+          unaccent(rt.submitted_by_name) ILIKE unaccent($${queryParams.length + index + 1}) OR 
+          unaccent(rt.converted_by_technician_name) ILIKE unaccent($${queryParams.length + index + 1}) OR
+          unaccent(rt.formatted_number) ILIKE unaccent($${queryParams.length + index + 1}) OR
+          rt.ticket_number::text ILIKE $${queryParams.length + index + 1}
+        )`)
+      })
+      
+      whereConditions.push(`(${searchConditions.join(' OR ')})`)
+      uniquePatterns.forEach(pattern => queryParams.push(pattern))
     }
 
     if (status) {

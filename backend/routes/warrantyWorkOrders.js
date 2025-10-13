@@ -120,15 +120,60 @@ router.get('/', authenticateToken, async (req, res, next) => {
     let paramIndex = 1;
 
     if (search) {
-      whereConditions.push(`(
-        unaccent(wwo.description) ILIKE unaccent($${paramIndex}) OR 
-        unaccent(c.name) ILIKE unaccent($${paramIndex}) OR 
-        unaccent(mm.name) ILIKE unaccent($${paramIndex}) OR
-        unaccent(wwo.formatted_number) ILIKE unaccent($${paramIndex}) OR
-        wwo.ticket_number::text ILIKE $${paramIndex}
-      )`);
-      queryParams.push(`%${search}%`);
-      paramIndex++;
+      // Create fuzzy search patterns for warranty work order numbers
+      const searchLower = search.toLowerCase().trim()
+      const searchPatterns = []
+      
+      // Original search pattern
+      searchPatterns.push(`%${search}%`)
+      
+      // Fuzzy patterns for warranty work order numbers
+      if (searchLower.match(/^(ww|warranty|work|order)?\s*(\d+)\s*(\/\d+)?\s*$/i)) {
+        // Extract numbers from patterns like: ww01, ww 01, ww01/25, warranty 01, work 01, order 01, 01/25, 01, 1
+        const numberMatch = searchLower.match(/(\d+)/)
+        if (numberMatch) {
+          const number = numberMatch[1]
+          const paddedNumber = number.padStart(2, '0') // Convert "1" to "01"
+          
+          // Pattern 1: Exact formatted number (WW-01/25)
+          searchPatterns.push(`%WW-${paddedNumber}/25%`)
+          searchPatterns.push(`%WW-${paddedNumber}/24%`)
+          searchPatterns.push(`%WW-${paddedNumber}/26%`)
+          
+          // Pattern 2: Without WW prefix (01/25)
+          searchPatterns.push(`%${paddedNumber}/25%`)
+          searchPatterns.push(`%${paddedNumber}/24%`)
+          searchPatterns.push(`%${paddedNumber}/26%`)
+          
+          // Pattern 3: Just the number (01, 1)
+          searchPatterns.push(`%${paddedNumber}%`)
+          searchPatterns.push(`%${number}%`)
+          
+          // Pattern 4: With WW prefix variations (WW01, WW-01)
+          searchPatterns.push(`%WW${paddedNumber}%`)
+          searchPatterns.push(`%WW-${paddedNumber}%`)
+          searchPatterns.push(`%ww${paddedNumber}%`)
+          searchPatterns.push(`%ww-${paddedNumber}%`)
+        }
+      }
+      
+      // Remove duplicates and create the search condition
+      const uniquePatterns = [...new Set(searchPatterns)]
+      const searchConditions = []
+      
+      uniquePatterns.forEach((pattern) => {
+        searchConditions.push(`(
+          unaccent(wwo.description) ILIKE unaccent($${paramIndex}) OR 
+          unaccent(c.name) ILIKE unaccent($${paramIndex}) OR 
+          unaccent(mm.name) ILIKE unaccent($${paramIndex}) OR
+          unaccent(wwo.formatted_number) ILIKE unaccent($${paramIndex}) OR
+          wwo.ticket_number::text ILIKE $${paramIndex}
+        )`)
+        queryParams.push(pattern)
+        paramIndex++
+      })
+      
+      whereConditions.push(`(${searchConditions.join(' OR ')})`)
     }
 
     if (status) {

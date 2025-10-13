@@ -123,15 +123,60 @@ router.get('/', authenticateToken, async (req, res, next) => {
     let paramIndex = 1;
 
     if (search) {
-      whereConditions.push(`(
-        unaccent(wo.description) ILIKE unaccent($${paramIndex}) OR 
-        unaccent(c.name) ILIKE unaccent($${paramIndex}) OR 
-        unaccent(mm.name) ILIKE unaccent($${paramIndex}) OR
-        unaccent(wo.formatted_number) ILIKE unaccent($${paramIndex}) OR
-        wo.ticket_number::text ILIKE $${paramIndex}
-      )`);
-      queryParams.push(`%${search}%`);
-      paramIndex++;
+      // Create fuzzy search patterns for work order numbers
+      const searchLower = search.toLowerCase().trim()
+      const searchPatterns = []
+      
+      // Original search pattern
+      searchPatterns.push(`%${search}%`)
+      
+      // Fuzzy patterns for work order numbers
+      if (searchLower.match(/^(wo|work|order)?\s*(\d+)\s*(\/\d+)?\s*$/i)) {
+        // Extract numbers from patterns like: wo01, wo 01, wo01/25, work 01, order 01, 01/25, 01, 1
+        const numberMatch = searchLower.match(/(\d+)/)
+        if (numberMatch) {
+          const number = numberMatch[1]
+          const paddedNumber = number.padStart(2, '0') // Convert "1" to "01"
+          
+          // Pattern 1: Exact formatted number (WO-01/25)
+          searchPatterns.push(`%WO-${paddedNumber}/25%`)
+          searchPatterns.push(`%WO-${paddedNumber}/24%`)
+          searchPatterns.push(`%WO-${paddedNumber}/26%`)
+          
+          // Pattern 2: Without WO prefix (01/25)
+          searchPatterns.push(`%${paddedNumber}/25%`)
+          searchPatterns.push(`%${paddedNumber}/24%`)
+          searchPatterns.push(`%${paddedNumber}/26%`)
+          
+          // Pattern 3: Just the number (01, 1)
+          searchPatterns.push(`%${paddedNumber}%`)
+          searchPatterns.push(`%${number}%`)
+          
+          // Pattern 4: With WO prefix variations (WO01, WO-01)
+          searchPatterns.push(`%WO${paddedNumber}%`)
+          searchPatterns.push(`%WO-${paddedNumber}%`)
+          searchPatterns.push(`%wo${paddedNumber}%`)
+          searchPatterns.push(`%wo-${paddedNumber}%`)
+        }
+      }
+      
+      // Remove duplicates and create the search condition
+      const uniquePatterns = [...new Set(searchPatterns)]
+      const searchConditions = []
+      
+      uniquePatterns.forEach((pattern) => {
+        searchConditions.push(`(
+          unaccent(wo.description) ILIKE unaccent($${paramIndex}) OR 
+          unaccent(c.name) ILIKE unaccent($${paramIndex}) OR 
+          unaccent(mm.name) ILIKE unaccent($${paramIndex}) OR
+          unaccent(wo.formatted_number) ILIKE unaccent($${paramIndex}) OR
+          wo.ticket_number::text ILIKE $${paramIndex}
+        )`)
+        queryParams.push(pattern)
+        paramIndex++
+      })
+      
+      whereConditions.push(`(${searchConditions.join(' OR ')})`)
     }
 
     // Include all work orders by default, but allow filtering by status

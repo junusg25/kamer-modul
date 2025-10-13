@@ -17,17 +17,62 @@ router.get('/', authenticateToken, async (req, res, next) => {
     let paramCount = 0;
 
     if (search) {
-      paramCount++;
-      whereConditions.push(`(
-        unaccent(wrt.problem_description) ILIKE unaccent($${paramCount}) OR 
-        unaccent(wrt.customer_name) ILIKE unaccent($${paramCount}) OR 
-        unaccent(wrt.model_name) ILIKE unaccent($${paramCount}) OR 
-        unaccent(wrt.submitted_by_name) ILIKE unaccent($${paramCount}) OR 
-        unaccent(wrt.converted_by_technician_name) ILIKE unaccent($${paramCount}) OR
-        unaccent(wrt.formatted_number) ILIKE unaccent($${paramCount}) OR
-        wrt.ticket_number::text ILIKE $${paramCount}
-      )`);
-      params.push(`%${search}%`);
+      // Create fuzzy search patterns for warranty ticket numbers
+      const searchLower = search.toLowerCase().trim()
+      const searchPatterns = []
+      
+      // Original search pattern
+      searchPatterns.push(`%${search}%`)
+      
+      // Fuzzy patterns for warranty ticket numbers
+      if (searchLower.match(/^(wt|warranty|ticket)?\s*(\d+)\s*(\/\d+)?\s*$/i)) {
+        // Extract numbers from patterns like: wt01, wt 01, wt01/25, warranty 01, ticket 01, 01/25, 01, 1
+        const numberMatch = searchLower.match(/(\d+)/)
+        if (numberMatch) {
+          const number = numberMatch[1]
+          const paddedNumber = number.padStart(2, '0') // Convert "1" to "01"
+          
+          // Pattern 1: Exact formatted number (WT-01/25)
+          searchPatterns.push(`%WT-${paddedNumber}/25%`)
+          searchPatterns.push(`%WT-${paddedNumber}/24%`)
+          searchPatterns.push(`%WT-${paddedNumber}/26%`)
+          
+          // Pattern 2: Without WT prefix (01/25)
+          searchPatterns.push(`%${paddedNumber}/25%`)
+          searchPatterns.push(`%${paddedNumber}/24%`)
+          searchPatterns.push(`%${paddedNumber}/26%`)
+          
+          // Pattern 3: Just the number (01, 1)
+          searchPatterns.push(`%${paddedNumber}%`)
+          searchPatterns.push(`%${number}%`)
+          
+          // Pattern 4: With WT prefix variations (WT01, WT-01)
+          searchPatterns.push(`%WT${paddedNumber}%`)
+          searchPatterns.push(`%WT-${paddedNumber}%`)
+          searchPatterns.push(`%wt${paddedNumber}%`)
+          searchPatterns.push(`%wt-${paddedNumber}%`)
+        }
+      }
+      
+      // Remove duplicates and create the search condition
+      const uniquePatterns = [...new Set(searchPatterns)]
+      const searchConditions = []
+      
+      uniquePatterns.forEach((pattern) => {
+        paramCount++
+        searchConditions.push(`(
+          unaccent(wrt.problem_description) ILIKE unaccent($${paramCount}) OR 
+          unaccent(wrt.customer_name) ILIKE unaccent($${paramCount}) OR 
+          unaccent(wrt.model_name) ILIKE unaccent($${paramCount}) OR 
+          unaccent(wrt.submitted_by_name) ILIKE unaccent($${paramCount}) OR 
+          unaccent(wrt.converted_by_technician_name) ILIKE unaccent($${paramCount}) OR
+          unaccent(wrt.formatted_number) ILIKE unaccent($${paramCount}) OR
+          wrt.ticket_number::text ILIKE $${paramCount}
+        )`)
+        params.push(pattern)
+      })
+      
+      whereConditions.push(`(${searchConditions.join(' OR ')})`)
     }
 
     if (status) {
