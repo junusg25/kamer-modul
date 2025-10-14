@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SmartSearch } from '@/components/ui/smart-search'
 import { Pagination } from '@/components/ui/pagination'
+import { matchesAccentInsensitive } from '@/utils/searchUtils'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -234,27 +235,11 @@ export default function MachineModelDetail() {
     }
   }
 
-  // Helper function to normalize accents
-  const normalizeAccents = (str: string) => {
-    return str
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
-      .replace(/[čćđšž]/g, match => {
-        const map: { [key: string]: string } = {
-          'č': 'c', 'ć': 'c', 'đ': 'd', 'š': 's', 'ž': 'z'
-        }
-        return map[match] || match
-      })
-  }
-
-  const filteredMachines = assignedMachines.filter(machine => {
-    const normalizedSearchTerm = normalizeAccents(appliedSearchTerm)
-    
-    return normalizeAccents(machine.serial_number || '').includes(normalizedSearchTerm) ||
-           normalizeAccents(machine.customer_name || '').includes(normalizedSearchTerm) ||
-           (machine.receipt_number && normalizeAccents(machine.receipt_number).includes(normalizedSearchTerm))
-  })
+  const filteredMachines = assignedMachines.filter(machine =>
+    matchesAccentInsensitive(appliedSearchTerm, machine.serial_number || '') ||
+    matchesAccentInsensitive(appliedSearchTerm, machine.customer_name || '') ||
+    (machine.receipt_number && matchesAccentInsensitive(appliedSearchTerm, machine.receipt_number))
+  )
 
   // Pagination logic
   const totalPages = Math.ceil(filteredMachines.length / pageSize)

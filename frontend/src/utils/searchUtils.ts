@@ -219,6 +219,36 @@ export function buildSearchConditions(
 }
 
 /**
+ * Client-side accent-insensitive search normalization
+ * Converts accented characters to their base forms for searching
+ */
+export function normalizeAccents(str: string): string {
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .replace(/[čćđšž]/g, match => {
+      const map: { [key: string]: string } = {
+        'č': 'c', 'ć': 'c', 'đ': 'd', 'š': 's', 'ž': 'z'
+      }
+      return map[match] || match
+    })
+}
+
+/**
+ * Client-side accent-insensitive search function
+ * Returns true if the search term matches the target text
+ */
+export function matchesAccentInsensitive(searchTerm: string, targetText: string): boolean {
+  if (!searchTerm || !targetText) return false
+  
+  const normalizedSearch = normalizeAccents(searchTerm)
+  const normalizedTarget = normalizeAccents(targetText)
+  
+  return normalizedTarget.includes(normalizedSearch)
+}
+
+/**
  * Debounce function for search input
  */
 export function debounce<T extends (...args: any[]) => any>(
