@@ -70,8 +70,8 @@ router.get('/by-inventory/:inventoryId', authenticateToken, async (req, res, nex
         c.name as customer_name,
         c.email as customer_email,
         c.phone as customer_phone,
-        ms.serial_number,
-        mm.name as machine_name,
+        am.serial_number,
+        am.model_name as machine_name,
         u.name as technician_name,
         wwoi.quantity as quantity_used
       FROM warranty_work_orders wwo
@@ -194,7 +194,7 @@ router.get('/', authenticateToken, async (req, res, next) => {
              wwo.labor_hours, wwo.labor_rate, wwo.troubleshooting_fee, wwo.quote_subtotal_parts, wwo.quote_total,
              wwo.converted_from_ticket_id,
              c.name as customer_name, c.email as customer_email,
-             mm.name as machine_name, mm.catalogue_number as catalogue_number, ms.serial_number as serial_number,
+             am.model_name as machine_name, am.catalogue_number as catalogue_number, am.serial_number as serial_number,
              u.name as technician_name
       FROM warranty_work_orders wwo
       LEFT JOIN customers c ON wwo.customer_id = c.id
@@ -297,14 +297,35 @@ router.get('/:id', authenticateToken, async (req, res, next) => {
                wwo.labor_hours, wwo.labor_rate, wwo.quote_subtotal_parts, 
               wwo.quote_total, wwo.troubleshooting_fee, wwo.converted_from_ticket_id, wwo.owner_technician_id,
               c.name as customer_name, c.email as customer_email, c.phone as customer_phone,
-              mm.name as machine_name, ms.serial_number as serial_number,
+              am.model_name as machine_name, am.serial_number as serial_number,
               u.name as technician_name,
               owner.name as owner_technician_name
        FROM warranty_work_orders wwo
        LEFT JOIN customers c ON wwo.customer_id = c.id
-       LEFT JOIN sold_machines am ON wwo.machine_id = am.id
-       LEFT JOIN machine_serials ms ON am.serial_id = ms.id
-       LEFT JOIN machine_models mm ON ms.model_id = mm.id
+       LEFT JOIN (
+         SELECT 
+           'sold' as machine_type,
+           sm.id,
+           sm.customer_id,
+           ms.serial_number,
+           mm.name as model_name,
+           mm.manufacturer,
+           mm.catalogue_number
+         FROM sold_machines sm
+         INNER JOIN machine_serials ms ON sm.serial_id = ms.id
+         INNER JOIN machine_models mm ON ms.model_id = mm.id
+         UNION ALL
+         SELECT 
+           'repair' as machine_type,
+           rm.id,
+           rm.customer_id,
+           rm.serial_number,
+           rm.model_name,
+           rm.manufacturer,
+           rm.catalogue_number
+         FROM machines rm
+         LEFT JOIN machine_models mm ON rm.model_name = mm.name
+       ) am ON wwo.machine_id = am.id
        LEFT JOIN users u ON wwo.technician_id = u.id
        LEFT JOIN users owner ON wwo.owner_technician_id = owner.id
        WHERE wwo.id = $1`,
