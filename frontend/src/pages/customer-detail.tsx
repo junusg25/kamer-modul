@@ -45,7 +45,9 @@ import {
   Activity,
   Save,
   X,
-  MoreHorizontal
+  MoreHorizontal,
+  ShoppingCart,
+  Tool
 } from 'lucide-react'
 import { useParams, useNavigate } from 'react-router-dom'
 import apiService from '../services/api'
@@ -493,6 +495,32 @@ export default function CustomerDetail() {
     )
   }
 
+  const getMachineTypeBadge = (machineType: string) => {
+    if (machineType === 'sold') {
+      return (
+        <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
+          <ShoppingCart className="w-3 h-3 mr-1" />
+          Sold
+        </Badge>
+      )
+    } else {
+      return (
+        <Badge variant="default" className="bg-blue-100 text-blue-800 hover:bg-blue-200">
+          <Tool className="w-3 h-3 mr-1" />
+          Repair
+        </Badge>
+      )
+    }
+  }
+
+  const getMachineTypeIcon = (machineType: string) => {
+    if (machineType === 'sold') {
+      return <ShoppingCart className="w-4 h-4 text-green-600" />
+    } else {
+      return <Tool className="w-4 h-4 text-blue-600" />
+    }
+  }
+
   if (isLoading) {
     return (
       <MainLayout>
@@ -778,6 +806,18 @@ export default function CustomerDetail() {
                 <CardTitle className="flex items-center gap-2">
                   <Wrench className="h-5 w-5" />
                   Customer Machines ({machines.length})
+                  {machines.length > 0 && (
+                    <div className="flex items-center gap-2 ml-4 text-sm font-normal">
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        <ShoppingCart className="w-3 h-3 mr-1" />
+                        {machines.filter(m => m.machine_type === 'sold').length} Sold
+                      </Badge>
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                        <Tool className="w-3 h-3 mr-1" />
+                        {machines.filter(m => m.machine_type === 'repair').length} Repair
+                      </Badge>
+                    </div>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -790,37 +830,50 @@ export default function CustomerDetail() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Type</TableHead>
                         <TableHead>Serial Number</TableHead>
                         <TableHead>Model</TableHead>
                         <TableHead>Manufacturer</TableHead>
                         <TableHead>Condition</TableHead>
-                        <TableHead>Purchase Date</TableHead>
+                        <TableHead>Date</TableHead>
                         <TableHead>Warranty Status</TableHead>
-                        <TableHead>Sale Price</TableHead>
+                        <TableHead>Price</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {machines.map((machine) => (
-                        <TableRow key={machine.id}>
+                        <TableRow key={machine.id} className={machine.machine_type === 'sold' ? 'bg-green-50/50' : 'bg-blue-50/50'}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {getMachineTypeIcon(machine.machine_type)}
+                              {getMachineTypeBadge(machine.machine_type)}
+                            </div>
+                          </TableCell>
                           <TableCell className="font-medium">
                             <Button 
                               variant="link" 
                               className="p-0 h-auto font-medium"
                               onClick={() => navigate(`/machines/${machine.id}`)}
                             >
-                              {machine.serial_number}
+                              {machine.serial_number || 'N/A'}
                             </Button>
                           </TableCell>
                           <TableCell>{machine.model_name}</TableCell>
                           <TableCell>{machine.manufacturer}</TableCell>
                           <TableCell>{getConditionBadge(machine.machine_condition)}</TableCell>
                           <TableCell>
-                            {machine.purchase_date ? formatDate(machine.purchase_date) : 'N/A'}
+                            {machine.machine_type === 'sold' 
+                              ? (machine.sale_date ? formatDate(machine.sale_date) : 'N/A')
+                              : (machine.received_date ? formatDate(machine.received_date) : 'N/A')
+                            }
                           </TableCell>
                           <TableCell>{getWarrantyStatus(machine.warranty_active, machine.warranty_expiry_date)}</TableCell>
                           <TableCell>
-                            {machine.sale_price ? formatCurrency(machine.sale_price) : 'N/A'}
+                            {machine.machine_type === 'sold' 
+                              ? (machine.sale_price ? formatCurrency(machine.sale_price) : 'N/A')
+                              : (machine.estimated_repair_cost ? formatCurrency(machine.estimated_repair_cost) : 'N/A')
+                            }
                           </TableCell>
                           <TableCell className="text-right">
                             <DropdownMenu>
