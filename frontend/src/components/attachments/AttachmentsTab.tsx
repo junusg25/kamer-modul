@@ -29,11 +29,22 @@ import {
   Image,
   File,
   Calendar,
-  User
+  User,
+  Archive,
+  Video,
+  Music
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { apiService } from '../../services/api'
 import { DeleteConfirmationDialog } from '../ui/delete-confirmation-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../ui/dialog'
 
 interface Attachment {
   id: number
@@ -60,6 +71,8 @@ export function AttachmentsTab({ entityType, entityId }: AttachmentsTabProps) {
   const [description, setDescription] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [attachmentToDelete, setAttachmentToDelete] = useState<Attachment | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(null)
 
   useEffect(() => {
     loadAttachments()
@@ -155,22 +168,37 @@ export function AttachmentsTab({ entityType, entityId }: AttachmentsTabProps) {
     }
   }
 
-  const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('image/')) {
-      return <Image className="h-4 w-4" />
-    } else if (fileType.includes('pdf')) {
-      return <FileText className="h-4 w-4" />
-    } else {
-      return <File className="h-4 w-4" />
-    }
-  }
-
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes'
     const k = 1024
     const sizes = ['Bytes', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const getFileIcon = (fileType: string) => {
+    if (fileType.startsWith('image/')) {
+      return <Image className="h-4 w-4 text-blue-500" />
+    } else if (fileType.includes('pdf')) {
+      return <FileText className="h-4 w-4 text-red-500" />
+    } else if (fileType.includes('video/')) {
+      return <Video className="h-4 w-4 text-purple-500" />
+    } else if (fileType.includes('audio/')) {
+      return <Music className="h-4 w-4 text-green-500" />
+    } else if (fileType.includes('zip') || fileType.includes('rar') || fileType.includes('7z')) {
+      return <Archive className="h-4 w-4 text-orange-500" />
+    } else {
+      return <File className="h-4 w-4 text-gray-500" />
+    }
+  }
+
+  const isImageFile = (fileType: string) => {
+    return fileType.startsWith('image/')
+  }
+
+  const handlePreview = (attachment: Attachment) => {
+    setPreviewAttachment(attachment)
+    setPreviewOpen(true)
   }
 
   const formatDate = (dateString: string) => {
@@ -270,9 +298,27 @@ export function AttachmentsTab({ entityType, entityId }: AttachmentsTabProps) {
                 {attachments.map((attachment) => (
                   <TableRow key={attachment.id}>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getFileIcon(attachment.file_type)}
-                        <div>
+                      <div className="flex items-center gap-3">
+                        {isImageFile(attachment.file_type) ? (
+                          <div className="relative w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
+                            <img 
+                              src={`/api/attachments/download/${attachment.id}`}
+                              alt={attachment.original_name}
+                              className="w-full h-full object-cover cursor-pointer"
+                              onClick={() => handlePreview(attachment)}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement
+                                target.style.display = 'none'
+                                target.parentElement!.innerHTML = getFileIcon(attachment.file_type)
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center">
+                            {getFileIcon(attachment.file_type)}
+                          </div>
+                        )}
+                        <div className="flex-1">
                           <div className="font-medium">{attachment.original_name}</div>
                           {attachment.description && (
                             <div className="text-sm text-muted-foreground">
@@ -309,6 +355,10 @@ export function AttachmentsTab({ entityType, entityId }: AttachmentsTabProps) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => handlePreview(attachment)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Preview
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDownload(attachment)}>
                             <Download className="mr-2 h-4 w-4" />
                             Download
@@ -332,6 +382,78 @@ export function AttachmentsTab({ entityType, entityId }: AttachmentsTabProps) {
         </CardContent>
       </Card>
 
+      {/* Preview Modal */}
+      {previewAttachment && (
+        <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                {getFileIcon(previewAttachment.file_type)}
+                {previewAttachment.original_name}
+              </DialogTitle>
+              <DialogDescription>
+                {previewAttachment.description && (
+                  <div className="text-sm text-muted-foreground mb-2">
+                    {previewAttachment.description}
+                  </div>
+                )}
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span>Size: {formatFileSize(previewAttachment.file_size)}</span>
+                  <span>Uploaded: {formatDate(previewAttachment.uploaded_at)}</span>
+                  <span>By: {previewAttachment.uploaded_by_name}</span>
+                </div>
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="flex-1 overflow-auto">
+              {isImageFile(previewAttachment.file_type) ? (
+                <div className="flex justify-center">
+                  <img 
+                    src={`/api/attachments/download/${previewAttachment.id}`}
+                    alt={previewAttachment.original_name}
+                    className="max-w-full max-h-[60vh] object-contain rounded-md"
+                  />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="w-24 h-24 mb-4 rounded-lg bg-gray-100 flex items-center justify-center">
+                    {getFileIcon(previewAttachment.file_type)}
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">{previewAttachment.original_name}</h3>
+                  <p className="text-muted-foreground mb-4">
+                    This file type cannot be previewed in the browser.
+                  </p>
+                  <Button onClick={() => handleDownload(previewAttachment)}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download to View
+                  </Button>
+                </div>
+              )}
+            </div>
+            
+            <DialogFooter className="flex justify-between">
+              <Button 
+                variant="outline" 
+                onClick={() => handleDeleteClick(previewAttachment)}
+                className="text-red-600 hover:text-red-700"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setPreviewOpen(false)}>
+                  Close
+                </Button>
+                <Button onClick={() => handleDownload(previewAttachment)}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </Button>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
       <DeleteConfirmationDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
@@ -343,3 +465,4 @@ export function AttachmentsTab({ entityType, entityId }: AttachmentsTabProps) {
     </div>
   )
 }
+
