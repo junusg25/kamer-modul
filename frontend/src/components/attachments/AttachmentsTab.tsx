@@ -302,14 +302,15 @@ export function AttachmentsTab({ entityType, entityId }: AttachmentsTabProps) {
                         {isImageFile(attachment.file_type) ? (
                           <div className="relative w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
                             <img 
-                              src={`/api/attachments/download/${attachment.id}`}
+                              src={`/api/attachments/preview/${attachment.id}`}
                               alt={attachment.original_name}
                               className="w-full h-full object-cover cursor-pointer"
                               onClick={() => handlePreview(attachment)}
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement
-                                target.style.display = 'none'
-                                target.parentElement!.innerHTML = getFileIcon(attachment.file_type)
+                                const parent = target.parentElement!
+                                parent.innerHTML = ''
+                                parent.appendChild(getFileIcon(attachment.file_type))
                               }}
                             />
                           </div>
@@ -409,7 +410,7 @@ export function AttachmentsTab({ entityType, entityId }: AttachmentsTabProps) {
               {isImageFile(previewAttachment.file_type) ? (
                 <div className="flex justify-center">
                   <img 
-                    src={`/api/attachments/download/${previewAttachment.id}`}
+                    src={`/api/attachments/preview/${previewAttachment.id}`}
                     alt={previewAttachment.original_name}
                     className="max-w-full max-h-[60vh] object-contain rounded-md"
                   />

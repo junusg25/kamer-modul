@@ -98,6 +98,54 @@ const upload = multer({
   }
 });
 
+// Get attachment thumbnail/preview (public endpoint for images)
+router.get('/preview/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await db.query(
+      'SELECT * FROM attachments WHERE id = $1 AND is_active = TRUE',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Attachment not found' });
+    }
+    
+    const attachment = result.rows[0];
+    
+    // Only allow preview for image files
+    if (!attachment.file_type.startsWith('image/')) {
+      return res.status(403).json({ error: 'Preview not available for this file type' });
+    }
+    
+    // Check if file exists
+    try {
+      await fs.access(attachment.file_path);
+    } catch {
+      return res.status(404).json({ error: 'File not found on disk' });
+    }
+    
+    // Use res.sendFile for preview
+    res.sendFile(attachment.file_path, {
+      headers: {
+        'Content-Type': attachment.file_type,
+        'Cache-Control': 'public, max-age=3600' // Cache for 1 hour
+      }
+    }, (err) => {
+      if (err) {
+        console.error('Error sending preview file:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Error sending preview file' });
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error getting attachment preview:', error);
+    res.status(500).json({ error: 'Failed to get attachment preview' });
+  }
+});
+
 // Download attachment (must be before /:entityType/:entityId route)
 router.get('/download/:id', authenticateToken, async (req, res) => {
   try {
