@@ -1087,7 +1087,7 @@ router.get('/by-customer/:id', async (req, res, next) => {
         mm.name as name,
         mm.name as model_name,
         mm.catalogue_number,
-        sm.serial_number,
+        ms.serial_number,
         sm.warranty_expiry_date,
         sm.warranty_active,
         sm.sale_date as created_at,
@@ -1112,7 +1112,8 @@ router.get('/by-customer/:id', async (req, res, next) => {
         null as received_by_user_id,
         null as received_by_name
        FROM sold_machines sm
-       INNER JOIN machine_models mm ON sm.model_id = mm.id
+       INNER JOIN machine_serials ms ON sm.serial_id = ms.id
+       INNER JOIN machine_models mm ON ms.model_id = mm.id
        LEFT JOIN machine_categories mc ON mm.category_id = mc.id
        LEFT JOIN users sales_user ON sm.sold_by_user_id = sales_user.id
        LEFT JOIN users added_user ON sm.added_by_user_id = added_user.id
