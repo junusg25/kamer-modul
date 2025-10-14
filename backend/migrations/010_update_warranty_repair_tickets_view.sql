@@ -34,7 +34,7 @@ SELECT
     u_owner.name AS owner_name,
     wrt.machine_id,
     -- Coalesce machine details from sold_machines (sm) or machines (rm)
-    COALESCE(sm.manufacturer, rm.manufacturer) AS manufacturer,
+    COALESCE(mm_sm.manufacturer, rm.manufacturer) AS manufacturer,
     COALESCE(sm.assigned_at, rm.received_date) AS bought_at,
     COALESCE(mm_sm.category_id, rm.category_id) AS category_id,
     COALESCE(mc_sm.name, mc_rm.name) AS category_name,
