@@ -76,10 +76,10 @@ router.get('/models', async (req, res, next) => {
       LEFT JOIN machine_categories mc ON mm.category_id = mc.id
       LEFT JOIN (
         SELECT 
-          model_id,
-          machines_with_serial + repair_machines_with_serial as total_serials,
-          repair_machines_without_serial as total_assigned,
-          unassigned_serials
+          COALESCE(serial_data.model_id, repair_data.model_id) as model_id,
+          COALESCE(machines_with_serial, 0) + COALESCE(repair_machines_with_serial, 0) as total_serials,
+          COALESCE(repair_machines_without_serial, 0) as total_assigned,
+          COALESCE(unassigned_serials, 0) as unassigned_serials
         FROM (
           SELECT 
             ms.model_id,
@@ -100,9 +100,9 @@ router.get('/models', async (req, res, next) => {
       ) serial_counts ON mm.id = serial_counts.model_id
       LEFT JOIN (
         SELECT 
-          model_id,
-          sold_warranty_active + repair_warranty_active as active_warranty,
-          sold_warranty_expired + repair_warranty_expired as expired_warranty
+          COALESCE(sold_warranty.model_id, repair_warranty.model_id) as model_id,
+          COALESCE(sold_warranty_active, 0) + COALESCE(repair_warranty_active, 0) as active_warranty,
+          COALESCE(sold_warranty_expired, 0) + COALESCE(repair_warranty_expired, 0) as expired_warranty
         FROM (
           SELECT 
             ms.model_id,
