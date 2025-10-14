@@ -206,19 +206,18 @@ router.get('/download/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'File not found on disk' });
     }
     
-    // Set proper headers for file download
-    res.setHeader('Content-Type', attachment.file_type || 'application/octet-stream');
-    res.setHeader('Content-Disposition', `attachment; filename="${attachment.original_name}"`);
-    res.setHeader('Content-Length', attachment.file_size);
-    
-    // Stream the file
-    const fileStream = require('fs').createReadStream(attachment.file_path);
-    fileStream.pipe(res);
-    
-    fileStream.on('error', (error) => {
-      console.error('Error streaming file:', error);
-      if (!res.headersSent) {
-        res.status(500).json({ error: 'Error reading file' });
+    // Use res.sendFile which is more reliable for file downloads
+    res.sendFile(attachment.file_path, {
+      headers: {
+        'Content-Type': attachment.file_type || 'application/octet-stream',
+        'Content-Disposition': `attachment; filename="${attachment.original_name}"`
+      }
+    }, (err) => {
+      if (err) {
+        console.error('Error sending file:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Error sending file' });
+        }
       }
     });
   } catch (error) {
