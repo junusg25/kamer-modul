@@ -296,7 +296,7 @@ export default function CreateRepairTicket() {
   const fetchPurchasedAtOptions = async () => {
     try {
       // Fetch unique purchased_at values from assigned machines using API service
-      const response = await apiService.request('/assigned-machines/purchased-at-options')
+      const response = await apiService.request('/sold-machines/purchased-at-options')
       const options = response.data || []
       // Combine predefined options with database options, removing duplicates
       const allOptions = [...new Set(['AMS', 'Kamer.ba', ...options])]
@@ -529,35 +529,33 @@ export default function CreateRepairTicket() {
     try {
       setIsCreatingMachine(true)
       
-      // Create the assigned machine (backend handles serial creation automatically)
-      const assignedMachineData = {
+      // Create a repair machine in the machines table
+      const repairMachineData = {
         customer_id: parseInt(formData.selectedCustomer!.id),
-        serial_number: formData.newMachine.serial_number,
-        model_id: parseInt(formData.newMachine.model_id),
-        purchase_date: formData.newMachine.purchase_date,
-        purchased_at: formData.newMachine.purchased_at,
-        receipt_number: formData.newMachine.receipt_number,
-        sale_price: formData.newMachine.sale_price ? parseFloat(formData.newMachine.sale_price) : null,
-        machine_condition: formData.newMachine.machine_condition,
+        serial_number: formData.newMachine.serial_number || null, // Optional for repair machines
+        model_name: machineModels.find(m => m.id === formData.newMachine.model_id)?.name,
+        manufacturer: machineModels.find(m => m.id === formData.newMachine.model_id)?.manufacturer,
+        catalogue_number: machineModels.find(m => m.id === formData.newMachine.model_id)?.catalogue_number,
         description: formData.newMachine.description,
-        warranty_expiry_date: formData.newMachine.warranty_expiry_date,
-        added_by_user_id: user?.id // Track who added the machine
+        received_date: new Date().toISOString().split('T')[0], // Today's date
+        status: 'in_repair',
+        condition_on_receipt: 'unknown',
+        warranty_covered: false,
+        received_by_user_id: user?.id
       }
       
-      
-      
-      const assignedResponse = await apiService.createAssignedMachine(assignedMachineData) as any
-      const newAssignedMachine = assignedResponse.data
+      const repairResponse = await apiService.createMachine(repairMachineData) as any
+      const newRepairMachine = repairResponse.data
       
       // Add to machines list
       const newMachine: Machine = {
-        id: newAssignedMachine.id,
-        machine_id: newAssignedMachine.id, // Use assigned machine ID, not serial ID
+        id: newRepairMachine.id,
+        machine_id: newRepairMachine.id,
         customer_id: formData.selectedCustomer!.id,
-        manufacturer: machineModels.find(m => m.id === formData.newMachine.model_id)?.manufacturer,
-        model_name: machineModels.find(m => m.id === formData.newMachine.model_id)?.name,
-        serial_number: formData.newMachine.serial_number,
-        purchase_date: formData.newMachine.purchase_date
+        manufacturer: newRepairMachine.manufacturer,
+        model_name: newRepairMachine.model_name,
+        serial_number: newRepairMachine.serial_number,
+        purchase_date: newRepairMachine.received_date
       }
       
       setMachines(prev => [newMachine, ...prev])
@@ -568,8 +566,8 @@ export default function CreateRepairTicket() {
       }))
       setShowNewMachineDialog(false)
     } catch (err) {
-      console.error('Error creating machine:', err)
-      setError(err instanceof Error ? err.message : 'Failed to create machine')
+      console.error('Error creating repair machine:', err)
+      setError(err instanceof Error ? err.message : 'Failed to create repair machine')
     } finally {
       setIsCreatingMachine(false)
     }

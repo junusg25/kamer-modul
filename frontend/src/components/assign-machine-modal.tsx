@@ -101,8 +101,8 @@ export function AssignMachineModal({
 
   const fetchPurchasedAtOptions = async () => {
     try {
-      // Fetch unique purchased_at values from assigned machines using API service
-      const response = await apiService.request('/assigned-machines/purchased-at-options')
+      // Fetch unique purchased_at values from sold machines using API service
+      const response = await apiService.request('/sold-machines/purchased-at-options')
       const options = response.data || []
       // Combine predefined options with database options, removing duplicates
       const allOptions = [...new Set(['AMS', 'Kamer.ba', ...options])]
@@ -153,7 +153,7 @@ export function AssignMachineModal({
         sale_date: purchaseDate
       }
 
-      await apiService.createAssignedMachine(assignmentData)
+      await apiService.createSoldMachine(assignmentData)
       
       onSuccess()
       onClose()

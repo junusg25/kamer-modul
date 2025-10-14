@@ -414,17 +414,26 @@ class ApiService {
     })
   }
 
-  async updateMachine(id: string, machine: any) {
-    return this.request(`/assigned-machines/${id}`, {
+  async updateSoldMachine(id: string, machine: any) {
+    return this.request(`/sold-machines/${id}`, {
       method: 'PUT',
       body: JSON.stringify(machine),
     })
   }
 
-  async deleteMachine(id: string) {
-    return this.request(`/assigned-machines/${id}`, {
+  async deleteSoldMachine(id: string) {
+    return this.request(`/sold-machines/${id}`, {
       method: 'DELETE',
     })
+  }
+
+  // Keep backward compatibility
+  async updateMachine(id: string, machine: any) {
+    return this.updateSoldMachine(id, machine)
+  }
+
+  async deleteMachine(id: string) {
+    return this.deleteSoldMachine(id)
   }
 
   // Inventory endpoints
@@ -803,12 +812,17 @@ class ApiService {
     })
   }
 
-  // Assigned Machine endpoints
-  async createAssignedMachine(machine: any) {
-    return this.request('/assigned-machines', {
+  // Sold Machine endpoints (formerly assigned machines)
+  async createSoldMachine(machine: any) {
+    return this.request('/sold-machines', {
       method: 'POST',
       body: JSON.stringify(machine),
     })
+  }
+
+  // Keep backward compatibility
+  async createAssignedMachine(machine: any) {
+    return this.createSoldMachine(machine)
   }
 
   async getUnassignedSerials(modelId: number) {

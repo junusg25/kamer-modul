@@ -1077,42 +1077,85 @@ router.delete('/categories/:id', async (req, res, next) => {
   }
 });
 
-// GET machines for a specific customer with sales data
+// GET machines for a specific customer (both sold and repair machines)
 router.get('/by-customer/:id', async (req, res, next) => {
   try {
     const result = await db.query(
       `SELECT 
-        am.id,
+        'sold' as machine_type,
+        sm.id,
         mm.name as name,
         mm.name as model_name,
         mm.catalogue_number,
-        ms.serial_number,
-        am.warranty_expiry_date,
-        am.warranty_active,
-        am.assigned_at as created_at,
-        am.updated_at,
+        sm.serial_number,
+        sm.warranty_expiry_date,
+        sm.warranty_active,
+        sm.sale_date as created_at,
+        sm.updated_at,
         mc.name as category_name,
         mm.manufacturer,
-        am.purchase_date,
-        am.description,
+        sm.purchase_date,
+        sm.description,
         -- Sales fields
-        am.sold_by_user_id,
-        am.added_by_user_id,
-        am.machine_condition,
-        am.sale_date,
-        am.sale_price,
-        am.is_sale,
+        sm.sold_by_user_id,
+        sm.added_by_user_id,
+        sm.machine_condition,
+        sm.sale_date,
+        sm.sale_price,
+        true as is_sale,
         -- Sales person information
         sales_user.name as sold_by_name,
-        added_user.name as added_by_name
-       FROM sold_machines am
-       INNER JOIN machine_serials ms ON am.serial_id = ms.id
-       INNER JOIN machine_models mm ON ms.model_id = mm.id
+        added_user.name as added_by_name,
+        null as received_date,
+        null as status,
+        null as condition_on_receipt,
+        null as received_by_user_id,
+        null as received_by_name
+       FROM sold_machines sm
+       INNER JOIN machine_models mm ON sm.model_id = mm.id
        LEFT JOIN machine_categories mc ON mm.category_id = mc.id
-       LEFT JOIN users sales_user ON am.sold_by_user_id = sales_user.id
-       LEFT JOIN users added_user ON am.added_by_user_id = added_user.id
-       WHERE am.customer_id = $1
-       ORDER BY mm.name ASC, ms.serial_number ASC NULLS LAST`,
+       LEFT JOIN users sales_user ON sm.sold_by_user_id = sales_user.id
+       LEFT JOIN users added_user ON sm.added_by_user_id = added_user.id
+       WHERE sm.customer_id = $1
+       
+       UNION ALL
+       
+       SELECT 
+        'repair' as machine_type,
+        rm.id,
+        rm.model_name as name,
+        rm.model_name,
+        rm.catalogue_number,
+        rm.serial_number,
+        rm.warranty_expiry_date,
+        rm.warranty_covered as warranty_active,
+        rm.received_date as created_at,
+        rm.updated_at,
+        mc.name as category_name,
+        rm.manufacturer,
+        rm.received_date as purchase_date,
+        rm.description,
+        -- Sales fields (null for repair machines)
+        null as sold_by_user_id,
+        null as added_by_user_id,
+        rm.condition_on_receipt as machine_condition,
+        null as sale_date,
+        null as sale_price,
+        false as is_sale,
+        null as sold_by_name,
+        null as added_by_name,
+        -- Repair fields
+        rm.received_date,
+        rm.status,
+        rm.condition_on_receipt,
+        rm.received_by_user_id,
+        received_user.name as received_by_name
+       FROM machines rm
+       LEFT JOIN machine_categories mc ON rm.category_id = mc.id
+       LEFT JOIN users received_user ON rm.received_by_user_id = received_user.id
+       WHERE rm.customer_id = $1
+       
+       ORDER BY name ASC, serial_number ASC NULLS LAST`,
       [req.params.id]
     )
     res.json({ status: 'success', data: result.rows })
