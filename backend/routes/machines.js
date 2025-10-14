@@ -76,22 +76,50 @@ router.get('/models', async (req, res, next) => {
       LEFT JOIN machine_categories mc ON mm.category_id = mc.id
       LEFT JOIN (
         SELECT 
-          ms.model_id,
-          COUNT(ms.id) as total_serials,
-          COUNT(CASE WHEN am.id IS NOT NULL THEN 1 END) as total_assigned,
-          COUNT(CASE WHEN am.id IS NULL THEN 1 END) as unassigned_serials
-        FROM machine_serials ms
-        LEFT JOIN sold_machines am ON ms.id = am.serial_id
-        GROUP BY ms.model_id
+          model_id,
+          machines_with_serial + repair_machines_with_serial as total_serials,
+          repair_machines_without_serial as total_assigned,
+          unassigned_serials
+        FROM (
+          SELECT 
+            ms.model_id,
+            COUNT(ms.id) as machines_with_serial,
+            COUNT(CASE WHEN am.id IS NULL THEN 1 END) as unassigned_serials
+          FROM machine_serials ms
+          LEFT JOIN sold_machines am ON ms.id = am.serial_id
+          GROUP BY ms.model_id
+        ) serial_data
+        FULL OUTER JOIN (
+          SELECT 
+            (SELECT id FROM machine_models WHERE name = rm.model_name) as model_id,
+            COUNT(CASE WHEN rm.serial_number IS NOT NULL THEN 1 END) as repair_machines_with_serial,
+            COUNT(CASE WHEN rm.serial_number IS NULL THEN 1 END) as repair_machines_without_serial
+          FROM machines rm
+          GROUP BY rm.model_name
+        ) repair_data ON serial_data.model_id = repair_data.model_id
       ) serial_counts ON mm.id = serial_counts.model_id
       LEFT JOIN (
         SELECT 
-          ms.model_id,
-          COUNT(CASE WHEN am.warranty_active = true THEN 1 END) as active_warranty,
-          COUNT(CASE WHEN am.warranty_active = false AND am.warranty_expiry_date IS NOT NULL THEN 1 END) as expired_warranty
-        FROM machine_serials ms
-        LEFT JOIN sold_machines am ON ms.id = am.serial_id
-        GROUP BY ms.model_id
+          model_id,
+          sold_warranty_active + repair_warranty_active as active_warranty,
+          sold_warranty_expired + repair_warranty_expired as expired_warranty
+        FROM (
+          SELECT 
+            ms.model_id,
+            COUNT(CASE WHEN am.warranty_active = true THEN 1 END) as sold_warranty_active,
+            COUNT(CASE WHEN am.warranty_active = false AND am.warranty_expiry_date IS NOT NULL THEN 1 END) as sold_warranty_expired
+          FROM machine_serials ms
+          LEFT JOIN sold_machines am ON ms.id = am.serial_id
+          GROUP BY ms.model_id
+        ) sold_warranty
+        FULL OUTER JOIN (
+          SELECT 
+            (SELECT id FROM machine_models WHERE name = rm.model_name) as model_id,
+            COUNT(CASE WHEN rm.warranty_covered = true THEN 1 END) as repair_warranty_active,
+            COUNT(CASE WHEN rm.warranty_covered = false AND rm.warranty_expiry_date IS NOT NULL THEN 1 END) as repair_warranty_expired
+          FROM machines rm
+          GROUP BY rm.model_name
+        ) repair_warranty ON sold_warranty.model_id = repair_warranty.model_id
       ) warranty_counts ON mm.id = warranty_counts.model_id
       ${where}
       ORDER BY mm.name ASC, mm.catalogue_number ASC NULLS LAST
