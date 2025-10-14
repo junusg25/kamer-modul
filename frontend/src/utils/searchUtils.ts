@@ -240,7 +240,8 @@ export function normalizeAccents(str: string): string {
  * Returns true if the search term matches the target text
  */
 export function matchesAccentInsensitive(searchTerm: string, targetText: string): boolean {
-  if (!searchTerm || !targetText) return false
+  if (!searchTerm) return true  // If no search term, show all results
+  if (!targetText) return false // If no target text, don't show
   
   const normalizedSearch = normalizeAccents(searchTerm)
   const normalizedTarget = normalizeAccents(targetText)
