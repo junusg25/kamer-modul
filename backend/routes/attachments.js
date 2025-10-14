@@ -98,6 +98,49 @@ const upload = multer({
   }
 });
 
+// Download attachment (must be before /:entityType/:entityId route)
+router.get('/download/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await db.query(
+      'SELECT * FROM attachments WHERE id = $1 AND is_active = TRUE',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Attachment not found' });
+    }
+    
+    const attachment = result.rows[0];
+    
+    // Check if file exists
+    try {
+      await fs.access(attachment.file_path);
+    } catch {
+      return res.status(404).json({ error: 'File not found on disk' });
+    }
+    
+    // Use res.sendFile which is more reliable for file downloads
+    res.sendFile(attachment.file_path, {
+      headers: {
+        'Content-Type': attachment.file_type || 'application/octet-stream',
+        'Content-Disposition': `attachment; filename="${attachment.original_name}"`
+      }
+    }, (err) => {
+      if (err) {
+        console.error('Error sending file:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Error sending file' });
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error downloading attachment:', error);
+    res.status(500).json({ error: 'Failed to download attachment' });
+  }
+});
+
 // Get all attachments for an entity
 router.get('/:entityType/:entityId', authenticateToken, async (req, res) => {
   try {
@@ -180,49 +223,6 @@ router.post('/upload/:entityType/:entityId', authenticateToken, upload.array('fi
     }
     
     res.status(500).json({ error: 'Failed to upload files' });
-  }
-});
-
-// Download attachment
-router.get('/download/:id', authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const result = await db.query(
-      'SELECT * FROM attachments WHERE id = $1 AND is_active = TRUE',
-      [id]
-    );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Attachment not found' });
-    }
-    
-    const attachment = result.rows[0];
-    
-    // Check if file exists
-    try {
-      await fs.access(attachment.file_path);
-    } catch {
-      return res.status(404).json({ error: 'File not found on disk' });
-    }
-    
-    // Use res.sendFile which is more reliable for file downloads
-    res.sendFile(attachment.file_path, {
-      headers: {
-        'Content-Type': attachment.file_type || 'application/octet-stream',
-        'Content-Disposition': `attachment; filename="${attachment.original_name}"`
-      }
-    }, (err) => {
-      if (err) {
-        console.error('Error sending file:', err);
-        if (!res.headersSent) {
-          res.status(500).json({ error: 'Error sending file' });
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Error downloading attachment:', error);
-    res.status(500).json({ error: 'Failed to download attachment' });
   }
 });
 
