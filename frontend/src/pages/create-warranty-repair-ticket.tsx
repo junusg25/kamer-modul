@@ -527,12 +527,12 @@ export default function CreateWarrantyRepairTicket() {
       const repairMachineData = {
         customer_id: parseInt(formData.selectedCustomer!.id),
         serial_number: formData.newMachine.serial_number || null, // Optional for repair machines
-        model_name: machineModels.find(m => m.id === formData.newMachine.model_id)?.name,
+        name: machineModels.find(m => m.id === formData.newMachine.model_id)?.name, // Backend expects 'name' not 'model_name'
         manufacturer: machineModels.find(m => m.id === formData.newMachine.model_id)?.manufacturer,
         catalogue_number: machineModels.find(m => m.id === formData.newMachine.model_id)?.catalogue_number,
         description: formData.newMachine.description,
         received_date: new Date().toISOString().split('T')[0], // Today's date
-        status: 'in_repair',
+        repair_status: 'in_repair', // Use correct column name
         condition_on_receipt: 'unknown',
         warranty_covered: true, // Warranty repair tickets assume warranty coverage
         received_by_user_id: user?.id
