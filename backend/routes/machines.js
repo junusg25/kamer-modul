@@ -271,10 +271,10 @@ router.get('/models/:modelId', async (req, res, next) => {
         mm.updated_at,
         mc.name as category_name,
         COUNT(ms.id) as total_serials,
-        COUNT(CASE WHEN am.id IS NOT NULL THEN 1 END) as total_assigned,
+        COUNT(CASE WHEN am.id IS NOT NULL THEN 1 END) + COUNT(CASE WHEN rm.id IS NOT NULL THEN 1 END) as total_assigned,
         COUNT(CASE WHEN am.id IS NULL THEN 1 END) as unassigned_serials,
-        COUNT(CASE WHEN am.warranty_active = true THEN 1 END) as active_warranty,
-        COUNT(CASE WHEN am.warranty_active = false OR am.warranty_expiry_date < CURRENT_DATE THEN 1 END) as expired_warranty,
+        COUNT(CASE WHEN am.warranty_active = true THEN 1 END) + COUNT(CASE WHEN rm.warranty_covered = true THEN 1 END) as active_warranty,
+        COUNT(CASE WHEN am.warranty_active = false OR am.warranty_expiry_date < CURRENT_DATE THEN 1 END) + COUNT(CASE WHEN rm.warranty_covered = false THEN 1 END) as expired_warranty,
         -- Sales metrics
         COUNT(CASE WHEN am.is_sale = true THEN 1 END) as total_sales,
         COUNT(CASE WHEN am.is_sale = false THEN 1 END) as total_assignments,
@@ -286,6 +286,7 @@ router.get('/models/:modelId', async (req, res, next) => {
       LEFT JOIN machine_categories mc ON mm.category_id = mc.id
       LEFT JOIN machine_serials ms ON mm.id = ms.model_id
       LEFT JOIN sold_machines am ON ms.id = am.serial_id
+      LEFT JOIN machines rm ON rm.model_name = mm.name
       WHERE mm.id = $1
       GROUP BY mm.id, mm.name, mm.catalogue_number, mm.manufacturer, mm.category_id, mm.description, mm.warranty_months, mm.created_at, mm.updated_at, mc.name
     `;
@@ -299,7 +300,7 @@ router.get('/models/:modelId', async (req, res, next) => {
       });
     }
 
-    // Get all serials for this model with sales data
+    // Get all serials for this model with sales data (both sold machines and repair machines)
     const serialsQuery = `
       SELECT 
         ms.id,
@@ -326,14 +327,50 @@ router.get('/models/:modelId', async (req, res, next) => {
         am.is_sale,
         -- Sales person information
         sales_user.name as sold_by_name,
-        added_user.name as added_by_name
+        added_user.name as added_by_name,
+        'sold' as machine_type
       FROM machine_serials ms
       LEFT JOIN sold_machines am ON ms.id = am.serial_id
       LEFT JOIN customers c ON c.id = am.customer_id
       LEFT JOIN users sales_user ON am.sold_by_user_id = sales_user.id
       LEFT JOIN users added_user ON am.added_by_user_id = added_user.id
-      WHERE ms.model_id = $1 ${warrantyFilter}
-      ORDER BY ms.serial_number ASC NULLS LAST
+      WHERE ms.model_id = $1 AND am.id IS NOT NULL
+      
+      UNION ALL
+      
+      SELECT 
+        rm.id as id,
+        rm.serial_number,
+        rm.id as assigned_machine_id,
+        rm.description,
+        rm.customer_id,
+        rm.created_at,
+        rm.updated_at,
+        rm.warranty_expiry_date,
+        rm.warranty_covered as warranty_active,
+        rm.purchase_date,
+        rm.receipt_number,
+        c.name as customer_name,
+        c.email as customer_email,
+        c.phone as customer_phone,
+        c.company_name,
+        -- Sales fields (repair machines don't have these)
+        null as sold_by_user_id,
+        rm.received_by_user_id as added_by_user_id,
+        rm.machine_condition,
+        null as sale_date,
+        rm.sale_price,
+        false as is_sale,
+        -- Sales person information
+        null as sold_by_name,
+        received_user.name as added_by_name,
+        'repair' as machine_type
+      FROM machines rm
+      LEFT JOIN customers c ON c.id = rm.customer_id
+      LEFT JOIN users received_user ON rm.received_by_user_id = received_user.id
+      WHERE rm.model_name = (SELECT name FROM machine_models WHERE id = $1)
+      
+      ORDER BY serial_number ASC NULLS LAST
     `;
     
     const serialsResult = await db.query(serialsQuery, params);
