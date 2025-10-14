@@ -254,14 +254,9 @@ router.post('/', authenticateToken, [
 
       // Handle machine creation if needed
       if (!finalMachineId) {
-        if (!machine_serial_number) {
-          await client.query('ROLLBACK')
-          client.release()
-          return res.status(400).json({
-            status: 'fail',
-            message: 'machine_serial_number is required when creating new machine'
-          })
-        }
+        // Serial number is optional for repair tickets - allow NULL values
+        // Convert empty strings to null
+        const finalSerialNumber = machine_serial_number && machine_serial_number.trim() !== '' ? machine_serial_number.trim() : null
 
         // Convert empty strings to null for integer fields
         const categoryId = machine_category_id && machine_category_id !== '' ? parseInt(machine_category_id) : null
@@ -330,31 +325,35 @@ router.post('/', authenticateToken, [
           })
         }
 
-        // Check if serial number already exists
-        const existingSerialResult = await client.query(
-          `SELECT id FROM machine_serials WHERE serial_number = $1`,
-          [machine_serial_number]
-        )
+        let serialId = null
         
-        if (existingSerialResult.rows.length > 0) {
-          await client.query('ROLLBACK')
-          client.release()
-          return res.status(400).json({
-            status: 'fail',
-            message: 'Serial number already exists'
-          })
-        }
+        // Only check and create serial if we have one
+        if (finalSerialNumber) {
+          // Check if serial number already exists
+          const existingSerialResult = await client.query(
+            `SELECT id FROM machine_serials WHERE serial_number = $1`,
+            [finalSerialNumber]
+          )
+          
+          if (existingSerialResult.rows.length > 0) {
+            await client.query('ROLLBACK')
+            client.release()
+            return res.status(400).json({
+              status: 'fail',
+              message: 'Serial number already exists'
+            })
+          }
 
-        // Create machine serial
-        const serialResult = await client.query(
-          `INSERT INTO machine_serials (
-            model_id, serial_number
-          ) VALUES ($1, $2)
-          RETURNING id`,
-          [modelId, machine_serial_number]
-        )
-        
-        const serialId = serialResult.rows[0].id
+          // Create machine serial
+          const serialResult = await client.query(
+            `INSERT INTO machine_serials (
+              model_id, serial_number
+            ) VALUES ($1, $2)
+            RETURNING id`,
+            [modelId, finalSerialNumber]
+          )
+          serialId = serialResult.rows[0].id
+        }
 
         // Calculate warranty expiry date
         let warrantyExpiryDate = null
