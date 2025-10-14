@@ -535,6 +535,7 @@ export default function CreateWarrantyRepairTicket() {
         warranty_covered: true, // Warranty repair tickets assume warranty coverage
         received_by_user_id: user?.id,
         // Add these fields from form data
+        purchase_date: formData.newMachine.purchase_date || null,
         receipt_number: formData.newMachine.receipt_number || null,
         purchased_at: formData.newMachine.purchased_at || null,
         warranty_expiry_date: formData.newMachine.warranty_expiry_date || null,
