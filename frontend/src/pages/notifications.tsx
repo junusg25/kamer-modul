@@ -530,7 +530,7 @@ export default function NotificationsPage() {
                 </p>
               </div>
             ) : (
-              <div className="divide-y">
+              <div className="space-y-3 p-4">
                 {paginatedNotifications.map((notification) => (
                   <NotificationItem
                     key={notification.id}
