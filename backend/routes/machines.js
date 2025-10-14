@@ -1147,7 +1147,7 @@ router.get('/by-customer/:id', async (req, res, next) => {
         null as added_by_name,
         -- Repair fields
         rm.received_date,
-        rm.status,
+        rm.repair_status as status,
         rm.condition_on_receipt,
         rm.received_by_user_id,
         received_user.name as received_by_name
