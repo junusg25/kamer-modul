@@ -42,8 +42,7 @@ interface Attachment {
   file_size: number
   uploaded_at: string
   description?: string
-  first_name?: string
-  last_name?: string
+  uploaded_by_name?: string
   version: number
 }
 
@@ -279,7 +278,7 @@ export function AttachmentsTab({ entityType, entityId }: AttachmentsTabProps) {
                     <TableCell>
                       <div className="flex items-center gap-1 text-sm">
                         <User className="h-3 w-3" />
-                        {attachment.first_name} {attachment.last_name}
+                        {attachment.uploaded_by_name || 'Unknown'}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">

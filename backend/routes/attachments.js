@@ -104,7 +104,7 @@ router.get('/:entityType/:entityId', authenticateToken, async (req, res) => {
     const { entityType, entityId } = req.params;
     
     const result = await db.query(
-      `SELECT a.*, u.first_name, u.last_name 
+      `SELECT a.*, u.name as uploaded_by_name
        FROM attachments a
        LEFT JOIN users u ON a.uploaded_by = u.id
        WHERE a.entity_type = $1 AND a.entity_id = $2 AND a.is_active = TRUE
@@ -219,7 +219,7 @@ router.get('/info/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     
     const result = await db.query(
-      `SELECT a.*, u.first_name, u.last_name 
+      `SELECT a.*, u.name as uploaded_by_name
        FROM attachments a
        LEFT JOIN users u ON a.uploaded_by = u.id
        WHERE a.id = $1 AND a.is_active = TRUE`,
