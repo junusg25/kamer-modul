@@ -557,20 +557,21 @@ export default function WarrantyRepairTickets() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <SmartSearch
-                  placeholder="Search warranty tickets..."
-                  onSearch={(term) => {
-                    setAppliedSearchTerm(term)
-                    setCurrentPage(1)
-                  }}
-                  onClear={() => {
-                    setAppliedSearchTerm('')
-                    setCurrentPage(1)
-                  }}
-                  debounceMs={300}
-                  className="w-80"
-                  disabled={isLoading}
-                />
+        <SmartSearch
+          placeholder="Search warranty tickets..."
+          value={appliedSearchTerm}
+          onSearch={(term) => {
+            setAppliedSearchTerm(term)
+            setCurrentPage(1)
+          }}
+          onClear={() => {
+            setAppliedSearchTerm('')
+            setCurrentPage(1)
+          }}
+          debounceMs={300}
+          className="w-80"
+          disabled={isLoading}
+        />
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

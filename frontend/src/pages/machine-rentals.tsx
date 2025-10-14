@@ -729,6 +729,7 @@ export default function MachineRentals() {
                 <Label>Search</Label>
                 <SmartSearch
                   placeholder="Search rentals..."
+                  value={appliedSearchTerm}
                   onSearch={(term) => {
                     setAppliedSearchTerm(term)
                     setPagination(prev => ({ ...prev, page: 1 })) // Reset to first page when searching

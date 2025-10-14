@@ -740,6 +740,7 @@ export default function PipelineLeads() {
                   {/* Search */}
                   <SmartSearch
                     placeholder="Search leads..."
+                    value={appliedSearchTerm}
                     onSearch={(term) => {
                       setAppliedSearchTerm(term)
                       setCurrentPage(1) // Reset to first page when searching

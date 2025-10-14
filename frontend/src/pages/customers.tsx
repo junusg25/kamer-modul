@@ -512,6 +512,7 @@ export default function Customers() {
                 <div className="relative">
                   <SmartSearch
                     placeholder="Search customers..."
+                    value={appliedSearchTerm}
                     onSearch={(term) => {
                       setAppliedSearchTerm(term)
                       setCurrentPage(1) // Reset to first page when searching

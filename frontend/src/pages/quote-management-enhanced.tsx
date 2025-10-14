@@ -1323,6 +1323,7 @@ export default function QuoteManagementEnhanced() {
                   <div className="flex-1">
                     <SmartSearch
                       placeholder="Search quotes..."
+                      value={appliedSearchTerm}
                       onSearch={(term) => {
                         setAppliedSearchTerm(term)
                         setCurrentPage(1) // Reset to first page when searching

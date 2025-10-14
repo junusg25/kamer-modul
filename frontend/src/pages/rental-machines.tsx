@@ -383,6 +383,7 @@ export default function RentalMachines() {
                 <Label>Search</Label>
                 <SmartSearch
                   placeholder="Search machines..."
+                  value={appliedSearchTerm}
                   onSearch={(term) => {
                     setAppliedSearchTerm(term)
                     setPagination(prev => ({ ...prev, page: 1 })) // Reset to first page when searching

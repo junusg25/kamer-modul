@@ -14,6 +14,7 @@ interface SmartSearchProps {
   showClearButton?: boolean;
   autoFocus?: boolean;
   disabled?: boolean;
+  value?: string; // Add value prop to control the input value
 }
 
 export function SmartSearch({
@@ -24,10 +25,16 @@ export function SmartSearch({
   className,
   showClearButton = true,
   autoFocus = false,
-  disabled = false
+  disabled = false,
+  value = ''
 }: SmartSearchProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(value);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Update internal state when value prop changes
+  useEffect(() => {
+    setSearchTerm(value);
+  }, [value]);
 
   // Handle search button click
   const handleSearchClick = () => {

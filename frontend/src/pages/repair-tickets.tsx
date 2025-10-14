@@ -525,20 +525,21 @@ export default function RepairTickets() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <SmartSearch
-                  placeholder="Search tickets..."
-                  onSearch={(term) => {
-                    setAppliedSearchTerm(term)
-                    setCurrentPage(1)
-                  }}
-                  onClear={() => {
-                    setAppliedSearchTerm('')
-                    setCurrentPage(1)
-                  }}
-                  debounceMs={300}
-                  className="w-80"
-                  disabled={isLoading}
-                />
+        <SmartSearch
+          placeholder="Search tickets..."
+          value={appliedSearchTerm}
+          onSearch={(term) => {
+            setAppliedSearchTerm(term)
+            setCurrentPage(1)
+          }}
+          onClear={() => {
+            setAppliedSearchTerm('')
+            setCurrentPage(1)
+          }}
+          debounceMs={300}
+          className="w-80"
+          disabled={isLoading}
+        />
                 
                 {/* Column Visibility */}
                 <ColumnVisibilityDropdown
