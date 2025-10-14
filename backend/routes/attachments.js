@@ -1,221 +1,340 @@
 const express = require('express');
-const router = express.Router();
-const db = require('../db');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs').promises;
+const { authenticateToken } = require('../middleware/auth');
+const { client } = require('../db');
+
+const router = express.Router();
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = 'uploads/';
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+  destination: async (req, file, cb) => {
+    try {
+      const { entityType, entityId } = req.params;
+      const now = new Date();
+      const year = now.getFullYear().toString();
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      
+      const uploadDir = path.join(__dirname, '../uploads/attachments', year, month, entityType);
+      
+      // Create directory if it doesn't exist
+      await fs.mkdir(uploadDir, { recursive: true });
+      cb(null, uploadDir);
+    } catch (error) {
+      cb(error);
     }
-    cb(null, uploadDir);
   },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  filename: async (req, file, cb) => {
+    try {
+      const { entityType, entityId } = req.params;
+      const ext = path.extname(file.originalname).toLowerCase();
+      
+      // Generate file name based on entity type and ID
+      let prefix;
+      switch (entityType) {
+        case 'repair_ticket':
+          prefix = 'tk';
+          break;
+        case 'warranty_repair_ticket':
+          prefix = 'wtk';
+          break;
+        case 'work_order':
+          prefix = 'wo';
+          break;
+        case 'warranty_work_order':
+          prefix = 'wwo';
+          break;
+        default:
+          prefix = 'att';
+      }
+      
+      // Check if file already exists and increment version
+      const baseName = `${prefix}_${entityId.toString().padStart(2, '0')}_${new Date().getFullYear().toString().slice(-2)}`;
+      let fileName = `${baseName}${ext}`;
+      let version = 1;
+      
+      // Check for existing files and increment version
+      const uploadDir = path.join(__dirname, '../uploads/attachments', new Date().getFullYear().toString(), (new Date().getMonth() + 1).toString().padStart(2, '0'), entityType);
+      
+      while (true) {
+        const filePath = path.join(uploadDir, fileName);
+        try {
+          await fs.access(filePath);
+          version++;
+          fileName = `${baseName}_${version}${ext}`;
+        } catch {
+          break;
+        }
+      }
+      
+      req.fileVersion = version;
+      cb(null, fileName);
+    } catch (error) {
+      cb(error);
+    }
   }
 });
 
 const upload = multer({
-  storage: storage,
+  storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 50 * 1024 * 1024, // 50MB limit
+    files: 10 // Maximum 10 files per request
   },
   fileFilter: (req, file, cb) => {
-    // Allow images, PDFs, and common document formats
-    const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|txt|csv/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-
-    // For testing, be more permissive with MIME types
-    if (extname || mimetype) {
-      return cb(null, true);
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/plain', 'application/zip', 'application/x-rar-compressed'
+    ];
+    
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
     } else {
-      cb(new Error('Only image, PDF, and document files are allowed'));
+      cb(new Error('File type not allowed'), false);
     }
   }
 });
 
-// POST /api/attachments - Upload file for work order
-router.post('/', upload.single('file'), async (req, res, next) => {
+// Get all attachments for an entity
+router.get('/:entityType/:entityId', authenticateToken, async (req, res) => {
   try {
-    const { work_order_id, description, file_type = 'general' } = req.body;
+    const { entityType, entityId } = req.params;
     
-    if (!req.file) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'No file uploaded'
-      });
-    }
-
-    if (!work_order_id) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'work_order_id is required'
-      });
-    }
-
-    // Verify work order exists
-    const workOrderCheck = await db.query(
-      'SELECT id FROM work_orders WHERE id = $1',
-      [work_order_id]
-    );
-
-    if (workOrderCheck.rows.length === 0) {
-      // Delete uploaded file if work order doesn't exist
-      fs.unlinkSync(req.file.path);
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Work order not found'
-      });
-    }
-
-    const result = await db.query(
-      `INSERT INTO work_order_attachments 
-       (work_order_id, filename, original_name, file_path, file_size, file_type, description, uploaded_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING id, work_order_id, filename, original_name, file_size, file_type, description, created_at`,
-      [
-        work_order_id,
-        req.file.filename,
-        req.file.originalname,
-        req.file.path,
-        req.file.size,
-        file_type,
-        description || null,
-        req.user?.id || null
-      ]
-    );
-
-    res.status(201).json({
-      status: 'success',
-      data: result.rows[0]
-    });
-  } catch (err) {
-    // Clean up uploaded file on error
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
-    next(err);
-  }
-});
-
-// GET /api/attachments/work-order/:id - Get attachments for a work order
-router.get('/work-order/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    
-    const result = await db.query(
-      `SELECT 
-        a.id, a.filename, a.original_name, a.file_size, a.file_type, a.description, a.created_at,
-        u.name as uploaded_by_name
-       FROM work_order_attachments a
+    const result = await client.query(
+      `SELECT a.*, u.first_name, u.last_name 
+       FROM attachments a
        LEFT JOIN users u ON a.uploaded_by = u.id
-       WHERE a.work_order_id = $1
-       ORDER BY a.created_at DESC`,
-      [id]
+       WHERE a.entity_type = $1 AND a.entity_id = $2 AND a.is_active = TRUE
+       ORDER BY a.uploaded_at DESC`,
+      [entityType, entityId]
     );
-
-    res.json({
-      status: 'success',
-      data: result.rows
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// GET /api/attachments/:workOrderId - Get attachments for a work order (alternative route for tests)
-router.get('/:workOrderId', async (req, res, next) => {
-  try {
-    const { workOrderId } = req.params;
     
-    const result = await db.query(
-      `SELECT 
-        a.id, a.filename, a.original_name, a.file_size, a.file_type, a.description, a.created_at,
-        u.name as uploaded_by_name
-       FROM work_order_attachments a
-       LEFT JOIN users u ON a.uploaded_by = u.id
-       WHERE a.work_order_id = $1
-       ORDER BY a.created_at DESC`,
-      [workOrderId]
-    );
-
     res.json(result.rows);
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    console.error('Error fetching attachments:', error);
+    res.status(500).json({ error: 'Failed to fetch attachments' });
   }
 });
 
-// GET /api/attachments/:id/download - Download attachment
-router.get('/:id/download', async (req, res, next) => {
+// Upload new attachment
+router.post('/upload/:entityType/:entityId', authenticateToken, upload.array('files', 10), async (req, res) => {
+  try {
+    const { entityType, entityId } = req.params;
+    const { description } = req.body;
+    const uploadedBy = req.user.id;
+    
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
+    }
+    
+    const attachments = [];
+    
+    for (const file of req.files) {
+      const now = new Date();
+      const year = now.getFullYear().toString();
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      
+      const result = await client.query(
+        `INSERT INTO attachments (
+          entity_type, entity_id, file_name, original_name, file_path, 
+          file_type, file_size, uploaded_by, description, version
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        RETURNING *`,
+        [
+          entityType,
+          entityId,
+          file.filename,
+          file.originalname,
+          file.path,
+          file.mimetype,
+          file.size,
+          uploadedBy,
+          description || null,
+          req.fileVersion || 1
+        ]
+      );
+      
+      attachments.push(result.rows[0]);
+    }
+    
+    res.json({ 
+      message: 'Files uploaded successfully', 
+      attachments,
+      count: attachments.length 
+    });
+  } catch (error) {
+    console.error('Error uploading files:', error);
+    
+    // Clean up uploaded files if database insert fails
+    if (req.files) {
+      for (const file of req.files) {
+        try {
+          await fs.unlink(file.path);
+        } catch (unlinkError) {
+          console.error('Error cleaning up file:', unlinkError);
+        }
+      }
+    }
+    
+    res.status(500).json({ error: 'Failed to upload files' });
+  }
+});
+
+// Download attachment
+router.get('/download/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     
-    const result = await db.query(
-      'SELECT filename, original_name, file_path FROM work_order_attachments WHERE id = $1',
+    const result = await client.query(
+      'SELECT * FROM attachments WHERE id = $1 AND is_active = TRUE',
       [id]
     );
-
+    
     if (result.rows.length === 0) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'Attachment not found'
-      });
+      return res.status(404).json({ error: 'Attachment not found' });
     }
-
+    
     const attachment = result.rows[0];
     
-    if (!fs.existsSync(attachment.file_path)) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'File not found on server'
-      });
+    // Check if file exists
+    try {
+      await fs.access(attachment.file_path);
+    } catch {
+      return res.status(404).json({ error: 'File not found on disk' });
     }
-
+    
     res.download(attachment.file_path, attachment.original_name);
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    console.error('Error downloading attachment:', error);
+    res.status(500).json({ error: 'Failed to download attachment' });
   }
 });
 
-// DELETE /api/attachments/:id - Delete attachment
-router.delete('/:id', async (req, res, next) => {
+// Get attachment preview/info
+router.get('/info/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     
-    const result = await db.query(
-      'SELECT file_path FROM work_order_attachments WHERE id = $1',
+    const result = await client.query(
+      `SELECT a.*, u.first_name, u.last_name 
+       FROM attachments a
+       LEFT JOIN users u ON a.uploaded_by = u.id
+       WHERE a.id = $1 AND a.is_active = TRUE`,
       [id]
     );
-
+    
     if (result.rows.length === 0) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'Attachment not found'
-      });
+      return res.status(404).json({ error: 'Attachment not found' });
     }
-
-    const filePath = result.rows[0].file_path;
     
-    // Delete from database
-    await db.query('DELETE FROM work_order_attachments WHERE id = $1', [id]);
+    const attachment = result.rows[0];
     
-    // Delete file from filesystem
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    // Check if file exists
+    try {
+      const stats = await fs.stat(attachment.file_path);
+      attachment.file_exists = true;
+      attachment.file_size_actual = stats.size;
+    } catch {
+      attachment.file_exists = false;
+      attachment.file_size_actual = 0;
     }
+    
+    res.json(attachment);
+  } catch (error) {
+    console.error('Error getting attachment info:', error);
+    res.status(500).json({ error: 'Failed to get attachment info' });
+  }
+});
 
-    res.json({
-      status: 'success',
-      message: 'Attachment deleted successfully'
+// Delete attachment (soft delete)
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await client.query(
+      'UPDATE attachments SET is_active = FALSE, updated_at = NOW() WHERE id = $1 RETURNING *',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Attachment not found' });
+    }
+    
+    const attachment = result.rows[0];
+    
+    // Optionally delete the physical file
+    try {
+      await fs.unlink(attachment.file_path);
+    } catch (unlinkError) {
+      console.error('Error deleting physical file:', unlinkError);
+      // Don't fail the request if file deletion fails
+    }
+    
+    res.json({ message: 'Attachment deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting attachment:', error);
+    res.status(500).json({ error: 'Failed to delete attachment' });
+  }
+});
+
+// Bulk delete attachments
+router.post('/bulk-delete', authenticateToken, async (req, res) => {
+  try {
+    const { attachmentIds } = req.body;
+    
+    if (!attachmentIds || !Array.isArray(attachmentIds) || attachmentIds.length === 0) {
+      return res.status(400).json({ error: 'No attachment IDs provided' });
+    }
+    
+    const result = await client.query(
+      `UPDATE attachments 
+       SET is_active = FALSE, updated_at = NOW() 
+       WHERE id = ANY($1) 
+       RETURNING *`,
+      [attachmentIds]
+    );
+    
+    // Delete physical files
+    for (const attachment of result.rows) {
+      try {
+        await fs.unlink(attachment.file_path);
+      } catch (unlinkError) {
+        console.error('Error deleting physical file:', unlinkError);
+      }
+    }
+    
+    res.json({ 
+      message: 'Attachments deleted successfully', 
+      deleted_count: result.rows.length 
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    console.error('Error bulk deleting attachments:', error);
+    res.status(500).json({ error: 'Failed to delete attachments' });
+  }
+});
+
+// Update attachment description
+router.patch('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { description } = req.body;
+    
+    const result = await client.query(
+      'UPDATE attachments SET description = $1, updated_at = NOW() WHERE id = $2 AND is_active = TRUE RETURNING *',
+      [description, id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Attachment not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating attachment:', error);
+    res.status(500).json({ error: 'Failed to update attachment' });
   }
 });
 
