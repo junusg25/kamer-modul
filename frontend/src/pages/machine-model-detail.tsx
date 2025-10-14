@@ -234,11 +234,27 @@ export default function MachineModelDetail() {
     }
   }
 
-  const filteredMachines = assignedMachines.filter(machine =>
-    machine.serial_number.toLowerCase().includes(appliedSearchTerm.toLowerCase()) ||
-    machine.customer_name.toLowerCase().includes(appliedSearchTerm.toLowerCase()) ||
-    (machine.receipt_number && machine.receipt_number.toLowerCase().includes(appliedSearchTerm.toLowerCase()))
-  )
+  // Helper function to normalize accents
+  const normalizeAccents = (str: string) => {
+    return str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+      .replace(/[čćđšž]/g, match => {
+        const map: { [key: string]: string } = {
+          'č': 'c', 'ć': 'c', 'đ': 'd', 'š': 's', 'ž': 'z'
+        }
+        return map[match] || match
+      })
+  }
+
+  const filteredMachines = assignedMachines.filter(machine => {
+    const normalizedSearchTerm = normalizeAccents(appliedSearchTerm)
+    
+    return normalizeAccents(machine.serial_number || '').includes(normalizedSearchTerm) ||
+           normalizeAccents(machine.customer_name || '').includes(normalizedSearchTerm) ||
+           (machine.receipt_number && normalizeAccents(machine.receipt_number).includes(normalizedSearchTerm))
+  })
 
   // Pagination logic
   const totalPages = Math.ceil(filteredMachines.length / pageSize)
