@@ -5,24 +5,16 @@
 
 BEGIN;
 
--- Add receipt_number column to machines table
+-- Add purchased_at column to machines table (if not exists)
 ALTER TABLE public.machines
-ADD COLUMN receipt_number VARCHAR(255);
-
--- Add purchased_at column to machines table  
-ALTER TABLE public.machines
-ADD COLUMN purchased_at VARCHAR(255);
-
--- Add warranty_expiry_date column to machines table
-ALTER TABLE public.machines
-ADD COLUMN warranty_expiry_date DATE;
+ADD COLUMN IF NOT EXISTS purchased_at VARCHAR(255);
 
 -- Add sale_price column for consistency (can be NULL for repair machines)
 ALTER TABLE public.machines
-ADD COLUMN sale_price NUMERIC(10,2);
+ADD COLUMN IF NOT EXISTS sale_price NUMERIC(10,2);
 
 -- Add machine_condition column for consistency (can be NULL for repair machines)
 ALTER TABLE public.machines
-ADD COLUMN machine_condition VARCHAR(20);
+ADD COLUMN IF NOT EXISTS machine_condition VARCHAR(20);
 
 COMMIT;
