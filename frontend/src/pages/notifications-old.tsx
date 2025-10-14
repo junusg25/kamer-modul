@@ -3,21 +3,34 @@ import { useNavigate } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { MainLayout } from '@/components/layout/main-layout'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Pagination } from '@/components/ui/pagination'
 import { useNotifications, type Notification } from '@/contexts/notifications-context'
 import {
   Bell,
+  Search,
+  Filter,
   CheckCheck,
   Trash2,
+  MoreHorizontal,
+  ExternalLink,
   Loader2,
   RefreshCw,
-  Check,
+  AlertCircle,
+  CheckCircle,
+  Info,
+  AlertTriangle,
   Clock,
+  Settings,
+  Archive,
+  Star,
+  Check,
   Wrench,
   FileText,
   User,
@@ -40,20 +53,37 @@ const getNotificationIcon = (type: string) => {
     case 'repair_ticket':
     case 'warranty_repair_ticket':
       return <FileText className="h-5 w-5 text-slate-600" />
-    case 'machine':
-      return <Package className="h-5 w-5 text-slate-600" />
     case 'customer':
       return <User className="h-5 w-5 text-slate-600" />
-    case 'inventory':
+    case 'machine':
       return <Package className="h-5 w-5 text-slate-600" />
+    case 'inventory':
+      return <Archive className="h-5 w-5 text-slate-600" />
     case 'system':
-    case 'info':
-    case 'success':
-    case 'warning':
-    case 'error':
+      return <Settings className="h-5 w-5 text-slate-600" />
+    case 'feedback':
       return <MessageSquare className="h-5 w-5 text-slate-600" />
+    case 'success':
+      return <CheckCircle className="h-5 w-5 text-emerald-600" />
+    case 'warning':
+      return <AlertTriangle className="h-5 w-5 text-amber-600" />
+    case 'error':
+      return <XCircle className="h-5 w-5 text-red-600" />
     default:
       return <Bell className="h-5 w-5 text-slate-600" />
+  }
+}
+
+const getNotificationTypeIcon = (type: string) => {
+  switch (type) {
+    case 'success':
+      return <CheckCircle className="h-4 w-4 text-green-600" />
+    case 'warning':
+      return <AlertTriangle className="h-4 w-4 text-yellow-600" />
+    case 'error':
+      return <AlertCircle className="h-4 w-4 text-red-600" />
+    default:
+      return <Info className="h-4 w-4 text-blue-600" />
   }
 }
 
@@ -76,7 +106,7 @@ interface NotificationItemProps {
   onSelect: (id: number, selected: boolean) => void
   onMarkAsRead: (id: number) => void
   onDelete: (id: number) => void
-  onClick: (notification: Notification) => void
+  onNavigate: (notification: Notification) => void
 }
 
 function NotificationItem({ 
@@ -85,14 +115,17 @@ function NotificationItem({
   onSelect, 
   onMarkAsRead, 
   onDelete, 
-  onClick 
+  onNavigate 
 }: NotificationItemProps) {
-  const handleSelect = (checked: boolean) => {
-    onSelect(notification.id, checked)
+  const handleClick = () => {
+    if (!notification.is_read) {
+      onMarkAsRead(notification.id)
+    }
+    onNavigate(notification)
   }
 
-  const handleClick = () => {
-    onClick(notification)
+  const handleSelect = (checked: boolean) => {
+    onSelect(notification.id, checked)
   }
 
   const handleDelete = () => {
@@ -198,11 +231,17 @@ function NotificationItem({
                   className="h-8 w-8 p-0"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <XCircle className="h-4 w-4" />
+                  <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDelete()
+                  }}
+                  className="text-red-600"
+                >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </DropdownMenuItem>
@@ -215,7 +254,7 @@ function NotificationItem({
   )
 }
 
-export function NotificationsPage() {
+export default function NotificationsPage() {
   const navigate = useNavigate()
   const { 
     notifications, 
@@ -223,7 +262,7 @@ export function NotificationsPage() {
     isLoading, 
     fetchNotifications,
     markAsRead, 
-    markAllAsRead,
+    markAllAsRead, 
     deleteNotification,
     deleteAllRead,
     deleteMultiple
@@ -349,18 +388,23 @@ export function NotificationsPage() {
           case 'warranty_repair_ticket':
             navigate(`/warranty-repair-tickets/${notification.related_entity_id}`)
             break
-          case 'machine':
-            navigate(`/machines/${notification.related_entity_id}`)
-            break
           case 'customer':
             navigate(`/customers/${notification.related_entity_id}`)
             break
+          case 'machine':
+            navigate(`/machines/${notification.related_entity_id}`)
+            break
+          case 'inventory':
+            navigate(`/inventory/${notification.related_entity_id}`)
+            break
+          case 'feedback':
+            navigate('/admin-feedback')
+            break
           default:
-            navigate('/notifications')
+            
         }
       } else {
-        // Fallback to notifications page
-        navigate('/notifications')
+        
       }
     } catch (error) {
       console.error('Navigation error:', error)
@@ -383,97 +427,164 @@ export function NotificationsPage() {
     paginatedNotifications.every(n => selectedNotifications.has(n.id))
   const someSelected = paginatedNotifications.some(n => selectedNotifications.has(n.id))
 
+
   return (
     <MainLayout>
-      <div className="space-y-4">
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
-            <p className="text-sm text-muted-foreground">
-              {totalItems} notifications • {unreadCount} unread
+            <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>
+            <p className="text-muted-foreground">
+              Stay updated with your latest activities and system alerts
             </p>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={isLoading}
-            >
-              <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
-              Refresh
-            </Button>
-            
-            {unreadCount > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={markAllAsRead}
-              >
-                <CheckCheck className="h-4 w-4 mr-2" />
-                Mark all read
-              </Button>
-            )}
-          </div>
+                 <div className="flex items-center gap-2">
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={handleRefresh}
+                     disabled={isLoading}
+                   >
+                     <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
+                     Refresh
+                   </Button>
+                   
+                   
+                   {unreadCount > 0 && (
+                     <Button
+                       variant="outline"
+                       size="sm"
+                       onClick={markAllAsRead}
+                     >
+                       <CheckCheck className="h-4 w-4 mr-2" />
+                       Mark all read
+                     </Button>
+                   )}
+                 </div>
         </div>
 
-        {/* Tabs */}
+        {/* Stats */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total</CardTitle>
+              <Bell className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{notifications.length}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Unread</CardTitle>
+              <AlertCircle className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">{unreadCount}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Read</CardTitle>
+              <CheckCircle className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {notifications.length - unreadCount}
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Selected</CardTitle>
+              <CheckCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{selectedNotifications.size}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Search and Tabs */}
         <Card>
-          <CardContent className="pt-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
-                <TabsTrigger value="all" className="flex items-center gap-2">
-                  All
-                  <Badge variant="secondary" className="ml-1">
-                    {tabCounts.all}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="unread" className="flex items-center gap-2">
-                  Unread
-                  <Badge variant="destructive" className="ml-1">
-                    {tabCounts.unread}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="work_orders" className="flex items-center gap-2">
-                  Work Orders
-                  <Badge variant="outline" className="ml-1">
-                    {tabCounts.work_orders}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="repair_tickets" className="flex items-center gap-2">
-                  Tickets
-                  <Badge variant="outline" className="ml-1">
-                    {tabCounts.repair_tickets}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="machines" className="flex items-center gap-2">
-                  Machines
-                  <Badge variant="outline" className="ml-1">
-                    {tabCounts.machines}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="customers" className="flex items-center gap-2">
-                  Customers
-                  <Badge variant="outline" className="ml-1">
-                    {tabCounts.customers}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="inventory" className="flex items-center gap-2">
-                  Inventory
-                  <Badge variant="outline" className="ml-1">
-                    {tabCounts.inventory}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="system" className="flex items-center gap-2">
-                  System
-                  <Badge variant="outline" className="ml-1">
-                    {tabCounts.system}
-                  </Badge>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+          <CardHeader>
+            <CardTitle className="text-lg">Notifications</CardTitle>
+            <CardDescription>
+              {filteredNotifications.length} of {notifications.length} notifications
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search notifications..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              {/* Tabs */}
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+                  <TabsTrigger value="all" className="flex items-center gap-2">
+                    All
+                    <Badge variant="secondary" className="ml-1">
+                      {tabCounts.all}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="unread" className="flex items-center gap-2">
+                    Unread
+                    <Badge variant="destructive" className="ml-1">
+                      {tabCounts.unread}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="work_orders" className="flex items-center gap-2">
+                    Work Orders
+                    <Badge variant="outline" className="ml-1">
+                      {tabCounts.work_orders}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="repair_tickets" className="flex items-center gap-2">
+                    Tickets
+                    <Badge variant="outline" className="ml-1">
+                      {tabCounts.repair_tickets}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="machines" className="flex items-center gap-2">
+                    Machines
+                    <Badge variant="outline" className="ml-1">
+                      {tabCounts.machines}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="customers" className="flex items-center gap-2">
+                    Customers
+                    <Badge variant="outline" className="ml-1">
+                      {tabCounts.customers}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="inventory" className="flex items-center gap-2">
+                    Inventory
+                    <Badge variant="outline" className="ml-1">
+                      {tabCounts.inventory}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="system" className="flex items-center gap-2">
+                    System
+                    <Badge variant="outline" className="ml-1">
+                      {tabCounts.system}
+                    </Badge>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
             
             {/* Bulk Actions */}
             {someSelected && (
@@ -495,7 +606,7 @@ export function NotificationsPage() {
                     size="sm"
                     onClick={handleMarkSelectedAsRead}
                   >
-                    <Check className="h-4 w-4 mr-2" />
+                    <CheckCircle className="h-4 w-4 mr-2" />
                     Mark as read
                   </Button>
                   <Button
@@ -514,24 +625,30 @@ export function NotificationsPage() {
 
         {/* Notifications List */}
         <Card>
-          <CardContent className="p-0">
+          <CardHeader>
+            <CardTitle className="text-lg">Notifications</CardTitle>
+            <CardDescription>
+              {filteredNotifications.length} of {notifications.length} notifications
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             {isLoading && notifications.length === 0 ? (
               <div className="flex items-center justify-center p-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
-            ) : paginatedNotifications.length === 0 ? (
+            ) : filteredNotifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center p-8 text-center">
                 <Bell className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No notifications found</h3>
                 <p className="text-sm text-muted-foreground">
-                  {activeTab !== 'all'
+                  {searchTerm || activeTab !== 'all'
                     ? 'Try adjusting your filters to see more notifications.'
                     : 'You\'ll see updates about your work here when they arrive.'}
                 </p>
               </div>
             ) : (
-              <div className="divide-y">
-                {paginatedNotifications.map((notification) => (
+              <div className="space-y-3">
+                {filteredNotifications.map((notification) => (
                   <NotificationItem
                     key={notification.id}
                     notification={notification}
@@ -539,24 +656,30 @@ export function NotificationsPage() {
                     onSelect={handleSelectNotification}
                     onMarkAsRead={markAsRead}
                     onDelete={deleteNotification}
-                    onClick={handleNotificationClick}
+                    onNavigate={handleNotificationClick}
                   />
                 ))}
+                
+                {hasMore && (
+                  <div className="flex justify-center pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={handleLoadMore}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                      )}
+                      Load More
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
         </Card>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-          </div>
-        )}
       </div>
     </MainLayout>
   )
