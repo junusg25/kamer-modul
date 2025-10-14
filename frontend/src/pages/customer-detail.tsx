@@ -855,7 +855,11 @@ export default function CustomerDetail() {
                     </TableHeader>
                     <TableBody>
                       {machines.map((machine) => (
-                        <TableRow key={machine.id}>
+                        <TableRow 
+                          key={machine.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => navigate(`/machines/${machine.id}`)}
+                        >
                           <TableCell>
                             <div className="flex items-center gap-2">
                               {getMachineTypeIcon(machine.machine_type)}
@@ -890,11 +894,15 @@ export default function CustomerDetail() {
                           <TableCell className="text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                <Button 
+                                  variant="ghost" 
+                                  className="h-8 w-8 p-0"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
+                              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuItem onClick={() => navigate(`/machines/${machine.id}`)}>
                                   <Eye className="mr-2 h-4 w-4" /> View Machine Details
