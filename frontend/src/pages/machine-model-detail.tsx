@@ -501,13 +501,6 @@ export default function MachineModelDetail() {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
-                  <User className="h-4 w-4 text-orange-500" />
-                  <span className="text-sm font-medium">Total Assignments</span>
-                </div>
-                <p className="text-2xl font-bold">{assignedMachines.length}</p>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
                   <Euro className="h-4 w-4 text-green-500" />
                   <span className="text-sm font-medium">Total Revenue</span>
                 </div>
