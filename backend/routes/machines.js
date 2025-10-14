@@ -1124,16 +1124,16 @@ router.get('/by-customer/:id', async (req, res, next) => {
        SELECT 
         'repair' as machine_type,
         rm.id,
-        rm.model_name as name,
-        rm.model_name,
-        rm.catalogue_number,
+        mm.name,
+        mm.name as model_name,
+        mm.catalogue_number,
         rm.serial_number,
         rm.warranty_expiry_date,
         rm.warranty_covered as warranty_active,
         rm.received_date as created_at,
         rm.updated_at,
         mc.name as category_name,
-        rm.manufacturer,
+        mm.manufacturer,
         rm.received_date as purchase_date,
         rm.description,
         -- Sales fields (null for repair machines)
@@ -1152,7 +1152,8 @@ router.get('/by-customer/:id', async (req, res, next) => {
         rm.received_by_user_id,
         received_user.name as received_by_name
        FROM machines rm
-       LEFT JOIN machine_categories mc ON rm.category_id = mc.id
+       LEFT JOIN machine_models mm ON rm.name = mm.name  -- Join with machine_models to get model data
+       LEFT JOIN machine_categories mc ON mm.category_id = mc.id  -- Get category from machine_models
        LEFT JOIN users received_user ON rm.received_by_user_id = received_user.id
        WHERE rm.customer_id = $1
        
@@ -1218,22 +1219,22 @@ router.get('/:id', async (req, res, next) => {
     // If not found in sold_machines, try machines (repair machines)
     if (!result.rows.length) {
       result = await db.query(
-        `SELECT 
+         `SELECT 
           'repair' as machine_type,
           rm.id,
           rm.customer_id,
-          rm.name as name,
-          rm.model_name,
-          rm.catalogue_number,
+          mm.name,
+          mm.name as model_name,
+          mm.catalogue_number,
           rm.serial_number,
           rm.description,
           rm.warranty_expiry_date,
           rm.warranty_covered as warranty_active,
           rm.updated_at,
           rm.received_date as created_at,
-          rm.manufacturer,
+          mm.manufacturer,
           rm.purchase_date,
-          rm.category_id,
+          mm.category_id,
           rm.receipt_number,
           c.name as customer_name,
           mc.name as category_name,
@@ -1255,8 +1256,9 @@ router.get('/:id', async (req, res, next) => {
           rm.received_by_user_id,
           received_user.name as received_by_name
          FROM machines rm
+         LEFT JOIN machine_models mm ON rm.name = mm.name  -- Join with machine_models to get model data
          LEFT JOIN customers c ON c.id = rm.customer_id
-         LEFT JOIN machine_categories mc ON rm.category_id = mc.id
+         LEFT JOIN machine_categories mc ON mm.category_id = mc.id  -- Get category from machine_models
          LEFT JOIN users received_user ON rm.received_by_user_id = received_user.id
          WHERE rm.id = $1`,
         [req.params.id]

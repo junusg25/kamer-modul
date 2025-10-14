@@ -843,7 +843,7 @@ export default function CustomerDetail() {
                     </TableHeader>
                     <TableBody>
                       {machines.map((machine) => (
-                        <TableRow key={machine.id} className={machine.machine_type === 'sold' ? 'bg-green-50/50' : 'bg-blue-50/50'}>
+                        <TableRow key={machine.id}>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               {getMachineTypeIcon(machine.machine_type)}
