@@ -107,14 +107,24 @@ export function AttachmentsTab({ entityType, entityId }: AttachmentsTabProps) {
   const handleDownload = async (attachment: Attachment) => {
     try {
       const blob = await apiService.downloadAttachment(attachment.id.toString())
+      
+      // Create a proper download link
       const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = attachment.original_name
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = attachment.original_name
+      link.style.display = 'none'
+      
+      document.body.appendChild(link)
+      link.click()
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      }, 100)
+      
+      toast.success(`Downloaded ${attachment.original_name}`)
     } catch (error) {
       console.error('Error downloading file:', error)
       toast.error('Failed to download file')
