@@ -299,22 +299,23 @@ router.get('/models/:modelId', async (req, res, next) => {
         mm.updated_at,
         mc.name as category_name,
         COUNT(ms.id) as total_serials,
-        COUNT(CASE WHEN am.id IS NOT NULL THEN 1 END) + COUNT(CASE WHEN rm.id IS NOT NULL THEN 1 END) as total_assigned,
+        (SELECT COUNT(*) FROM sold_machines sm INNER JOIN machine_serials ms ON sm.serial_id = ms.id WHERE ms.model_id = mm.id) + 
+        (SELECT COUNT(*) FROM machines rm WHERE rm.model_name = mm.name) as total_assigned,
         COUNT(CASE WHEN am.id IS NULL THEN 1 END) as unassigned_serials,
-        COUNT(CASE WHEN am.warranty_active = true THEN 1 END) + COUNT(CASE WHEN rm.warranty_covered = true THEN 1 END) as active_warranty,
-        COUNT(CASE WHEN am.warranty_active = false OR am.warranty_expiry_date < CURRENT_DATE THEN 1 END) + COUNT(CASE WHEN rm.warranty_covered = false THEN 1 END) as expired_warranty,
+        (SELECT COUNT(*) FROM sold_machines sm INNER JOIN machine_serials ms ON sm.serial_id = ms.id WHERE ms.model_id = mm.id AND sm.warranty_active = true) + 
+        (SELECT COUNT(*) FROM machines rm WHERE rm.model_name = mm.name AND rm.warranty_covered = true) as active_warranty,
+        (SELECT COUNT(*) FROM sold_machines sm INNER JOIN machine_serials ms ON sm.serial_id = ms.id WHERE ms.model_id = mm.id AND (sm.warranty_active = false OR sm.warranty_expiry_date < CURRENT_DATE)) + 
+        (SELECT COUNT(*) FROM machines rm WHERE rm.model_name = mm.name AND rm.warranty_covered = false) as expired_warranty,
         -- Sales metrics
-        COUNT(CASE WHEN am.is_sale = true THEN 1 END) as total_sales,
-        COUNT(CASE WHEN am.is_sale = false THEN 1 END) as total_assignments,
-        COUNT(CASE WHEN am.machine_condition = 'new' THEN 1 END) as new_machines_sold,
-        COUNT(CASE WHEN am.machine_condition = 'used' THEN 1 END) as used_machines_sold,
-        COALESCE(SUM(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as total_sales_revenue,
-        COALESCE(AVG(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as avg_sale_price
+        (SELECT COUNT(*) FROM sold_machines sm INNER JOIN machine_serials ms ON sm.serial_id = ms.id WHERE ms.model_id = mm.id AND sm.is_sale = true) as total_sales,
+        (SELECT COUNT(*) FROM sold_machines sm INNER JOIN machine_serials ms ON sm.serial_id = ms.id WHERE ms.model_id = mm.id AND sm.is_sale = false) as total_assignments,
+        (SELECT COUNT(*) FROM sold_machines sm INNER JOIN machine_serials ms ON sm.serial_id = ms.id WHERE ms.model_id = mm.id AND sm.machine_condition = 'new') as new_machines_sold,
+        (SELECT COUNT(*) FROM sold_machines sm INNER JOIN machine_serials ms ON sm.serial_id = ms.id WHERE ms.model_id = mm.id AND sm.machine_condition = 'used') as used_machines_sold,
+        (SELECT COALESCE(SUM(sm.sale_price), 0) FROM sold_machines sm INNER JOIN machine_serials ms ON sm.serial_id = ms.id WHERE ms.model_id = mm.id AND sm.is_sale = true) as total_sales_revenue,
+        (SELECT COALESCE(AVG(sm.sale_price), 0) FROM sold_machines sm INNER JOIN machine_serials ms ON sm.serial_id = ms.id WHERE ms.model_id = mm.id AND sm.is_sale = true) as avg_sale_price
       FROM machine_models mm
       LEFT JOIN machine_categories mc ON mm.category_id = mc.id
       LEFT JOIN machine_serials ms ON mm.id = ms.model_id
-      LEFT JOIN sold_machines am ON ms.id = am.serial_id
-      LEFT JOIN machines rm ON rm.model_name = mm.name
       WHERE mm.id = $1
       GROUP BY mm.id, mm.name, mm.catalogue_number, mm.manufacturer, mm.category_id, mm.description, mm.warranty_months, mm.created_at, mm.updated_at, mc.name
     `;
