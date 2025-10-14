@@ -1141,7 +1141,7 @@ router.get('/by-customer/:id', async (req, res, next) => {
         null as added_by_user_id,
         rm.condition_on_receipt as machine_condition,
         null as sale_date,
-        null as sale_price,
+        rm.sale_price,
         false as is_sale,
         null as sold_by_name,
         null as added_by_name,
