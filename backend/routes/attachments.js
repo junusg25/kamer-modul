@@ -3,7 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
 const { authenticateToken } = require('../middleware/auth');
-const { client } = require('../db');
+const db = require('../db');
 
 const router = express.Router();
 
@@ -103,7 +103,7 @@ router.get('/:entityType/:entityId', authenticateToken, async (req, res) => {
   try {
     const { entityType, entityId } = req.params;
     
-    const result = await client.query(
+    const result = await db.query(
       `SELECT a.*, u.first_name, u.last_name 
        FROM attachments a
        LEFT JOIN users u ON a.uploaded_by = u.id
@@ -137,7 +137,7 @@ router.post('/upload/:entityType/:entityId', authenticateToken, upload.array('fi
       const year = now.getFullYear().toString();
       const month = (now.getMonth() + 1).toString().padStart(2, '0');
       
-      const result = await client.query(
+      const result = await db.query(
         `INSERT INTO attachments (
           entity_type, entity_id, file_name, original_name, file_path, 
           file_type, file_size, uploaded_by, description, version
@@ -188,7 +188,7 @@ router.get('/download/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     
-    const result = await client.query(
+    const result = await db.query(
       'SELECT * FROM attachments WHERE id = $1 AND is_active = TRUE',
       [id]
     );
@@ -218,7 +218,7 @@ router.get('/info/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     
-    const result = await client.query(
+    const result = await db.query(
       `SELECT a.*, u.first_name, u.last_name 
        FROM attachments a
        LEFT JOIN users u ON a.uploaded_by = u.id
@@ -254,7 +254,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     
-    const result = await client.query(
+    const result = await db.query(
       'UPDATE attachments SET is_active = FALSE, updated_at = NOW() WHERE id = $1 RETURNING *',
       [id]
     );
@@ -289,7 +289,7 @@ router.post('/bulk-delete', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'No attachment IDs provided' });
     }
     
-    const result = await client.query(
+    const result = await db.query(
       `UPDATE attachments 
        SET is_active = FALSE, updated_at = NOW() 
        WHERE id = ANY($1) 
@@ -322,7 +322,7 @@ router.patch('/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const { description } = req.body;
     
-    const result = await client.query(
+    const result = await db.query(
       'UPDATE attachments SET description = $1, updated_at = NOW() WHERE id = $2 AND is_active = TRUE RETURNING *',
       [description, id]
     );
