@@ -103,6 +103,7 @@ interface Machine {
   is_sale: boolean
   sold_by_name?: string
   added_by_name?: string
+  received_by_name?: string
 }
 
 interface WorkOrder {
@@ -581,7 +582,12 @@ export default function MachineDetail() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Added By</p>
-                      <p className="text-sm">{machine.added_by_name || 'N/A'}</p>
+                      <p className="text-sm">
+                        {machine.machine_type === 'sold' 
+                          ? (machine.added_by_name || 'N/A')
+                          : (machine.received_by_name || 'N/A')
+                        }
+                      </p>
                     </div>
                   </div>
                 </CardContent>
