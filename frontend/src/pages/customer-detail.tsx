@@ -17,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '../components/ui/dropdown-menu'
 import { DeleteConfirmationDialog } from '../components/ui/delete-confirmation-dialog'
 import { GeneralAlertDialog } from '../components/ui/general-alert-dialog'
@@ -43,7 +44,8 @@ import {
   Shield,
   Activity,
   Save,
-  X
+  X,
+  MoreHorizontal
 } from 'lucide-react'
 import { useParams, useNavigate } from 'react-router-dom'
 import apiService from '../services/api'
@@ -189,6 +191,10 @@ export default function CustomerDetail() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [machineAlertOpen, setMachineAlertOpen] = useState(false)
   
+  // Machine deletion state
+  const [machineDeleteDialogOpen, setMachineDeleteDialogOpen] = useState(false)
+  const [machineToDelete, setMachineToDelete] = useState<CustomerMachine | null>(null)
+  
   // Edit functionality state
   const [isEditing, setIsEditing] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -278,6 +284,42 @@ export default function CustomerDetail() {
       }
     } finally {
       setDeleteDialogOpen(false)
+    }
+  }
+
+  const handleDeleteMachine = (machine: CustomerMachine) => {
+    setMachineToDelete(machine)
+    setMachineDeleteDialogOpen(true)
+  }
+
+  const confirmDeleteMachine = async () => {
+    if (!machineToDelete) return
+
+    try {
+      // Determine if it's a sold machine or repair machine based on machine_type
+      if (machineToDelete.machine_type === 'sold') {
+        await apiService.deleteSoldMachine(machineToDelete.id)
+      } else {
+        await apiService.deleteMachine(machineToDelete.id)
+      }
+      
+      // Remove machine from local state
+      setMachines(prev => prev.filter(m => m.id !== machineToDelete.id))
+      
+      // Show success message
+      toast.success('Machine deleted successfully')
+    } catch (error: any) {
+      console.error('Error deleting machine:', error)
+      
+      // Handle specific error messages from backend
+      if (error.message) {
+        toast.error(error.message)
+      } else {
+        toast.error('Failed to delete machine. Please try again.')
+      }
+    } finally {
+      setMachineDeleteDialogOpen(false)
+      setMachineToDelete(null)
     }
   }
 
@@ -784,7 +826,7 @@ export default function CustomerDetail() {
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="h-8 w-8 p-0">
-                                  <Eye className="h-4 w-4" />
+                                  <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
@@ -794,6 +836,13 @@ export default function CustomerDetail() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => navigate(`/machines/${machine.id}`)}>
                                   <Edit className="mr-2 h-4 w-4" /> Edit Machine
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  onClick={() => handleDeleteMachine(machine)}
+                                  className="text-red-600 focus:text-red-600"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete Machine
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -992,6 +1041,16 @@ export default function CustomerDetail() {
           title="Delete Customer"
           itemName={customer?.name}
           itemType="customer"
+        />
+
+        {/* Machine Delete Confirmation Dialog */}
+        <DeleteConfirmationDialog
+          open={machineDeleteDialogOpen}
+          onOpenChange={setMachineDeleteDialogOpen}
+          onConfirm={confirmDeleteMachine}
+          title="Delete Machine"
+          itemName={machineToDelete?.name}
+          itemType="machine"
         />
 
         {/* Customer with Machines Alert Dialog */}
