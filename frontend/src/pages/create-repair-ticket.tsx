@@ -1558,7 +1558,7 @@ export default function CreateRepairTicket() {
             <div className="space-y-2">
               <Label htmlFor="serial-number" className="flex items-center gap-2">
                 <Hash className="w-4 h-4" />
-                Serial Number *
+                Serial Number (optional)
               </Label>
               <Input
                 id="serial-number"
@@ -1567,7 +1567,7 @@ export default function CreateRepairTicket() {
                   ...prev,
                   newMachine: { ...prev.newMachine, serial_number: e.target.value }
                 }))}
-                placeholder="Enter serial number"
+                placeholder="Enter serial number (optional)"
                 className="h-11"
               />
             </div>
@@ -2086,7 +2086,7 @@ export default function CreateRepairTicket() {
               <DialogTrigger asChild>
                 <Button 
                   className="flex-1" 
-                  disabled={!formData.newMachine.model_id || !formData.newMachine.serial_number}
+                  disabled={!formData.newMachine.model_id}
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Add Machine
