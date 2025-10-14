@@ -1304,16 +1304,16 @@ router.post('/', async (req, res, next) => {
     }
     
     const result = await db.query(
-      `INSERT INTO machines (customer_id, model_name, catalogue_number, serial_number, description, 
+      `INSERT INTO machines (customer_id, name, model_name, catalogue_number, serial_number, description, 
                            manufacturer, bought_at, category_id, receipt_number, purchase_date, received_date, 
                            repair_status, condition_on_receipt, warranty_covered, received_by_user_id, 
                            purchased_at, warranty_expiry_date, sale_price, machine_condition) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) 
-       RETURNING id, customer_id, model_name, catalogue_number, serial_number, description, 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) 
+       RETURNING id, customer_id, name, model_name, catalogue_number, serial_number, description, 
                 warranty_expiry_date, warranty_active, updated_at, manufacturer, bought_at, category_id, 
                 receipt_number, purchase_date, received_date, repair_status, condition_on_receipt, 
                 warranty_covered, received_by_user_id, purchased_at, sale_price, machine_condition`,
-      [customer_id || null, model_name, finalCatalogueNumber || null, serial_number || null, description || null, 
+      [customer_id || null, model_name, model_name, finalCatalogueNumber || null, serial_number || null, description || null, 
        finalManufacturer, bought_at || null, finalCategoryId || null, receipt_number || null, purchase_date || null,
        received_date || null, repair_status || null, condition_on_receipt || null, warranty_covered || null, 
        received_by_user_id || null, purchased_at || null, warranty_expiry_date || null, sale_price || null, machine_condition || null]
