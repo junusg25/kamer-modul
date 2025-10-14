@@ -18,6 +18,7 @@ import { Progress } from '../components/ui/progress'
 import { DatePicker } from '../components/ui/date-picker'
 import { 
   Plus, 
+  Search,
   RefreshCw, 
   Edit, 
   Trash2, 
