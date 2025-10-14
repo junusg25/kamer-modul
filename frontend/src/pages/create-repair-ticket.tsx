@@ -529,23 +529,35 @@ export default function CreateRepairTicket() {
     try {
       setIsCreatingMachine(true)
       
-      // For repair tickets, we don't create assigned machines directly
-      // Instead, we just add the machine to the form data
-      // The repair ticket creation will handle machine creation with optional serial
+      // Create the assigned machine (backend handles serial creation automatically)
+      const assignedMachineData = {
+        customer_id: parseInt(formData.selectedCustomer!.id),
+        serial_number: formData.newMachine.serial_number,
+        model_id: parseInt(formData.newMachine.model_id),
+        purchase_date: formData.newMachine.purchase_date,
+        purchased_at: formData.newMachine.purchased_at,
+        receipt_number: formData.newMachine.receipt_number,
+        sale_price: formData.newMachine.sale_price ? parseFloat(formData.newMachine.sale_price) : null,
+        machine_condition: formData.newMachine.machine_condition,
+        description: formData.newMachine.description,
+        warranty_expiry_date: formData.newMachine.warranty_expiry_date,
+        added_by_user_id: user?.id // Track who added the machine
+      }
+      
+      
+      
+      const assignedResponse = await apiService.createAssignedMachine(assignedMachineData) as any
+      const newAssignedMachine = assignedResponse.data
+      
+      // Add to machines list
       const newMachine: Machine = {
-        id: `temp-${Date.now()}`, // Temporary ID for form
-        machine_id: null, // Will be set during repair ticket creation
+        id: newAssignedMachine.id,
+        machine_id: newAssignedMachine.id, // Use assigned machine ID, not serial ID
         customer_id: formData.selectedCustomer!.id,
         manufacturer: machineModels.find(m => m.id === formData.newMachine.model_id)?.manufacturer,
         model_name: machineModels.find(m => m.id === formData.newMachine.model_id)?.name,
-        serial_number: formData.newMachine.serial_number || null, // Allow null for repair tickets
-        purchase_date: formData.newMachine.purchase_date,
-        warranty_expiry_date: formData.newMachine.warranty_expiry_date,
-        machine_condition: formData.newMachine.machine_condition,
-        description: formData.newMachine.description,
-        sale_price: formData.newMachine.sale_price ? parseFloat(formData.newMachine.sale_price) : null,
-        receipt_number: formData.newMachine.receipt_number,
-        purchased_at: formData.newMachine.purchased_at
+        serial_number: formData.newMachine.serial_number,
+        purchase_date: formData.newMachine.purchase_date
       }
       
       setMachines(prev => [newMachine, ...prev])
@@ -555,12 +567,9 @@ export default function CreateRepairTicket() {
         machineType: 'existing'
       }))
       setShowNewMachineDialog(false)
-      toast.success('Machine added to repair ticket')
     } catch (err) {
-      console.error('Error adding machine:', err)
-      toast.error('Failed to add machine', {
-        description: err instanceof Error ? err.message : 'An error occurred'
-      })
+      console.error('Error creating machine:', err)
+      setError(err instanceof Error ? err.message : 'Failed to create machine')
     } finally {
       setIsCreatingMachine(false)
     }
