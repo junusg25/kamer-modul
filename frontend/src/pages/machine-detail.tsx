@@ -101,6 +101,7 @@ interface Machine {
   sale_date?: string
   sale_price?: number
   is_sale: boolean
+  machine_type?: string
   sold_by_name?: string
   added_by_name?: string
   received_by_name?: string
@@ -316,6 +317,18 @@ export default function MachineDetail() {
     const today = new Date()
     const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 
+    // For repair machines, ignore warranty_active flag and only check the expiry date
+    if (machine.machine_type === 'repair') {
+      if (daysUntilExpiry < 0) {
+        return { status: 'Expired', color: 'destructive' as const }
+      } else if (daysUntilExpiry <= 90) {
+        return { status: `Expires in ${daysUntilExpiry} days`, color: 'outline' as const }
+      } else {
+        return { status: 'Active', color: 'default' as const }
+      }
+    }
+
+    // For sold machines, check both warranty_active flag and expiry date
     if (!machine.warranty_active || daysUntilExpiry < 0) {
       return { status: 'Expired', color: 'destructive' as const }
     } else if (daysUntilExpiry <= 90) {
