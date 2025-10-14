@@ -85,12 +85,12 @@ router.get('/',
         MAX(am.assigned_at) as last_purchase_date,
         -- Sales person info (get the most recent sales person)
         (SELECT u2.name FROM users u2 
-         JOIN assigned_machines am2 ON u2.id = am2.sold_by_user_id 
+         JOIN sold_machines am2 ON u2.id = am2.sold_by_user_id 
          WHERE am2.customer_id = c.id AND am2.is_sale = true 
          ORDER BY am2.assigned_at DESC LIMIT 1) as primary_sales_person
       FROM customers c
       LEFT JOIN users u ON c.owner_id = u.id
-      LEFT JOIN assigned_machines am ON c.id = am.customer_id
+      LEFT JOIN sold_machines am ON c.id = am.customer_id
       ${whereClause}
       GROUP BY c.id, c.name, c.phone, c.email, c.company_name, c.vat_number, 
                c.city, c.postal_code, c.street_address, c.phone2, c.fax, c.owner_id, c.assigned_at, c.ownership_notes, c.status, c.created_at, c.updated_at, u.name
@@ -279,7 +279,7 @@ router.delete('/:id', authenticateToken, async (req, res, next) => {
 
     // Check if customer has assigned machines
     const machinesQuery = await db.query(
-      'SELECT COUNT(*) as machine_count FROM assigned_machines WHERE customer_id = $1',
+      'SELECT COUNT(*) as machine_count FROM sold_machines WHERE customer_id = $1',
       [customerId]
     );
     const machineCount = parseInt(machinesQuery.rows[0].machine_count);

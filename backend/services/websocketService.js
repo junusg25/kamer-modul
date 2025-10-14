@@ -494,7 +494,7 @@ class WebSocketService {
       // Get assigned machine details
       const result = await db.query(`
         SELECT am.*, c.name as customer_name, mm.name as machine_name, mm.manufacturer
-        FROM assigned_machines am
+        FROM sold_machines am
         LEFT JOIN customers c ON am.customer_id = c.id
         LEFT JOIN machine_serials ms ON am.serial_id = ms.id
         LEFT JOIN machine_models mm ON ms.model_id = mm.id

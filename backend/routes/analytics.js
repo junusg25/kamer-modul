@@ -1100,7 +1100,7 @@ router.get('/top-repaired-machines', authenticateToken, async (req, res) => {
         COALESCE(AVG(EXTRACT(EPOCH FROM (wo.completed_at - wo.created_at))/3600), 0) as avg_repair_hours,
         COALESCE(SUM(wo.quote_total), 0) as total_revenue,
         COUNT(DISTINCT wo.customer_id) as unique_customers
-      FROM assigned_machines am
+      FROM sold_machines am
       LEFT JOIN machine_serials ms ON am.serial_id = ms.id
       LEFT JOIN machine_models mm ON ms.model_id = mm.id
       LEFT JOIN work_orders wo ON am.id = wo.machine_id ${dateFilter}
@@ -1224,7 +1224,7 @@ router.get('/sales-metrics', authenticateToken, async (req, res) => {
         COALESCE(SUM(CASE WHEN is_sale = true THEN sale_price END), 0) as total_revenue,
         COALESCE(AVG(CASE WHEN is_sale = true THEN sale_price END), 0) as avg_sale_price,
         COUNT(CASE WHEN is_sale = false THEN 1 END) as total_assignments
-      FROM assigned_machines 
+      FROM sold_machines 
       WHERE assigned_at >= $1
     `;
     
@@ -1234,7 +1234,7 @@ router.get('/sales-metrics', authenticateToken, async (req, res) => {
         COUNT(CASE WHEN is_sale = true THEN 1 END) as total_sales,
         COALESCE(SUM(CASE WHEN is_sale = true THEN sale_price END), 0) as total_revenue,
         COALESCE(AVG(CASE WHEN is_sale = true THEN sale_price END), 0) as avg_sale_price
-      FROM assigned_machines 
+      FROM sold_machines 
       WHERE assigned_at >= $1 AND assigned_at <= $2
     `;
 
@@ -1349,7 +1349,7 @@ router.get('/sales-team', authenticateToken, async (req, res) => {
         -- Assuming a monthly target of €10,000 per sales person
         10000 as target
       FROM users u
-      LEFT JOIN assigned_machines am ON u.id = am.sold_by_user_id 
+      LEFT JOIN sold_machines am ON u.id = am.sold_by_user_id 
         AND am.assigned_at >= $1
         AND am.is_sale = true
       WHERE u.role = 'sales' AND u.status = 'active'
@@ -1390,7 +1390,7 @@ router.get('/recent-sales', authenticateToken, async (req, res) => {
         mm.name as model_name,
         ms.serial_number,
         u.name as sold_by_name
-      FROM assigned_machines am
+      FROM sold_machines am
       INNER JOIN machine_serials ms ON am.serial_id = ms.id
       INNER JOIN machine_models mm ON ms.model_id = mm.id
       INNER JOIN customers c ON am.customer_id = c.id
@@ -1464,7 +1464,7 @@ router.get('/sales-reports', authenticateToken, async (req, res) => {
         COALESCE(SUM(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as total_revenue,
         COALESCE(AVG(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as avg_sale_price,
         COUNT(CASE WHEN am.is_sale = false THEN 1 END) as total_assignments
-      FROM assigned_machines am
+      FROM sold_machines am
       ${whereClause}
     `;
 
@@ -1474,7 +1474,7 @@ router.get('/sales-reports', authenticateToken, async (req, res) => {
         COUNT(CASE WHEN am.is_sale = true THEN 1 END) as total_sales,
         COALESCE(SUM(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as total_revenue,
         COALESCE(AVG(CASE WHEN am.is_sale = true THEN am.sale_price END), 0) as avg_sale_price
-      FROM assigned_machines am
+      FROM sold_machines am
       ${previousWhereClause}
     `;
 
@@ -1570,7 +1570,7 @@ router.get('/sales-trends', authenticateToken, async (req, res) => {
         COUNT(CASE WHEN am.is_sale = true AND am.machine_condition = 'new' THEN 1 END) as new_machines_sold,
         COUNT(CASE WHEN am.is_sale = true AND am.machine_condition = 'used' THEN 1 END) as used_machines_sold,
         'N/A' as top_selling_model
-      FROM assigned_machines am
+      FROM sold_machines am
       WHERE am.assigned_at >= CURRENT_DATE - INTERVAL '12 months'
         AND am.is_sale = true
       GROUP BY ${intervalClause}
@@ -1640,7 +1640,7 @@ router.get('/team-performance', authenticateToken, async (req, res) => {
       FROM users u
       LEFT JOIN leads l ON u.id = l.assigned_to 
         AND l.created_at >= $1
-      LEFT JOIN assigned_machines am ON u.id = am.sold_by_user_id 
+      LEFT JOIN sold_machines am ON u.id = am.sold_by_user_id 
         AND am.assigned_at >= $1
         AND am.is_sale = true
       WHERE u.role = 'sales' AND u.status = 'active'

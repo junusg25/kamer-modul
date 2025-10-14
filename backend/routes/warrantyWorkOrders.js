@@ -77,7 +77,7 @@ router.get('/by-inventory/:inventoryId', authenticateToken, async (req, res, nex
       FROM warranty_work_orders wwo
       INNER JOIN warranty_work_order_inventory wwoi ON wwo.id = wwoi.warranty_work_order_id
       LEFT JOIN customers c ON wwo.customer_id = c.id
-      LEFT JOIN assigned_machines am ON wwo.machine_id = am.id
+      LEFT JOIN sold_machines am ON wwo.machine_id = am.id
       LEFT JOIN machine_serials ms ON am.serial_id = ms.id
       LEFT JOIN machine_models mm ON ms.model_id = mm.id
       LEFT JOIN users u ON wwo.technician_id = u.id
@@ -177,7 +177,7 @@ router.get('/', authenticateToken, async (req, res, next) => {
              u.name as technician_name
       FROM warranty_work_orders wwo
       LEFT JOIN customers c ON wwo.customer_id = c.id
-      LEFT JOIN assigned_machines am ON wwo.machine_id = am.id
+      LEFT JOIN sold_machines am ON wwo.machine_id = am.id
       LEFT JOIN machine_serials ms ON am.serial_id = ms.id
       LEFT JOIN machine_models mm ON ms.model_id = mm.id
       LEFT JOIN users u ON wwo.technician_id = u.id
@@ -190,7 +190,7 @@ router.get('/', authenticateToken, async (req, res, next) => {
       SELECT COUNT(*) 
       FROM warranty_work_orders wwo
       LEFT JOIN customers c ON wwo.customer_id = c.id
-      LEFT JOIN assigned_machines am ON wwo.machine_id = am.id
+      LEFT JOIN sold_machines am ON wwo.machine_id = am.id
       LEFT JOIN machine_serials ms ON am.serial_id = ms.id
       LEFT JOIN machine_models mm ON ms.model_id = mm.id
       ${whereClause}
@@ -239,7 +239,7 @@ router.get('/:id', authenticateToken, async (req, res, next) => {
               owner.name as owner_technician_name
        FROM warranty_work_orders wwo
        LEFT JOIN customers c ON wwo.customer_id = c.id
-       LEFT JOIN assigned_machines am ON wwo.machine_id = am.id
+       LEFT JOIN sold_machines am ON wwo.machine_id = am.id
        LEFT JOIN machine_serials ms ON am.serial_id = ms.id
        LEFT JOIN machine_models mm ON ms.model_id = mm.id
        LEFT JOIN users u ON wwo.technician_id = u.id

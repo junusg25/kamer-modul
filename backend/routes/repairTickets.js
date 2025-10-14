@@ -206,7 +206,7 @@ router.post('/', authenticateToken, [
       // Validate machine_id if provided
       if (finalMachineId) {
         const machineCheck = await client.query(
-          'SELECT id FROM assigned_machines WHERE id = $1',
+          'SELECT id FROM sold_machines WHERE id = $1',
           [finalMachineId]
         )
         if (machineCheck.rows.length === 0) {
@@ -368,7 +368,7 @@ router.post('/', authenticateToken, [
 
         // Assign machine to customer
         const assignedMachineResult = await client.query(
-          `INSERT INTO assigned_machines (
+          `INSERT INTO sold_machines (
             serial_id, customer_id, purchase_date, warranty_expiry_date, warranty_active, description, receipt_number
           ) VALUES ($1, $2, $3, $4, $5, $6, $7)
           RETURNING id`,
@@ -638,7 +638,7 @@ router.post('/:id/convert', authenticateToken, async (req, res, next) => {
         SELECT rt.*, c.name as customer_name, mm.manufacturer, mm.name as model_name
         FROM repair_tickets rt
         LEFT JOIN customers c ON rt.customer_id = c.id
-        LEFT JOIN assigned_machines am ON rt.machine_id = am.id
+        LEFT JOIN sold_machines am ON rt.machine_id = am.id
         LEFT JOIN machine_serials ms ON am.serial_id = ms.id
         LEFT JOIN machine_models mm ON ms.model_id = mm.id
         WHERE rt.id = $1

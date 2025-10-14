@@ -61,7 +61,7 @@ router.get('/', authenticateToken, async (req, res, next) => {
     const customerStats = await db.query(`
       SELECT 
         (SELECT COUNT(*) FROM customers) as total_customers,
-        (SELECT COUNT(*) FROM assigned_machines) as total_machines,
+        (SELECT COUNT(*) FROM sold_machines) as total_machines,
         (SELECT COUNT(DISTINCT customer_id) FROM work_orders WHERE created_at >= NOW() - INTERVAL '30 days') as active_customers,
         (SELECT COUNT(DISTINCT machine_id) FROM work_orders WHERE created_at >= NOW() - INTERVAL '30 days') as active_machines
     `);
@@ -141,13 +141,13 @@ router.get('/', authenticateToken, async (req, res, next) => {
       SELECT 'customer_updated' as type, id, NULL as formatted_number, name as description, 'updated' as status, updated_at as created_at, 'Customer Updated' as action_text FROM customers WHERE updated_at >= NOW() - INTERVAL '30 days'
              UNION ALL
                SELECT 'machine_created' as type, am.id, NULL as formatted_number, mm.name as description, 'active' as status, am.assigned_at as created_at, 'Machine Added' as action_text 
-         FROM assigned_machines am
+         FROM sold_machines am
          LEFT JOIN machine_serials ms ON am.serial_id = ms.id
          LEFT JOIN machine_models mm ON ms.model_id = mm.id
          WHERE am.assigned_at >= NOW() - INTERVAL '30 days'
          UNION ALL
          SELECT 'machine_updated' as type, am.id, NULL as formatted_number, mm.name as description, 'updated' as status, am.updated_at as created_at, 'Machine Updated' as action_text 
-         FROM assigned_machines am
+         FROM sold_machines am
          LEFT JOIN machine_serials ms ON am.serial_id = ms.id
          LEFT JOIN machine_models mm ON ms.model_id = mm.id
          WHERE am.updated_at >= NOW() - INTERVAL '30 days'
@@ -183,7 +183,7 @@ router.get('/', authenticateToken, async (req, res, next) => {
         COUNT(wo.id) as repair_count,
         COUNT(DISTINCT wo.customer_id) as unique_customers,
         COALESCE(AVG(EXTRACT(EPOCH FROM (wo.completed_at - wo.created_at))/3600), 0) as avg_repair_hours
-      FROM assigned_machines am
+      FROM sold_machines am
       LEFT JOIN machine_serials ms ON am.serial_id = ms.id
       LEFT JOIN machine_models mm ON ms.model_id = mm.id
       LEFT JOIN work_orders wo ON am.id = wo.machine_id
@@ -471,7 +471,7 @@ router.get('/quick-stats', authenticateToken, async (req, res, next) => {
         
         -- Customers and Machines
         (SELECT COUNT(*) FROM customers) as total_customers,
-        (SELECT COUNT(*) FROM assigned_machines) as total_machines,
+        (SELECT COUNT(*) FROM sold_machines) as total_machines,
         (SELECT COUNT(DISTINCT customer_id) FROM work_orders WHERE created_at >= NOW() - INTERVAL '30 days') as active_customers,
         
         -- Team

@@ -432,7 +432,7 @@ router.get('/my-items/:type/:id', authenticateCustomer, async (req, res, next) =
         `SELECT 
           am.id, am.serial_id, am.warranty_expiry_date, am.warranty_active,
           ms.serial_number, mm.name as model_name, mm.manufacturer, mm.catalogue_number
-         FROM assigned_machines am
+         FROM sold_machines am
          JOIN machine_serials ms ON am.serial_id = ms.id
          JOIN machine_models mm ON ms.model_id = mm.id
          WHERE am.id = $1`,
@@ -469,7 +469,7 @@ router.get('/my-items/:type/:id', authenticateCustomer, async (req, res, next) =
         `SELECT 
           am.id, am.serial_id, am.warranty_expiry_date, am.warranty_active,
           ms.serial_number, mm.name as model_name, mm.manufacturer, mm.catalogue_number
-         FROM assigned_machines am
+         FROM sold_machines am
          JOIN machine_serials ms ON am.serial_id = ms.id
          JOIN machine_models mm ON ms.model_id = mm.id
          WHERE am.id = $1`,
@@ -494,7 +494,7 @@ router.get('/my-items/:type/:id', authenticateCustomer, async (req, res, next) =
         `SELECT 
           am.id, am.serial_id, am.warranty_expiry_date, am.warranty_active,
           ms.serial_number, mm.name as model_name, mm.manufacturer, mm.catalogue_number
-         FROM assigned_machines am
+         FROM sold_machines am
          JOIN machine_serials ms ON am.serial_id = ms.id
          JOIN machine_models mm ON ms.model_id = mm.id
          WHERE am.id = $1`,
@@ -547,7 +547,7 @@ router.get('/my-machines', authenticateCustomer, async (req, res, next) => {
         -- Latest work order
         (SELECT wo.formatted_number FROM work_orders wo WHERE wo.machine_id = am.id ORDER BY wo.created_at DESC LIMIT 1) as latest_work_order,
         (SELECT wo.status FROM work_orders wo WHERE wo.machine_id = am.id ORDER BY wo.created_at DESC LIMIT 1) as latest_work_order_status
-      FROM assigned_machines am
+      FROM sold_machines am
       JOIN machine_serials ms ON am.serial_id = ms.id
       JOIN machine_models mm ON ms.model_id = mm.id
       LEFT JOIN machine_categories mc ON mm.category_id = mc.id
@@ -617,7 +617,7 @@ router.get('/my-machines/:id', authenticateCustomer, async (req, res, next) => {
         c.company_name,
         sold_by.name as sold_by_name,
         added_by.name as added_by_name
-      FROM assigned_machines am
+      FROM sold_machines am
       JOIN machine_serials ms ON am.serial_id = ms.id
       JOIN machine_models mm ON ms.model_id = mm.id
       JOIN customers c ON am.customer_id = c.id

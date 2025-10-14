@@ -12,7 +12,7 @@ router.get('/', async (req, res, next) => {
     const offset = (page - 1) * limit;
     
     let query = `
-      SELECT * FROM assigned_machines_with_details 
+      SELECT * FROM sold_machines_with_details 
       WHERE 1=1
     `;
     const params = [];
@@ -28,7 +28,7 @@ router.get('/', async (req, res, next) => {
     const result = await db.query(query, params);
     
     // Get total count for pagination
-    let countQuery = `SELECT COUNT(*) FROM assigned_machines_with_details WHERE 1=1`;
+    let countQuery = `SELECT COUNT(*) FROM sold_machines_with_details WHERE 1=1`;
     const countParams = [];
     
     if (search) {
@@ -60,7 +60,7 @@ router.get('/customer/:customerId', async (req, res, next) => {
     const { customerId } = req.params;
     
     const result = await db.query(
-      'SELECT * FROM assigned_machines_with_details WHERE customer_id = $1 ORDER BY assigned_at DESC',
+      'SELECT * FROM sold_machines_with_details WHERE customer_id = $1 ORDER BY assigned_at DESC',
       [customerId]
     );
     
@@ -125,7 +125,7 @@ router.post('/', authenticateToken, async (req, res, next) => {
     
     // Check if serial is already assigned
     const assignmentCheck = await client.query(
-      'SELECT id FROM assigned_machines WHERE serial_id = $1',
+      'SELECT id FROM sold_machines WHERE serial_id = $1',
       [serialId]
     );
     
@@ -156,7 +156,7 @@ router.post('/', authenticateToken, async (req, res, next) => {
     
     // Create assignment with all fields
     const assignmentResult = await client.query(
-      `INSERT INTO assigned_machines (
+      `INSERT INTO sold_machines (
         serial_id, 
         customer_id, 
         purchase_date, 
@@ -206,7 +206,7 @@ router.post('/', authenticateToken, async (req, res, next) => {
           mm.name as model_name,
           mm.manufacturer,
           u.name as seller_name
-        FROM assigned_machines am
+        FROM sold_machines am
         LEFT JOIN customers c ON am.customer_id = c.id
         LEFT JOIN machine_serials ms ON am.serial_id = ms.id
         LEFT JOIN machine_models mm ON ms.model_id = mm.id
@@ -304,7 +304,7 @@ router.put('/:id', async (req, res, next) => {
     } = req.body;
     
     const result = await db.query(
-      `UPDATE assigned_machines 
+      `UPDATE sold_machines 
        SET purchase_date = $1, 
            warranty_expiry_date = $2, 
            warranty_active = $3,
@@ -358,7 +358,7 @@ router.delete('/:id', async (req, res, next) => {
     // Get assignment details including serial_id
     const assignmentResult = await client.query(
       `SELECT am.serial_id 
-       FROM assigned_machines am
+       FROM sold_machines am
        WHERE am.id = $1`,
       [id]
     );
@@ -414,7 +414,7 @@ router.delete('/:id', async (req, res, next) => {
     const { serial_id } = assignmentResult.rows[0];
     
     // Delete assignment
-    await client.query('DELETE FROM assigned_machines WHERE id = $1', [id]);
+    await client.query('DELETE FROM sold_machines WHERE id = $1', [id]);
     
     // Delete machine serial
     await client.query('DELETE FROM machine_serials WHERE id = $1', [serial_id]);
@@ -438,7 +438,7 @@ router.get('/purchased-at-options', async (req, res, next) => {
   try {
     const result = await db.query(
       `SELECT DISTINCT purchased_at 
-       FROM assigned_machines 
+       FROM sold_machines 
        WHERE purchased_at IS NOT NULL AND purchased_at != ''
        ORDER BY purchased_at`
     );

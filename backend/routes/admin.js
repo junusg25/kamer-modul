@@ -149,7 +149,7 @@ router.get('/business-metrics', async (req, res, next) => {
         COALESCE(SUM(am.sale_price), 0) as total_revenue,
         COALESCE(SUM(CASE WHEN am.sale_date >= DATE_TRUNC('month', CURRENT_DATE) THEN am.sale_price ELSE 0 END), 0) as monthly_revenue,
         COALESCE(SUM(CASE WHEN am.sale_date >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month') AND am.sale_date < DATE_TRUNC('month', CURRENT_DATE) THEN am.sale_price ELSE 0 END), 0) as last_month_revenue
-      FROM assigned_machines am
+      FROM sold_machines am
       WHERE am.is_sale = true AND am.sale_price IS NOT NULL
     `
 
@@ -475,7 +475,7 @@ router.get('/system-stats', async (req, res, next) => {
         COUNT(*) as total_machines,
         COUNT(CASE WHEN warranty_active = true THEN 1 END) as machines_under_warranty,
         COUNT(CASE WHEN is_sale = true THEN 1 END) as machines_sold
-      FROM assigned_machines
+      FROM sold_machines
     `
 
     const [userStats, workOrderStats, customerStats, machineStats] = await Promise.all([

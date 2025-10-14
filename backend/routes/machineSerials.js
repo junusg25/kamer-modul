@@ -26,7 +26,7 @@ router.get('/model/:modelId', async (req, res, next) => {
         c.email as customer_email,
         c.phone as customer_phone
       FROM machine_serials ms
-      LEFT JOIN assigned_machines am ON ms.id = am.serial_id
+      LEFT JOIN sold_machines am ON ms.id = am.serial_id
       LEFT JOIN customers c ON am.customer_id = c.id
       WHERE ms.model_id = $1
     `;
@@ -63,7 +63,7 @@ router.get('/unassigned/:modelId', async (req, res, next) => {
         ms.created_at,
         ms.updated_at
       FROM machine_serials ms
-      LEFT JOIN assigned_machines am ON ms.id = am.serial_id
+      LEFT JOIN sold_machines am ON ms.id = am.serial_id
       WHERE ms.model_id = $1 
         AND am.id IS NULL
       ORDER BY ms.created_at DESC
@@ -176,7 +176,7 @@ router.delete('/:id', async (req, res, next) => {
     
     // Check if serial is assigned
     const assignmentCheck = await db.query(
-      'SELECT COUNT(*) FROM assigned_machines WHERE serial_id = $1',
+      'SELECT COUNT(*) FROM sold_machines WHERE serial_id = $1',
       [id]
     );
     

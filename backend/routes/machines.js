@@ -81,7 +81,7 @@ router.get('/models', async (req, res, next) => {
           COUNT(CASE WHEN am.id IS NOT NULL THEN 1 END) as total_assigned,
           COUNT(CASE WHEN am.id IS NULL THEN 1 END) as unassigned_serials
         FROM machine_serials ms
-        LEFT JOIN assigned_machines am ON ms.id = am.serial_id
+        LEFT JOIN sold_machines am ON ms.id = am.serial_id
         GROUP BY ms.model_id
       ) serial_counts ON mm.id = serial_counts.model_id
       LEFT JOIN (
@@ -90,7 +90,7 @@ router.get('/models', async (req, res, next) => {
           COUNT(CASE WHEN am.warranty_active = true THEN 1 END) as active_warranty,
           COUNT(CASE WHEN am.warranty_active = false AND am.warranty_expiry_date IS NOT NULL THEN 1 END) as expired_warranty
         FROM machine_serials ms
-        LEFT JOIN assigned_machines am ON ms.id = am.serial_id
+        LEFT JOIN sold_machines am ON ms.id = am.serial_id
         GROUP BY ms.model_id
       ) warranty_counts ON mm.id = warranty_counts.model_id
       ${where}
@@ -285,7 +285,7 @@ router.get('/models/:modelId', async (req, res, next) => {
       FROM machine_models mm
       LEFT JOIN machine_categories mc ON mm.category_id = mc.id
       LEFT JOIN machine_serials ms ON mm.id = ms.model_id
-      LEFT JOIN assigned_machines am ON ms.id = am.serial_id
+      LEFT JOIN sold_machines am ON ms.id = am.serial_id
       WHERE mm.id = $1
       GROUP BY mm.id, mm.name, mm.catalogue_number, mm.manufacturer, mm.category_id, mm.description, mm.warranty_months, mm.created_at, mm.updated_at, mc.name
     `;
@@ -328,7 +328,7 @@ router.get('/models/:modelId', async (req, res, next) => {
         sales_user.name as sold_by_name,
         added_user.name as added_by_name
       FROM machine_serials ms
-      LEFT JOIN assigned_machines am ON ms.id = am.serial_id
+      LEFT JOIN sold_machines am ON ms.id = am.serial_id
       LEFT JOIN customers c ON c.id = am.customer_id
       LEFT JOIN users sales_user ON am.sold_by_user_id = sales_user.id
       LEFT JOIN users added_user ON am.added_by_user_id = added_user.id
@@ -437,7 +437,7 @@ router.delete('/models/:modelId', async (req, res, next) => {
     const assignedQuery = `
       SELECT COUNT(*) as assigned_count
       FROM machine_serials ms
-      JOIN assigned_machines am ON ms.id = am.serial_id
+      JOIN sold_machines am ON ms.id = am.serial_id
       WHERE ms.model_id = $1
     `;
     
@@ -494,11 +494,11 @@ router.delete('/serials/:serialId', async (req, res, next) => {
   try {
     const { serialId } = req.params;
     
-    // First, check if this is an assigned_machines ID or machine_serials ID
-    // Check if serial exists and get its details - try assigned_machines first
+    // First, check if this is an sold_machines ID or machine_serials ID
+    // Check if serial exists and get its details - try sold_machines first
     const checkAssignedQuery = `
       SELECT am.id as assignment_id, am.customer_id, ms.id as serial_id, ms.serial_number
-      FROM assigned_machines am
+      FROM sold_machines am
       JOIN machine_serials ms ON am.serial_id = ms.id
       WHERE am.id = $1
     `;
@@ -506,7 +506,7 @@ router.delete('/serials/:serialId', async (req, res, next) => {
     let checkResult = await db.query(checkAssignedQuery, [serialId]);
     let isAssigned = true;
     
-    // If not found in assigned_machines, check if it's a machine_serials ID
+    // If not found in sold_machines, check if it's a machine_serials ID
     if (checkResult.rows.length === 0) {
       const checkUnassignedQuery = `
         SELECT NULL as assignment_id, NULL as customer_id, ms.id as serial_id, ms.serial_number
@@ -552,10 +552,10 @@ router.delete('/serials/:serialId', async (req, res, next) => {
       });
     }
 
-    // If it's an assigned serial, delete from assigned_machines first
+    // If it's an assigned serial, delete from sold_machines first
     if (isAssigned) {
       const deleteAssignmentQuery = `
-        DELETE FROM assigned_machines
+        DELETE FROM sold_machines
         WHERE id = $1
       `;
       await db.query(deleteAssignmentQuery, [serialId]);
@@ -675,7 +675,7 @@ router.post('/assign', async (req, res, next) => {
 
     // Assign serial to customer with calculated warranty expiry and sales fields
     const assignQuery = `
-      INSERT INTO assigned_machines (
+      INSERT INTO sold_machines (
         serial_id, customer_id, purchase_date, warranty_expiry_date, warranty_active, 
         receipt_number, sold_by_user_id, added_by_user_id, machine_condition, 
         sale_date, sale_price, is_sale, description
@@ -891,7 +891,7 @@ router.get('/model-serials', async (req, res, next) => {
         c.name as customer_name
        FROM machine_serials ms
        INNER JOIN machine_models mm ON ms.model_id = mm.id
-       LEFT JOIN assigned_machines am ON ms.id = am.serial_id
+       LEFT JOIN sold_machines am ON ms.id = am.serial_id
        LEFT JOIN customers c ON am.customer_id = c.id
        ${whereClause}
        ORDER BY ms.serial_number ASC NULLS LAST`
@@ -1105,7 +1105,7 @@ router.get('/by-customer/:id', async (req, res, next) => {
         -- Sales person information
         sales_user.name as sold_by_name,
         added_user.name as added_by_name
-       FROM assigned_machines am
+       FROM sold_machines am
        INNER JOIN machine_serials ms ON am.serial_id = ms.id
        INNER JOIN machine_models mm ON ms.model_id = mm.id
        LEFT JOIN machine_categories mc ON mm.category_id = mc.id
@@ -1152,7 +1152,7 @@ router.get('/:id', async (req, res, next) => {
         -- Sales person information
         sales_user.name as sold_by_name,
         added_user.name as added_by_name
-       FROM assigned_machines am
+       FROM sold_machines am
        INNER JOIN machine_serials ms ON am.serial_id = ms.id
        INNER JOIN machine_models mm ON ms.model_id = mm.id
        LEFT JOIN customers c ON c.id = am.customer_id

@@ -80,7 +80,7 @@ router.get('/by-inventory/:inventoryId', authenticateToken, async (req, res, nex
       FROM work_orders wo
       INNER JOIN work_order_inventory woi ON wo.id = woi.work_order_id
       LEFT JOIN customers c ON wo.customer_id = c.id
-      LEFT JOIN assigned_machines am ON wo.machine_id = am.id
+      LEFT JOIN sold_machines am ON wo.machine_id = am.id
       LEFT JOIN machine_serials ms ON am.serial_id = ms.id
       LEFT JOIN machine_models mm ON ms.model_id = mm.id
       LEFT JOIN users u ON wo.technician_id = u.id
@@ -205,7 +205,7 @@ router.get('/', authenticateToken, async (req, res, next) => {
         u.name as technician_name
       FROM work_orders wo
       LEFT JOIN customers c ON wo.customer_id = c.id
-      LEFT JOIN assigned_machines am ON wo.machine_id = am.id
+      LEFT JOIN sold_machines am ON wo.machine_id = am.id
       LEFT JOIN machine_serials ms ON am.serial_id = ms.id
       LEFT JOIN machine_models mm ON ms.model_id = mm.id
       LEFT JOIN users u ON wo.technician_id = u.id
@@ -218,7 +218,7 @@ router.get('/', authenticateToken, async (req, res, next) => {
       SELECT COUNT(*) 
       FROM work_orders wo
       LEFT JOIN customers c ON wo.customer_id = c.id
-      LEFT JOIN assigned_machines am ON wo.machine_id = am.id
+      LEFT JOIN sold_machines am ON wo.machine_id = am.id
       LEFT JOIN machine_serials ms ON am.serial_id = ms.id
       LEFT JOIN machine_models mm ON ms.model_id = mm.id
       ${whereClause}
@@ -267,7 +267,7 @@ router.get('/:id', authenticateToken, async (req, res, next) => {
               owner.name as owner_technician_name
        FROM work_orders wo
        LEFT JOIN customers c ON wo.customer_id = c.id
-       LEFT JOIN assigned_machines am ON wo.machine_id = am.id
+       LEFT JOIN sold_machines am ON wo.machine_id = am.id
        LEFT JOIN machine_serials ms ON am.serial_id = ms.id
        LEFT JOIN machine_models mm ON ms.model_id = mm.id
        LEFT JOIN users u ON wo.technician_id = u.id

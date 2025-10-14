@@ -351,9 +351,9 @@ router.get('/sales-overview', async (req, res, next) => {
     const query = `
       SELECT 
         -- Sales metrics (selected period)
-        (SELECT COALESCE(SUM(sale_price), 0) FROM assigned_machines 
+        (SELECT COALESCE(SUM(sale_price), 0) FROM sold_machines 
          WHERE is_sale = true AND sale_date >= ${dateCondition}${endDateFilter}) as monthly_sales_revenue,
-        (SELECT COUNT(*) FROM assigned_machines 
+        (SELECT COUNT(*) FROM sold_machines 
          WHERE is_sale = true AND sale_date >= ${dateCondition}${endDateFilter}) as monthly_sales_count,
         
         -- Leads metrics
@@ -459,7 +459,7 @@ router.get('/sales-team', async (req, res, next) => {
       FROM users u
       LEFT JOIN leads l ON u.id = l.assigned_to
       LEFT JOIN quotes q ON u.id = q.created_by
-      LEFT JOIN assigned_machines am ON u.id = am.sold_by_user_id
+      LEFT JOIN sold_machines am ON u.id = am.sold_by_user_id
       WHERE u.role = 'sales' AND u.status = 'active'
       GROUP BY u.id, u.name, u.email
       ORDER BY revenue DESC

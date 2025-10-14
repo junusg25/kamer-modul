@@ -366,7 +366,7 @@ router.post('/', [
 
         // Assign machine to customer
         const assignedMachineResult = await client.query(
-          `INSERT INTO assigned_machines (
+          `INSERT INTO sold_machines (
             serial_id, customer_id, purchase_date, warranty_expiry_date, warranty_active, description, receipt_number
           ) VALUES ($1, $2, $3, $4, $5, $6, $7)
           RETURNING id`,
@@ -734,7 +734,7 @@ router.post('/:id/convert', authenticateToken, async (req, res, next) => {
         SELECT wrt.*, c.name as customer_name, mm.manufacturer, mm.name as model_name
         FROM warranty_repair_tickets wrt
         LEFT JOIN customers c ON wrt.customer_id = c.id
-        LEFT JOIN assigned_machines am ON wrt.machine_id = am.id
+        LEFT JOIN sold_machines am ON wrt.machine_id = am.id
         LEFT JOIN machine_serials ms ON am.serial_id = ms.id
         LEFT JOIN machine_models mm ON ms.model_id = mm.id
         WHERE wrt.id = $1

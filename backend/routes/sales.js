@@ -52,7 +52,7 @@ router.get('/my-performance', authenticateToken, async (req, res, next) => {
     const salesQuery = `
       SELECT 
         COALESCE(SUM(am.sale_price), 0) as total_sales
-      FROM assigned_machines am
+      FROM sold_machines am
       WHERE am.sold_by_user_id = $1
         AND am.is_sale = true
         AND am.sale_price > 0
@@ -128,7 +128,7 @@ router.get('/metrics', authenticateToken, async (req, res, next) => {
         COALESCE(SUM(am.sale_price), 0) as total_revenue,
         COALESCE(AVG(am.sale_price), 0) as avg_sale_price,
         COUNT(DISTINCT am.customer_id) as customers_served
-      FROM assigned_machines am
+      FROM sold_machines am
       LEFT JOIN users u ON am.sold_by_user_id = u.id
       WHERE am.is_sale = true 
         AND am.sale_price > 0
@@ -341,7 +341,7 @@ router.get('/recent', authenticateToken, async (req, res, next) => {
         am.sale_price,
         am.sale_date,
         am.assigned_at
-      FROM assigned_machines am
+      FROM sold_machines am
       LEFT JOIN customers c ON am.customer_id = c.id
       LEFT JOIN machine_serials ms ON am.serial_id = ms.id
       LEFT JOIN machine_models mm ON ms.model_id = mm.id
@@ -480,7 +480,7 @@ router.get('/trends', authenticateToken, async (req, res, next) => {
         COUNT(*) as sales,
         COALESCE(SUM(am.sale_price), 0) as revenue,
         COUNT(DISTINCT am.customer_id) as customers
-      FROM assigned_machines am
+      FROM sold_machines am
       WHERE am.is_sale = true 
         AND am.sale_date IS NOT NULL
         ${dateFilter}
@@ -600,7 +600,7 @@ router.get('/top-customers', authenticateToken, async (req, res, next) => {
         COALESCE(SUM(am.sale_price), 0) as total_revenue,
         MAX(am.sale_date) as last_deal
       FROM customers c
-      INNER JOIN assigned_machines am ON c.id = am.customer_id 
+      INNER JOIN sold_machines am ON c.id = am.customer_id 
         AND am.is_sale = true 
         AND am.sale_price > 0
         ${dateFilter}
@@ -641,7 +641,7 @@ router.get('/forecast', authenticateToken, async (req, res, next) => {
         DATE_TRUNC('month', am.sale_date) as month,
         COALESCE(SUM(am.sale_price), 0) as revenue,
         COUNT(*) as sales_count
-      FROM assigned_machines am
+      FROM sold_machines am
       WHERE am.is_sale = true 
         AND am.sale_date IS NOT NULL
         AND am.sale_date >= CURRENT_DATE - INTERVAL '12 months'

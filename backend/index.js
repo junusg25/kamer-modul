@@ -119,7 +119,7 @@ app.use('/api/customers', require('./routes/customers'));
 app.use('/api/machines', require('./routes/machines'));
 app.use('/api/machine-models', require('./routes/machineModels'));
 app.use('/api/machine-serials', require('./routes/machineSerials'));
-app.use('/api/assigned-machines', require('./routes/assignedMachines'));
+app.use('/api/sold-machines', require('./routes/soldMachines'));
 app.use('/api/rental-machines', require('./routes/rentalMachines'));
 app.use('/api/machine-rentals', require('./routes/machineRentals'));
 app.use('/api/rental-analytics', require('./routes/rentalAnalytics'));

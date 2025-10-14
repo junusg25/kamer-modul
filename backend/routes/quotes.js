@@ -640,7 +640,7 @@ router.get('/catalog/machines', authenticateToken, async (req, res, next) => {
         mc.name as category_name,
         COUNT(ms.id) as available_serials,
         (SELECT AVG(am.sale_price) 
-         FROM assigned_machines am 
+         FROM sold_machines am 
          JOIN machine_serials ms2 ON am.serial_id = ms2.id 
          WHERE ms2.model_id = mm.id AND am.is_sale = true) as avg_sale_price
       FROM machine_models mm
