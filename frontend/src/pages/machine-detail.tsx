@@ -260,7 +260,12 @@ export default function MachineDetail() {
         purchased_at: editFormData.purchased_at || null
       }
 
-      await apiService.updateMachine(machine.id, updateData)
+      // Use the correct API endpoint based on machine type
+      if (machine.machine_type === 'sold') {
+        await apiService.updateSoldMachine(machine.id, updateData)
+      } else {
+        await apiService.updateMachine(machine.id, updateData)
+      }
       
       toast.success("Machine updated successfully.")
       
@@ -284,7 +289,12 @@ export default function MachineDetail() {
     try {
       setIsDeleting(true)
       
-      await apiService.deleteMachine(machine.id)
+      // Use the correct API endpoint based on machine type
+      if (machine.machine_type === 'sold') {
+        await apiService.deleteSoldMachine(machine.id)
+      } else {
+        await apiService.deleteMachine(machine.id)
+      }
       
       toast.success("Machine permanently deleted successfully.")
       

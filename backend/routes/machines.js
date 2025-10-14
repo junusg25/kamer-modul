@@ -1163,49 +1163,106 @@ router.get('/by-customer/:id', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// GET machine by id (assigned machine)
+// GET machine by id (both sold and repair machines)
 router.get('/:id', async (req, res, next) => {
   try {
-    const result = await db.query(
+    // First try to find in sold_machines
+    let result = await db.query(
       `SELECT 
-        am.id,
-        am.customer_id,
+        'sold' as machine_type,
+        sm.id,
+        sm.customer_id,
         mm.name as name,
         mm.name as model_name,
         mm.catalogue_number,
         ms.serial_number,
-        am.description,
-        am.warranty_expiry_date,
-        am.warranty_active,
-        am.updated_at,
-        am.assigned_at as created_at,
+        sm.description,
+        sm.warranty_expiry_date,
+        sm.warranty_active,
+        sm.updated_at,
+        sm.sale_date as created_at,
         mm.manufacturer,
-        am.purchase_date,
+        sm.purchase_date,
         mm.category_id,
-        am.receipt_number,
+        sm.receipt_number,
         c.name as customer_name,
         mc.name as category_name,
         -- Sales fields
-        am.sold_by_user_id,
-        am.added_by_user_id,
-        am.machine_condition,
-        am.sale_date,
-        am.sale_price,
-        am.is_sale,
-        am.purchased_at,
+        sm.sold_by_user_id,
+        sm.added_by_user_id,
+        sm.machine_condition,
+        sm.sale_date,
+        sm.sale_price,
+        true as is_sale,
+        sm.purchased_at,
         -- Sales person information
         sales_user.name as sold_by_name,
-        added_user.name as added_by_name
-       FROM sold_machines am
-       INNER JOIN machine_serials ms ON am.serial_id = ms.id
+        added_user.name as added_by_name,
+        -- Repair machine fields (null for sold machines)
+        null as received_date,
+        null as repair_status,
+        null as condition_on_receipt,
+        null as received_by_user_id,
+        null as received_by_name
+       FROM sold_machines sm
+       INNER JOIN machine_serials ms ON sm.serial_id = ms.id
        INNER JOIN machine_models mm ON ms.model_id = mm.id
-       LEFT JOIN customers c ON c.id = am.customer_id
+       LEFT JOIN customers c ON c.id = sm.customer_id
        LEFT JOIN machine_categories mc ON mm.category_id = mc.id
-       LEFT JOIN users sales_user ON am.sold_by_user_id = sales_user.id
-       LEFT JOIN users added_user ON am.added_by_user_id = added_user.id
-       WHERE am.id = $1`,
+       LEFT JOIN users sales_user ON sm.sold_by_user_id = sales_user.id
+       LEFT JOIN users added_user ON sm.added_by_user_id = added_user.id
+       WHERE sm.id = $1`,
       [req.params.id]
     );
+
+    // If not found in sold_machines, try machines (repair machines)
+    if (!result.rows.length) {
+      result = await db.query(
+        `SELECT 
+          'repair' as machine_type,
+          rm.id,
+          rm.customer_id,
+          rm.name as name,
+          rm.model_name,
+          rm.catalogue_number,
+          rm.serial_number,
+          rm.description,
+          rm.warranty_expiry_date,
+          rm.warranty_covered as warranty_active,
+          rm.updated_at,
+          rm.received_date as created_at,
+          rm.manufacturer,
+          rm.purchase_date,
+          rm.category_id,
+          rm.receipt_number,
+          c.name as customer_name,
+          mc.name as category_name,
+          -- Sales fields (null for repair machines)
+          null as sold_by_user_id,
+          null as added_by_user_id,
+          rm.machine_condition,
+          null as sale_date,
+          rm.sale_price,
+          false as is_sale,
+          rm.purchased_at,
+          -- Sales person information (null for repair machines)
+          null as sold_by_name,
+          null as added_by_name,
+          -- Repair machine fields
+          rm.received_date,
+          rm.repair_status,
+          rm.condition_on_receipt,
+          rm.received_by_user_id,
+          received_user.name as received_by_name
+         FROM machines rm
+         LEFT JOIN customers c ON c.id = rm.customer_id
+         LEFT JOIN machine_categories mc ON rm.category_id = mc.id
+         LEFT JOIN users received_user ON rm.received_by_user_id = received_user.id
+         WHERE rm.id = $1`,
+        [req.params.id]
+      );
+    }
+
     if (!result.rows.length) return res.status(404).json({ status: 'fail', message: 'Machine not found' });
     res.json({ status: 'success', data: result.rows[0] });
   } catch (err) {

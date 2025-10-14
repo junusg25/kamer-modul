@@ -429,11 +429,16 @@ class ApiService {
 
   // Keep backward compatibility
   async updateMachine(id: string, machine: any) {
-    return this.updateSoldMachine(id, machine)
+    return this.request(`/machines/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(machine),
+    })
   }
 
   async deleteMachine(id: string) {
-    return this.deleteSoldMachine(id)
+    return this.request(`/machines/${id}`, {
+      method: 'DELETE',
+    })
   }
 
   // Inventory endpoints
