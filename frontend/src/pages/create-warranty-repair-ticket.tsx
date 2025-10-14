@@ -539,17 +539,24 @@ export default function CreateWarrantyRepairTicket() {
       }
       
       const repairResponse = await apiService.createMachine(repairMachineData) as any
-      const newRepairMachine = repairResponse.data
+      console.log('Warranty repair machine creation response:', repairResponse)
+      
+      const newRepairMachine = repairResponse.data || repairResponse
+      console.log('New warranty repair machine data:', newRepairMachine)
+      
+      if (!newRepairMachine || !newRepairMachine.id) {
+        throw new Error('Invalid response from server - missing machine ID')
+      }
       
       // Add to machines list
       const newMachine: Machine = {
         id: newRepairMachine.id,
         machine_id: newRepairMachine.id,
         customer_id: formData.selectedCustomer!.id,
-        manufacturer: newRepairMachine.manufacturer,
-        model_name: newRepairMachine.model_name,
+        manufacturer: newRepairMachine.manufacturer || newRepairMachine.name,
+        model_name: newRepairMachine.name || newRepairMachine.model_name,
         serial_number: newRepairMachine.serial_number,
-        purchase_date: newRepairMachine.received_date
+        purchase_date: newRepairMachine.received_date || newRepairMachine.purchase_date
       }
       
       setMachines(prev => [newMachine, ...prev])
