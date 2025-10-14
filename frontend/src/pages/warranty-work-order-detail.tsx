@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog'
 import { DeleteConfirmationDialog } from '../components/ui/delete-confirmation-dialog'
 import { CompletedItemAlertDialog } from '../components/ui/completed-item-alert-dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
+import { AttachmentsTab } from '../components/attachments/AttachmentsTab'
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
 import {
   Table,
@@ -718,7 +720,14 @@ export default function WarrantyWorkOrderDetail() {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <Tabs defaultValue="work-order" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="work-order">Work Order</TabsTrigger>
+            <TabsTrigger value="attachments">Attachments</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="work-order" className="space-y-4">
+            <div className="grid gap-6 lg:grid-cols-3">
           {/* Left Column - Customer & Machine Info */}
           <div className="space-y-6">
             {/* Customer Info */}
@@ -1218,7 +1227,16 @@ export default function WarrantyWorkOrderDetail() {
               </CardContent>
             </Card>
           </div>
-        </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="attachments" className="space-y-4">
+            <AttachmentsTab 
+              entityType="warranty_work_order" 
+              entityId={id} 
+            />
+          </TabsContent>
+        </Tabs>
 
         {/* Add Note Dialog */}
         <Dialog open={noteDialogOpen} onOpenChange={setNoteDialogOpen}>

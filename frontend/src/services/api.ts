@@ -441,6 +441,64 @@ class ApiService {
     })
   }
 
+  // Attachments API
+  async getAttachments(entityType: string, entityId: string) {
+    return this.request(`/attachments/${entityType}/${entityId}`)
+  }
+
+  async uploadAttachments(entityType: string, entityId: string, files: File[], description?: string) {
+    const formData = new FormData()
+    files.forEach(file => {
+      formData.append('files', file)
+    })
+    if (description) {
+      formData.append('description', description)
+    }
+
+    const token = localStorage.getItem('token')
+    return fetch(`${API_BASE_URL}/attachments/upload/${entityType}/${entityId}`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    }).then(async (response) => {
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Upload failed')
+      }
+      return response.json()
+    })
+  }
+
+  async downloadAttachment(id: string) {
+    const token = localStorage.getItem('token')
+    const response = await fetch(`${API_BASE_URL}/attachments/download/${id}`, {
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    })
+    
+    if (!response.ok) {
+      throw new Error('Download failed')
+    }
+    
+    return response.blob()
+  }
+
+  async deleteAttachment(id: string) {
+    return this.request(`/attachments/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async bulkDeleteAttachments(attachmentIds: string[]) {
+    return this.request('/attachments/bulk-delete', {
+      method: 'POST',
+      body: JSON.stringify({ attachmentIds }),
+    })
+  }
+
   // Inventory endpoints
   async getInventory(params?: { page?: number; limit?: number; search?: string; category?: string; supplier?: string; stock_status?: string }) {
     const queryParams = new URLSearchParams()

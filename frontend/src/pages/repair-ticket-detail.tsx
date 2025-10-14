@@ -61,6 +61,7 @@ import { useAuth } from '../contexts/auth-context'
 import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
+import { AttachmentsTab } from '../components/attachments/AttachmentsTab'
 import { DeleteConfirmationDialog } from '../components/ui/delete-confirmation-dialog'
 import { CompletedItemAlertDialog } from '../components/ui/completed-item-alert-dialog'
 import { formatDate } from '../lib/dateTime'
@@ -531,6 +532,7 @@ export default function RepairTicketDetail() {
             <TabsTrigger value="details">Ticket Details</TabsTrigger>
             <TabsTrigger value="customer">Customer Info</TabsTrigger>
             <TabsTrigger value="machine">Machine Info</TabsTrigger>
+            <TabsTrigger value="attachments">Attachments</TabsTrigger>
             <TabsTrigger value="conversion">Conversion</TabsTrigger>
           </TabsList>
 
@@ -774,6 +776,14 @@ export default function RepairTicketDetail() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Attachments Tab */}
+          <TabsContent value="attachments" className="space-y-4">
+            <AttachmentsTab 
+              entityType="repair_ticket" 
+              entityId={id} 
+            />
           </TabsContent>
 
           {/* Conversion Tab */}
