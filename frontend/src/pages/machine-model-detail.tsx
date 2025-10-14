@@ -4,6 +4,8 @@ import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { SmartSearch } from '@/components/ui/smart-search'
+import { Pagination } from '@/components/ui/pagination'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -31,7 +33,6 @@ import {
 import {
   ArrowLeft,
   Plus,
-  Search,
   MoreHorizontal,
   Edit,
   Trash2,
@@ -125,7 +126,11 @@ export default function MachineModelDetail() {
   const [model, setModel] = useState<MachineModel | null>(null)
   const [assignedMachines, setAssignedMachines] = useState<AssignedMachine[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState('')
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize] = useState(25)
   const [error, setError] = useState('')
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false)
   
@@ -230,10 +235,21 @@ export default function MachineModelDetail() {
   }
 
   const filteredMachines = assignedMachines.filter(machine =>
-    machine.serial_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    machine.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (machine.receipt_number && machine.receipt_number.toLowerCase().includes(searchTerm.toLowerCase()))
+    machine.serial_number.toLowerCase().includes(appliedSearchTerm.toLowerCase()) ||
+    machine.customer_name.toLowerCase().includes(appliedSearchTerm.toLowerCase()) ||
+    (machine.receipt_number && machine.receipt_number.toLowerCase().includes(appliedSearchTerm.toLowerCase()))
   )
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredMachines.length / pageSize)
+  const startIndex = (currentPage - 1) * pageSize
+  const endIndex = startIndex + pageSize
+  const paginatedMachines = filteredMachines.slice(startIndex, endIndex)
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [appliedSearchTerm])
 
   const totalRevenue = assignedMachines
     .filter(m => m.is_sale && m.sale_price)
@@ -284,6 +300,7 @@ export default function MachineModelDetail() {
       setEditingModel(null)
       setCategorySearch('')
       setManufacturerSearch('')
+      setAppliedSearchTerm('')
     } catch (err: any) {
       console.error('Error updating machine model:', err)
       toast.error(err.message || 'Failed to update machine model')
@@ -512,15 +529,21 @@ export default function MachineModelDetail() {
             <div className="flex items-center justify-between">
               <CardTitle>Assigned Machines</CardTitle>
               <div className="flex items-center space-x-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Search machines..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-80"
-                  />
-                </div>
+                <SmartSearch
+                  placeholder="Search by serial number, customer name, or receipt number..."
+                  value={appliedSearchTerm}
+                  onSearch={(term) => {
+                    setAppliedSearchTerm(term)
+                    setCurrentPage(1) // Reset to first page when searching
+                  }}
+                  onClear={() => {
+                    setAppliedSearchTerm('')
+                    setCurrentPage(1)
+                  }}
+                  debounceMs={300}
+                  className="w-80"
+                  disabled={isLoading}
+                />
               </div>
             </div>
           </CardHeader>
@@ -550,7 +573,7 @@ export default function MachineModelDetail() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredMachines.map((machine, index) => (
+                  paginatedMachines.map((machine, index) => (
                     <TableRow key={`machine-${machine.id}-${index}`} onClick={() => navigate(`/machines/${machine.assigned_machine_id}`)} className="cursor-pointer hover:bg-muted/50">
                       <TableCell className="font-medium">
                         <Button 
@@ -641,6 +664,20 @@ export default function MachineModelDetail() {
                 )}
               </TableBody>
             </Table>
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-6 py-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {startIndex + 1} to {Math.min(endIndex, filteredMachines.length)} of {filteredMachines.length} machines
+                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
 
