@@ -47,7 +47,7 @@ import {
   X,
   MoreHorizontal,
   ShoppingCart,
-  Tool
+  Settings
 } from 'lucide-react'
 import { useParams, useNavigate } from 'react-router-dom'
 import apiService from '../services/api'
@@ -506,7 +506,7 @@ export default function CustomerDetail() {
     } else {
       return (
         <Badge variant="default" className="bg-blue-100 text-blue-800 hover:bg-blue-200">
-          <Tool className="w-3 h-3 mr-1" />
+          <Settings className="w-3 h-3 mr-1" />
           Repair
         </Badge>
       )
@@ -517,7 +517,7 @@ export default function CustomerDetail() {
     if (machineType === 'sold') {
       return <ShoppingCart className="w-4 h-4 text-green-600" />
     } else {
-      return <Tool className="w-4 h-4 text-blue-600" />
+      return <Settings className="w-4 h-4 text-blue-600" />
     }
   }
 
@@ -813,7 +813,7 @@ export default function CustomerDetail() {
                         {machines.filter(m => m.machine_type === 'sold').length} Sold
                       </Badge>
                       <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                        <Tool className="w-3 h-3 mr-1" />
+                        <Settings className="w-3 h-3 mr-1" />
                         {machines.filter(m => m.machine_type === 'repair').length} Repair
                       </Badge>
                     </div>
