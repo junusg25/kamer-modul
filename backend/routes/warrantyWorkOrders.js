@@ -77,9 +77,30 @@ router.get('/by-inventory/:inventoryId', authenticateToken, async (req, res, nex
       FROM warranty_work_orders wwo
       INNER JOIN warranty_work_order_inventory wwoi ON wwo.id = wwoi.warranty_work_order_id
       LEFT JOIN customers c ON wwo.customer_id = c.id
-      LEFT JOIN sold_machines am ON wwo.machine_id = am.id
-      LEFT JOIN machine_serials ms ON am.serial_id = ms.id
-      LEFT JOIN machine_models mm ON ms.model_id = mm.id
+      LEFT JOIN (
+        SELECT 
+          'sold' as machine_type,
+          sm.id,
+          sm.customer_id,
+          ms.serial_number,
+          mm.name as model_name,
+          mm.manufacturer,
+          mm.catalogue_number
+        FROM sold_machines sm
+        INNER JOIN machine_serials ms ON sm.serial_id = ms.id
+        INNER JOIN machine_models mm ON ms.model_id = mm.id
+        UNION ALL
+        SELECT 
+          'repair' as machine_type,
+          rm.id,
+          rm.customer_id,
+          rm.serial_number,
+          rm.model_name,
+          rm.manufacturer,
+          rm.catalogue_number
+        FROM machines rm
+        LEFT JOIN machine_models mm ON rm.model_name = mm.name
+      ) am ON wwo.machine_id = am.id
       LEFT JOIN users u ON wwo.technician_id = u.id
       WHERE wwoi.inventory_id = $1
       ORDER BY wwo.created_at DESC
@@ -177,9 +198,30 @@ router.get('/', authenticateToken, async (req, res, next) => {
              u.name as technician_name
       FROM warranty_work_orders wwo
       LEFT JOIN customers c ON wwo.customer_id = c.id
-      LEFT JOIN sold_machines am ON wwo.machine_id = am.id
-      LEFT JOIN machine_serials ms ON am.serial_id = ms.id
-      LEFT JOIN machine_models mm ON ms.model_id = mm.id
+      LEFT JOIN (
+        SELECT 
+          'sold' as machine_type,
+          sm.id,
+          sm.customer_id,
+          ms.serial_number,
+          mm.name as model_name,
+          mm.manufacturer,
+          mm.catalogue_number
+        FROM sold_machines sm
+        INNER JOIN machine_serials ms ON sm.serial_id = ms.id
+        INNER JOIN machine_models mm ON ms.model_id = mm.id
+        UNION ALL
+        SELECT 
+          'repair' as machine_type,
+          rm.id,
+          rm.customer_id,
+          rm.serial_number,
+          rm.model_name,
+          rm.manufacturer,
+          rm.catalogue_number
+        FROM machines rm
+        LEFT JOIN machine_models mm ON rm.model_name = mm.name
+      ) am ON wwo.machine_id = am.id
       LEFT JOIN users u ON wwo.technician_id = u.id
       ${whereClause}
       ORDER BY wwo.created_at DESC
@@ -190,9 +232,30 @@ router.get('/', authenticateToken, async (req, res, next) => {
       SELECT COUNT(*) 
       FROM warranty_work_orders wwo
       LEFT JOIN customers c ON wwo.customer_id = c.id
-      LEFT JOIN sold_machines am ON wwo.machine_id = am.id
-      LEFT JOIN machine_serials ms ON am.serial_id = ms.id
-      LEFT JOIN machine_models mm ON ms.model_id = mm.id
+      LEFT JOIN (
+        SELECT 
+          'sold' as machine_type,
+          sm.id,
+          sm.customer_id,
+          ms.serial_number,
+          mm.name as model_name,
+          mm.manufacturer,
+          mm.catalogue_number
+        FROM sold_machines sm
+        INNER JOIN machine_serials ms ON sm.serial_id = ms.id
+        INNER JOIN machine_models mm ON ms.model_id = mm.id
+        UNION ALL
+        SELECT 
+          'repair' as machine_type,
+          rm.id,
+          rm.customer_id,
+          rm.serial_number,
+          rm.model_name,
+          rm.manufacturer,
+          rm.catalogue_number
+        FROM machines rm
+        LEFT JOIN machine_models mm ON rm.model_name = mm.name
+      ) am ON wwo.machine_id = am.id
       ${whereClause}
     `, queryParams);
 

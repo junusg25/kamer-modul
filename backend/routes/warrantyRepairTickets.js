@@ -252,14 +252,7 @@ router.post('/', [
 
       // Handle machine creation if needed
       if (!finalMachineId) {
-        if (!machine_serial_number) {
-          await client.query('ROLLBACK')
-          client.release()
-          return res.status(400).json({
-            status: 'fail',
-            message: 'machine_serial_number is required when creating new machine'
-          })
-        }
+        // Serial number is optional for warranty repair machines
 
         // Convert empty strings to null for integer fields
         const categoryId = machine_category_id && machine_category_id !== '' ? parseInt(machine_category_id) : null
@@ -328,60 +321,85 @@ router.post('/', [
           })
         }
 
-        // Check if serial number already exists
-        const existingSerialResult = await client.query(
-          `SELECT id FROM machine_serials WHERE serial_number = $1`,
-          [machine_serial_number]
+        // For warranty repair tickets, create repair machines in the machines table
+        // (same logic as regular repair tickets but with warranty_covered = true)
+        
+        // Get machine model data if manufacturer is not provided
+        let finalManufacturer = machine_manufacturer
+        let finalCatalogueNumber = machine_catalogue_number
+        let finalCategoryId = categoryId
+        
+        if (!finalManufacturer) {
+          const modelQuery = await client.query(
+            'SELECT manufacturer, catalogue_number, category_id FROM machine_models WHERE name = $1',
+            [machine_model_name]
+          )
+          
+          if (modelQuery.rows.length === 0) {
+            await client.query('ROLLBACK')
+            client.release()
+            return res.status(400).json({
+              status: 'fail',
+              message: 'Machine model not found. Please create the machine model first.'
+            })
+          }
+          
+          const modelData = modelQuery.rows[0]
+          finalManufacturer = modelData.manufacturer
+          finalCatalogueNumber = finalCatalogueNumber || modelData.catalogue_number
+          finalCategoryId = finalCategoryId || modelData.category_id
+        }
+
+        // Create repair machine in machines table
+        const repairMachineResult = await client.query(
+          `INSERT INTO machines (customer_id, name, model_name, catalogue_number, serial_number, description, 
+                               manufacturer, bought_at, category_id, receipt_number, purchase_date, received_date, 
+                               repair_status, condition_on_receipt, warranty_covered, received_by_user_id, 
+                               purchased_at, warranty_expiry_date, sale_price, machine_condition) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) 
+           RETURNING id`,
+          [
+            finalCustomerId,
+            machine_model_name, // name field
+            machine_model_name, // model_name field
+            finalCatalogueNumber || null,
+            machine_serial_number || null, // Optional serial number
+            machine_description || null,
+            finalManufacturer,
+            machine_bought_at || null,
+            finalCategoryId || null,
+            machine_receipt_number || null,
+            machine_purchase_date || null,
+            new Date().toISOString().split('T')[0], // received_date (today)
+            'in_repair', // repair_status
+            'unknown', // condition_on_receipt
+            true, // warranty_covered (true for warranty repair tickets)
+            submitted_by, // received_by_user_id
+            machine_bought_at || null, // purchased_at
+            null, // warranty_expiry_date (will be calculated later if needed)
+            null, // sale_price
+            'unknown' // machine_condition
+          ]
         )
         
-        if (existingSerialResult.rows.length > 0) {
+        finalMachineId = repairMachineResult.rows[0].id
+      } else {
+        // Validate that the existing machine_id exists in either sold_machines or machines tables
+        const machineCheck = await client.query(
+          `SELECT id FROM sold_machines WHERE id = $1
+           UNION ALL
+           SELECT id FROM machines WHERE id = $1`,
+          [finalMachineId]
+        )
+        
+        if (machineCheck.rows.length === 0) {
           await client.query('ROLLBACK')
           client.release()
           return res.status(400).json({
             status: 'fail',
-            message: 'Serial number already exists'
+            message: 'Invalid machine_id provided'
           })
         }
-
-        // Create machine serial
-        const serialResult = await client.query(
-          `INSERT INTO machine_serials (
-            model_id, serial_number
-          ) VALUES ($1, $2)
-          RETURNING id`,
-          [modelId, machine_serial_number]
-        )
-        
-        const serialId = serialResult.rows[0].id
-
-        // Calculate warranty expiry date
-        let warrantyExpiryDate = null
-        if (machine_purchase_date) {
-          const warrantyResult = await client.query(
-            `SELECT calculate_warranty_expiry($1, $2) as expiry_date`,
-            [machine_purchase_date, modelId]
-          )
-          warrantyExpiryDate = warrantyResult.rows[0].expiry_date
-        }
-
-        // Assign machine to customer
-        const assignedMachineResult = await client.query(
-          `INSERT INTO sold_machines (
-            serial_id, customer_id, purchase_date, warranty_expiry_date, warranty_active, description, receipt_number
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-          RETURNING id`,
-          [
-            serialId,
-            finalCustomerId,
-            machine_purchase_date || null,
-            warrantyExpiryDate,
-            true, // Default to warranty active for warranty tickets
-            machine_bought_at || null,
-            machine_receipt_number || null
-          ]
-        )
-        
-        finalMachineId = assignedMachineResult.rows[0].id
       }
 
       if (!finalCustomerId || !finalMachineId) {
