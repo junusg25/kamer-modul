@@ -749,12 +749,15 @@ router.post('/:id/convert', authenticateToken, async (req, res, next) => {
 
       // Get the warranty repair ticket directly from the table to avoid view issues
       const ticketQuery = `
-        SELECT wrt.*, c.name as customer_name, mm.manufacturer, mm.name as model_name
+        SELECT wrt.*, c.name as customer_name, 
+               COALESCE(sm.manufacturer, rm.manufacturer) as manufacturer,
+               COALESCE(mm_sm.name, rm.model_name) as model_name
         FROM warranty_repair_tickets wrt
         LEFT JOIN customers c ON wrt.customer_id = c.id
-        LEFT JOIN sold_machines am ON wrt.machine_id = am.id
-        LEFT JOIN machine_serials ms ON am.serial_id = ms.id
-        LEFT JOIN machine_models mm ON ms.model_id = mm.id
+        LEFT JOIN sold_machines sm ON wrt.machine_id = sm.id
+        LEFT JOIN machine_serials ms ON sm.serial_id = ms.id
+        LEFT JOIN machine_models mm_sm ON ms.model_id = mm_sm.id
+        LEFT JOIN machines rm ON wrt.machine_id = rm.id
         WHERE wrt.id = $1
       `;
       const ticketResult = await client.query(ticketQuery, [id]);
