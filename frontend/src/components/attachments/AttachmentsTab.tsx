@@ -220,11 +220,11 @@ export function AttachmentsTab({ entityType, entityId }: AttachmentsTabProps) {
             </div>
           )}
 
-          <Button 
-            onClick={handleUpload} 
-            disabled={uploading || selectedFiles.length === 0}
-            className="w-full"
-          >
+              <Button
+                onClick={handleUpload}
+                disabled={uploading || selectedFiles.length === 0}
+                className="w-auto px-4"
+              >
             {uploading ? 'Uploading...' : `Upload ${selectedFiles.length} File(s)`}
           </Button>
         </CardContent>
