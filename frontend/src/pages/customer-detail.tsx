@@ -431,7 +431,7 @@ export default function CustomerDetail() {
     })
   }
 
-  const getWarrantyStatus = (warrantyActive: boolean, warrantyExpiryDate?: string) => {
+  const getWarrantyStatus = (warrantyActive: boolean, warrantyExpiryDate?: string, machineType?: string) => {
     if (!warrantyExpiryDate) {
       return <Badge variant="secondary">No Warranty</Badge>
     }
@@ -440,6 +440,18 @@ export default function CustomerDetail() {
     const today = new Date()
     const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 
+    // For repair machines, ignore warranty_active flag and only check the expiry date
+    if (machineType === 'repair') {
+      if (daysUntilExpiry < 0) {
+        return <Badge variant="destructive">Expired</Badge>
+      } else if (daysUntilExpiry <= 90) {
+        return <Badge variant="outline" className="border-orange-300 text-orange-700">Expires Soon</Badge>
+      } else {
+        return <Badge variant="outline" className="border-green-300 text-green-700">Active</Badge>
+      }
+    }
+
+    // For sold machines, check both warranty_active flag and expiry date
     if (!warrantyActive || daysUntilExpiry < 0) {
       return <Badge variant="destructive">Expired</Badge>
     } else if (daysUntilExpiry <= 90) {
@@ -868,11 +880,11 @@ export default function CustomerDetail() {
                               : (machine.received_date ? formatDate(machine.received_date) : 'N/A')
                             }
                           </TableCell>
-                          <TableCell>{getWarrantyStatus(machine.warranty_active, machine.warranty_expiry_date)}</TableCell>
+                          <TableCell>{getWarrantyStatus(machine.warranty_active, machine.warranty_expiry_date, machine.machine_type)}</TableCell>
                           <TableCell>
                             {machine.machine_type === 'sold' 
                               ? (machine.sale_price ? formatCurrency(machine.sale_price) : 'N/A')
-                              : (machine.estimated_repair_cost ? formatCurrency(machine.estimated_repair_cost) : 'N/A')
+                              : (machine.sale_price ? formatCurrency(machine.sale_price) : 'N/A')
                             }
                           </TableCell>
                           <TableCell className="text-right">
