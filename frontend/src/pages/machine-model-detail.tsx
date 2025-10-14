@@ -212,15 +212,33 @@ export default function MachineModelDetail() {
     }
   }
 
-  const getWarrantyStatus = (warrantyActive: boolean, warrantyExpiry?: string) => {
+  const getWarrantyStatus = (warrantyActive: boolean, warrantyExpiry?: string, machineType?: string) => {
     if (!warrantyExpiry) {
       return <Badge variant="outline">No Warranty</Badge>
     }
-    
-    if (warrantyActive) {
-      return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>
-    } else {
+
+    const expiryDate = new Date(warrantyExpiry)
+    const today = new Date()
+    const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+
+    // For repair machines, ignore warranty_active flag and only check the expiry date
+    if (machineType === 'repair') {
+      if (daysUntilExpiry < 0) {
+        return <Badge variant="destructive">Expired</Badge>
+      } else if (daysUntilExpiry <= 90) {
+        return <Badge variant="outline" className="border-orange-300 text-orange-700">Expires Soon</Badge>
+      } else {
+        return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>
+      }
+    }
+
+    // For sold machines, check both warranty_active flag and expiry date
+    if (!warrantyActive || daysUntilExpiry < 0) {
       return <Badge variant="destructive">Expired</Badge>
+    } else if (daysUntilExpiry <= 90) {
+      return <Badge variant="outline" className="border-orange-300 text-orange-700">Expires Soon</Badge>
+    } else {
+      return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>
     }
   }
 
@@ -604,7 +622,7 @@ export default function MachineModelDetail() {
                         {formatDate(machine.purchase_date)}
                       </TableCell>
                       <TableCell>
-                        {getWarrantyStatus(machine.warranty_active, machine.warranty_expiry_date)}
+                        {getWarrantyStatus(machine.warranty_active, machine.warranty_expiry_date, machine.machine_type)}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {machine.sale_price ? formatCurrency(machine.sale_price) : 'N/A'}
