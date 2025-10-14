@@ -33,6 +33,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { apiService } from '../../services/api'
+import { DeleteConfirmationDialog } from '../ui/delete-confirmation-dialog'
 
 interface Attachment {
   id: number
@@ -57,6 +58,8 @@ export function AttachmentsTab({ entityType, entityId }: AttachmentsTabProps) {
   const [uploading, setUploading] = useState(false)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [description, setDescription] = useState('')
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [attachmentToDelete, setAttachmentToDelete] = useState<Attachment | null>(null)
 
   useEffect(() => {
     loadAttachments()
@@ -131,18 +134,24 @@ export function AttachmentsTab({ entityType, entityId }: AttachmentsTabProps) {
     }
   }
 
-  const handleDelete = async (attachment: Attachment) => {
-    if (!confirm(`Are you sure you want to delete "${attachment.original_name}"?`)) {
-      return
-    }
+  const handleDeleteClick = (attachment: Attachment) => {
+    setAttachmentToDelete(attachment)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!attachmentToDelete) return
 
     try {
-      await apiService.deleteAttachment(attachment.id.toString())
+      await apiService.deleteAttachment(attachmentToDelete.id.toString())
       toast.success('File deleted successfully')
       loadAttachments()
     } catch (error) {
       console.error('Error deleting file:', error)
       toast.error('Failed to delete file')
+    } finally {
+      setAttachmentToDelete(null)
+      setDeleteDialogOpen(false)
     }
   }
 
@@ -306,7 +315,7 @@ export function AttachmentsTab({ entityType, entityId }: AttachmentsTabProps) {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
-                            onClick={() => handleDelete(attachment)}
+                            onClick={() => handleDeleteClick(attachment)}
                             className="text-red-600 focus:text-red-600"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
@@ -322,6 +331,15 @@ export function AttachmentsTab({ entityType, entityId }: AttachmentsTabProps) {
           )}
         </CardContent>
       </Card>
+
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Attachment"
+        itemName={attachmentToDelete?.original_name || ''}
+        itemType="attachment"
+      />
     </div>
   )
 }
