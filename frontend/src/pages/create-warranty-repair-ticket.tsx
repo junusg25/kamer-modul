@@ -527,19 +527,19 @@ export default function CreateWarrantyRepairTicket() {
       const repairMachineData = {
         customer_id: parseInt(formData.selectedCustomer!.id),
         serial_number: formData.newMachine.serial_number || null, // Optional for repair machines
-        name: machineModels.find(m => m.id === formData.newMachine.model_id)?.name, // Machine model name - backend will get other data from machine_models table
+        model_name: machineModels.find(m => m.id === formData.newMachine.model_id)?.name, // Machine model name - backend will get other data from machine_models table
         description: formData.newMachine.description,
         received_date: new Date().toISOString().split('T')[0], // Today's date
         repair_status: 'in_repair', // Use correct column name
-        condition_on_receipt: 'unknown',
+        condition_on_receipt: formData.newMachine.machine_condition || 'unknown', // Use selected condition from form
         warranty_covered: true, // Warranty repair tickets assume warranty coverage
         received_by_user_id: user?.id,
-        // Add these fields as null to prevent fallback to sold_machines data
-        receipt_number: null,
-        purchased_at: null,
-        warranty_expiry_date: null,
-        sale_price: null,
-        machine_condition: null
+        // Add these fields from form data
+        receipt_number: formData.newMachine.receipt_number || null,
+        purchased_at: formData.newMachine.purchased_at || null,
+        warranty_expiry_date: formData.newMachine.warranty_expiry_date || null,
+        sale_price: formData.newMachine.sale_price || null,
+        machine_condition: formData.newMachine.machine_condition || 'unknown' // Use selected condition from form
       }
       
       const repairResponse = await apiService.createMachine(repairMachineData) as any

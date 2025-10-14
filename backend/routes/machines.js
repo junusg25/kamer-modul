@@ -1124,8 +1124,8 @@ router.get('/by-customer/:id', async (req, res, next) => {
        SELECT 
         'repair' as machine_type,
         rm.id,
-        mm.name,
-        mm.name as model_name,
+        rm.model_name as name,
+        rm.model_name,
         mm.catalogue_number,
         rm.serial_number,
         rm.warranty_expiry_date,
@@ -1152,7 +1152,7 @@ router.get('/by-customer/:id', async (req, res, next) => {
         rm.received_by_user_id,
         received_user.name as received_by_name
        FROM machines rm
-       LEFT JOIN machine_models mm ON rm.name = mm.name  -- Join with machine_models to get model data
+       LEFT JOIN machine_models mm ON rm.model_name = mm.name  -- Join with machine_models to get model data
        LEFT JOIN machine_categories mc ON mm.category_id = mc.id  -- Get category from machine_models
        LEFT JOIN users received_user ON rm.received_by_user_id = received_user.id
        WHERE rm.customer_id = $1
@@ -1223,8 +1223,8 @@ router.get('/:id', async (req, res, next) => {
           'repair' as machine_type,
           rm.id,
           rm.customer_id,
-          mm.name,
-          mm.name as model_name,
+          rm.model_name as name,
+          rm.model_name,
           mm.catalogue_number,
           rm.serial_number,
           rm.description,
@@ -1256,7 +1256,7 @@ router.get('/:id', async (req, res, next) => {
           rm.received_by_user_id,
           received_user.name as received_by_name
          FROM machines rm
-         LEFT JOIN machine_models mm ON rm.name = mm.name  -- Join with machine_models to get model data
+         LEFT JOIN machine_models mm ON rm.model_name = mm.name  -- Join with machine_models to get model data
          LEFT JOIN customers c ON c.id = rm.customer_id
          LEFT JOIN machine_categories mc ON mm.category_id = mc.id  -- Get category from machine_models
          LEFT JOIN users received_user ON rm.received_by_user_id = received_user.id
@@ -1275,11 +1275,11 @@ router.get('/:id', async (req, res, next) => {
 // CREATE machine
 router.post('/', async (req, res, next) => {
   try {
-    const { customer_id, name, model_name, catalogue_number, serial_number, description, manufacturer, bought_at, category_id, receipt_number, purchase_date, received_date, repair_status, condition_on_receipt, warranty_covered, received_by_user_id, purchased_at, warranty_expiry_date, sale_price, machine_condition } = req.body;
+    const { customer_id, model_name, catalogue_number, serial_number, description, manufacturer, bought_at, category_id, receipt_number, purchase_date, received_date, repair_status, condition_on_receipt, warranty_covered, received_by_user_id, purchased_at, warranty_expiry_date, sale_price, machine_condition } = req.body;
     
-    // For repair machine creation, only name is required (manufacturer will be fetched from machine_models)
-    if (!name) {
-      return res.status(400).json({ status: 'fail', message: 'name is required' });
+    // For repair machine creation, only model_name is required (manufacturer will be fetched from machine_models)
+    if (!model_name) {
+      return res.status(400).json({ status: 'fail', message: 'model_name is required' });
     }
     
     // Get machine model data if manufacturer is not provided
@@ -1290,7 +1290,7 @@ router.post('/', async (req, res, next) => {
     if (!finalManufacturer) {
       const modelQuery = await db.query(
         'SELECT manufacturer, catalogue_number, category_id FROM machine_models WHERE name = $1',
-        [name]
+        [model_name]
       );
       
       if (modelQuery.rows.length === 0) {
@@ -1304,16 +1304,16 @@ router.post('/', async (req, res, next) => {
     }
     
     const result = await db.query(
-      `INSERT INTO machines (customer_id, name, model_name, catalogue_number, serial_number, description, 
+      `INSERT INTO machines (customer_id, model_name, catalogue_number, serial_number, description, 
                            manufacturer, bought_at, category_id, receipt_number, purchase_date, received_date, 
                            repair_status, condition_on_receipt, warranty_covered, received_by_user_id, 
                            purchased_at, warranty_expiry_date, sale_price, machine_condition) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) 
-       RETURNING id, customer_id, name, model_name, catalogue_number, serial_number, description, 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) 
+       RETURNING id, customer_id, model_name, catalogue_number, serial_number, description, 
                 warranty_expiry_date, warranty_active, updated_at, manufacturer, bought_at, category_id, 
                 receipt_number, purchase_date, received_date, repair_status, condition_on_receipt, 
                 warranty_covered, received_by_user_id, purchased_at, sale_price, machine_condition`,
-      [customer_id || null, name, model_name || null, finalCatalogueNumber || null, serial_number || null, description || null, 
+      [customer_id || null, model_name, finalCatalogueNumber || null, serial_number || null, description || null, 
        finalManufacturer, bought_at || null, finalCategoryId || null, receipt_number || null, purchase_date || null,
        received_date || null, repair_status || null, condition_on_receipt || null, warranty_covered || null, 
        received_by_user_id || null, purchased_at || null, warranty_expiry_date || null, sale_price || null, machine_condition || null]
