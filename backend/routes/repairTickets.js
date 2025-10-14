@@ -203,10 +203,12 @@ router.post('/', authenticateToken, [
       let finalCustomerId = customer_id
       let finalMachineId = machine_id
 
-      // Validate machine_id if provided
+      // Validate machine_id if provided (check both sold_machines and machines tables)
       if (finalMachineId) {
         const machineCheck = await client.query(
-          'SELECT id FROM sold_machines WHERE id = $1',
+          `SELECT id FROM sold_machines WHERE id = $1
+           UNION ALL
+           SELECT id FROM machines WHERE id = $1`,
           [finalMachineId]
         )
         if (machineCheck.rows.length === 0) {
