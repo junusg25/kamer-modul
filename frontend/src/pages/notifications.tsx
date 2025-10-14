@@ -640,7 +640,7 @@ export default function NotificationsPage() {
                 <Bell className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No notifications found</h3>
                 <p className="text-sm text-muted-foreground">
-                  {searchTerm || typeFilter !== 'all' || statusFilter !== 'all'
+                  {searchTerm || activeTab !== 'all'
                     ? 'Try adjusting your filters to see more notifications.'
                     : 'You\'ll see updates about your work here when they arrive.'}
                 </p>
