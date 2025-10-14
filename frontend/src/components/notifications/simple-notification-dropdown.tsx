@@ -14,7 +14,15 @@ import {
   AlertCircle,
   CheckCircle,
   Info,
-  AlertTriangle
+  AlertTriangle,
+  Wrench,
+  FileText,
+  User,
+  Package,
+  Archive,
+  Settings,
+  MessageSquare,
+  XCircle
 } from 'lucide-react'
 import { useNotifications } from '@/contexts/notifications-context'
 import { cn } from '@/lib/utils'
@@ -24,45 +32,41 @@ const getNotificationIcon = (type: string) => {
   switch (type) {
     case 'work_order':
     case 'warranty_work_order':
-      return <CheckCircle className="h-4 w-4 text-blue-500" />
+      return <Wrench className="h-4 w-4 text-slate-600" />
     case 'repair_ticket':
     case 'warranty_repair_ticket':
-      return <AlertCircle className="h-4 w-4 text-orange-500" />
+      return <FileText className="h-4 w-4 text-slate-600" />
     case 'customer':
-      return <Info className="h-4 w-4 text-green-500" />
+      return <User className="h-4 w-4 text-slate-600" />
     case 'machine':
-      return <AlertTriangle className="h-4 w-4 text-purple-500" />
+      return <Package className="h-4 w-4 text-slate-600" />
     case 'inventory':
-      return <AlertTriangle className="h-4 w-4 text-red-500" />
+      return <Archive className="h-4 w-4 text-slate-600" />
     case 'system':
-      return <Info className="h-4 w-4 text-muted-foreground" />
+      return <Settings className="h-4 w-4 text-slate-600" />
     case 'feedback':
-      return <Bell className="h-4 w-4 text-blue-500" />
+      return <MessageSquare className="h-4 w-4 text-slate-600" />
+    case 'success':
+      return <CheckCircle className="h-4 w-4 text-emerald-600" />
+    case 'warning':
+      return <AlertTriangle className="h-4 w-4 text-amber-600" />
+    case 'error':
+      return <XCircle className="h-4 w-4 text-red-600" />
     default:
-      return <Bell className="h-4 w-4 text-muted-foreground" />
+      return <Bell className="h-4 w-4 text-slate-600" />
   }
 }
 
 const getNotificationColor = (type: string) => {
   switch (type) {
-    case 'work_order':
-    case 'warranty_work_order':
-      return 'border-l-blue-500 bg-blue-50 dark:bg-blue-950 dark:border-l-blue-400'
-    case 'repair_ticket':
-    case 'warranty_repair_ticket':
-      return 'border-l-orange-500 bg-orange-50 dark:bg-orange-950 dark:border-l-orange-400'
-    case 'customer':
-      return 'border-l-green-500 bg-green-50 dark:bg-green-950 dark:border-l-green-400'
-    case 'machine':
-      return 'border-l-purple-500 bg-purple-50 dark:bg-purple-950 dark:border-l-purple-400'
-    case 'inventory':
+    case 'success':
+      return 'border-l-emerald-500 bg-emerald-50 dark:bg-emerald-950 dark:border-l-emerald-400'
+    case 'warning':
+      return 'border-l-amber-500 bg-amber-50 dark:bg-amber-950 dark:border-l-amber-400'
+    case 'error':
       return 'border-l-red-500 bg-red-50 dark:bg-red-950 dark:border-l-red-400'
-    case 'system':
-      return 'border-l-muted-foreground bg-muted/50 dark:bg-muted/20'
-    case 'feedback':
-      return 'border-l-blue-500 bg-blue-50 dark:bg-blue-950 dark:border-l-blue-400'
     default:
-      return 'border-l-muted-foreground bg-muted/50 dark:bg-muted/20'
+      return 'border-l-slate-200 bg-slate-50 dark:bg-slate-900 dark:border-l-slate-700'
   }
 }
 
@@ -223,9 +227,9 @@ export function SimpleNotificationDropdown() {
                   <div 
                     key={notification.id} 
                     className={cn(
-                      "p-4 hover:bg-muted/50 cursor-pointer transition-all duration-150 border-l-4",
+                      "p-4 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-all duration-150 border-l-4",
                       getNotificationColor(notification.type),
-                      !notification.is_read && "bg-blue-50/50 dark:bg-blue-950/50"
+                      !notification.is_read && "bg-slate-50/50 dark:bg-slate-800/50"
                     )}
                     onClick={() => handleNotificationClick(notification)}
                   >
@@ -252,7 +256,7 @@ export function SimpleNotificationDropdown() {
                                 {formatTimeAgo(notification.created_at)}
                               </span>
                               {!notification.is_read && (
-                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                               )}
                             </div>
                           </div>

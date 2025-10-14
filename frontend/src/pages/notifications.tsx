@@ -28,7 +28,13 @@ import {
   Settings,
   Archive,
   Star,
-  Check
+  Check,
+  Wrench,
+  FileText,
+  User,
+  Package,
+  MessageSquare,
+  XCircle
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -41,28 +47,28 @@ const getNotificationIcon = (type: string) => {
   switch (type) {
     case 'work_order':
     case 'warranty_work_order':
-      return '🔧'
+      return <Wrench className="h-5 w-5 text-slate-600" />
     case 'repair_ticket':
     case 'warranty_repair_ticket':
-      return '🎫'
+      return <FileText className="h-5 w-5 text-slate-600" />
     case 'customer':
-      return '👤'
+      return <User className="h-5 w-5 text-slate-600" />
     case 'machine':
-      return '⚙️'
+      return <Package className="h-5 w-5 text-slate-600" />
     case 'inventory':
-      return '📦'
+      return <Archive className="h-5 w-5 text-slate-600" />
     case 'system':
-      return '⚙️'
+      return <Settings className="h-5 w-5 text-slate-600" />
     case 'feedback':
-      return '💬'
+      return <MessageSquare className="h-5 w-5 text-slate-600" />
     case 'success':
-      return '✅'
+      return <CheckCircle className="h-5 w-5 text-emerald-600" />
     case 'warning':
-      return '⚠️'
+      return <AlertTriangle className="h-5 w-5 text-amber-600" />
     case 'error':
-      return '❌'
+      return <XCircle className="h-5 w-5 text-red-600" />
     default:
-      return 'ℹ️'
+      return <Bell className="h-5 w-5 text-slate-600" />
   }
 }
 
@@ -82,25 +88,13 @@ const getNotificationTypeIcon = (type: string) => {
 const getNotificationTypeColor = (type: string) => {
   switch (type) {
     case 'success':
-      return 'bg-green-100 text-green-800 border-green-200'
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200'
     case 'warning':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      return 'bg-amber-50 text-amber-700 border-amber-200'
     case 'error':
-      return 'bg-red-100 text-red-800 border-red-200'
-    case 'work_order':
-    case 'warranty_work_order':
-      return 'bg-blue-100 text-blue-800 border-blue-200'
-    case 'repair_ticket':
-    case 'warranty_repair_ticket':
-      return 'bg-purple-100 text-purple-800 border-purple-200'
-    case 'customer':
-      return 'bg-indigo-100 text-indigo-800 border-indigo-200'
-    case 'machine':
-      return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700'
-    case 'inventory':
-      return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:text-orange-200 dark:border-orange-800'
+      return 'bg-red-50 text-red-700 border-red-200'
     default:
-      return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700'
+      return 'bg-slate-50 text-slate-700 border-slate-200'
   }
 }
 
