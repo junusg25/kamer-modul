@@ -301,7 +301,7 @@ router.get('/models/:modelId', async (req, res, next) => {
         COUNT(ms.id) as total_serials,
         (SELECT COUNT(*) FROM sold_machines sm INNER JOIN machine_serials ms ON sm.serial_id = ms.id WHERE ms.model_id = mm.id) + 
         (SELECT COUNT(*) FROM machines rm WHERE rm.model_name = mm.name) as total_assigned,
-        COUNT(CASE WHEN am.id IS NULL THEN 1 END) as unassigned_serials,
+        (SELECT COUNT(*) FROM machine_serials ms2 WHERE ms2.model_id = mm.id AND NOT EXISTS (SELECT 1 FROM sold_machines sm2 WHERE sm2.serial_id = ms2.id)) as unassigned_serials,
         (SELECT COUNT(*) FROM sold_machines sm INNER JOIN machine_serials ms ON sm.serial_id = ms.id WHERE ms.model_id = mm.id AND sm.warranty_active = true) + 
         (SELECT COUNT(*) FROM machines rm WHERE rm.model_name = mm.name AND rm.warranty_covered = true) as active_warranty,
         (SELECT COUNT(*) FROM sold_machines sm INNER JOIN machine_serials ms ON sm.serial_id = ms.id WHERE ms.model_id = mm.id AND (sm.warranty_active = false OR sm.warranty_expiry_date < CURRENT_DATE)) + 
