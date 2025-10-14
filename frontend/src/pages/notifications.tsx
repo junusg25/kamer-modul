@@ -215,7 +215,7 @@ function NotificationItem({
   )
 }
 
-export function NotificationsPage() {
+export default function NotificationsPage() {
   const navigate = useNavigate()
   const { 
     notifications, 
