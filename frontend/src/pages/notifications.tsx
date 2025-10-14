@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useNotifications, type Notification } from '@/contexts/notifications-context'
 import {
   Bell,
@@ -134,9 +135,16 @@ function NotificationItem({
     <div
       className={cn(
         "flex items-start gap-3 p-4 border rounded-xl transition-all duration-200",
-        "hover:shadow-md cursor-pointer group",
-        !notification.is_read && "bg-blue-50/50 border-blue-200 shadow-sm",
-        isSelected && "bg-blue-100 border-blue-300 shadow-md"
+        "hover:shadow-md cursor-pointer group relative",
+        // Enhanced unread styling
+        !notification.is_read && [
+          "bg-blue-50 dark:bg-blue-950/30 border-l-4 border-l-blue-500 shadow-sm",
+          "ring-1 ring-blue-100 dark:ring-blue-900/50"
+        ],
+        // Selected state
+        isSelected && "bg-blue-100 dark:bg-blue-900/50 border-blue-300 dark:border-blue-700 shadow-md",
+        // Read state
+        notification.is_read && "bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
       )}
       onClick={handleClick}
     >
@@ -162,15 +170,27 @@ function NotificationItem({
             <div className="flex items-center gap-2 mb-1">
               <p className={cn(
                 "text-sm font-semibold",
-                !notification.is_read ? "text-foreground" : "text-muted-foreground"
+                !notification.is_read 
+                  ? "text-slate-900 dark:text-slate-100 font-bold" 
+                  : "text-slate-700 dark:text-slate-300"
               )}>
                 {notification.title}
               </p>
               {!notification.is_read && (
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 px-2 py-0.5 rounded-full">
+                    New
+                  </span>
+                </div>
               )}
             </div>
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+            <p className={cn(
+              "text-sm line-clamp-2 mb-2",
+              !notification.is_read 
+                ? "text-slate-700 dark:text-slate-200 font-medium" 
+                : "text-muted-foreground"
+            )}>
               {notification.message}
             </p>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -196,10 +216,10 @@ function NotificationItem({
                   e.stopPropagation()
                   onMarkAsRead(notification.id)
                 }}
-                className="h-8 w-8 p-0 hover:bg-blue-100"
+                className="h-8 w-8 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/50 hover:text-blue-700 dark:hover:text-blue-300"
                 title="Mark as read"
               >
-                <Check className="h-4 w-4 text-blue-600" />
+                <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </Button>
             )}
             <DropdownMenu>
@@ -248,25 +268,70 @@ export default function NotificationsPage() {
   } = useNotifications()
   
   const [searchTerm, setSearchTerm] = useState('')
-  const [typeFilter, setTypeFilter] = useState<string>('all')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [activeTab, setActiveTab] = useState<string>('all')
   const [selectedNotifications, setSelectedNotifications] = useState<Set<number>>(new Set())
   const [currentPage, setCurrentPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
 
-  // Filter notifications
-  const filteredNotifications = notifications.filter(notification => {
-    const matchesSearch = !searchTerm || 
-      notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      notification.message.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesType = typeFilter === 'all' || notification.type === typeFilter
-    const matchesStatus = statusFilter === 'all' || 
-      (statusFilter === 'unread' && !notification.is_read) ||
-      (statusFilter === 'read' && notification.is_read)
-    
-    return matchesSearch && matchesType && matchesStatus
-  })
+  // Calculate tab counts
+  const tabCounts = {
+    all: notifications.length,
+    unread: notifications.filter(n => !n.is_read).length,
+    work_orders: notifications.filter(n => n.type === 'work_order' || n.type === 'warranty_work_order').length,
+    repair_tickets: notifications.filter(n => n.type === 'repair_ticket' || n.type === 'warranty_repair_ticket').length,
+    machines: notifications.filter(n => n.type === 'machine').length,
+    system: notifications.filter(n => n.type === 'system' || n.type === 'info' || n.type === 'success' || n.type === 'warning' || n.type === 'error').length,
+    customers: notifications.filter(n => n.type === 'customer').length,
+    inventory: notifications.filter(n => n.type === 'inventory').length
+  }
+
+  // Filter and sort notifications (unread first, then by date)
+  const filteredNotifications = notifications
+    .filter(notification => {
+      const matchesSearch = !searchTerm || 
+        notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        notification.message.toLowerCase().includes(searchTerm.toLowerCase())
+      
+      // Tab-based filtering
+      let matchesTab = true
+      switch (activeTab) {
+        case 'unread':
+          matchesTab = !notification.is_read
+          break
+        case 'work_orders':
+          matchesTab = notification.type === 'work_order' || notification.type === 'warranty_work_order'
+          break
+        case 'repair_tickets':
+          matchesTab = notification.type === 'repair_ticket' || notification.type === 'warranty_repair_ticket'
+          break
+        case 'machines':
+          matchesTab = notification.type === 'machine'
+          break
+        case 'system':
+          matchesTab = ['system', 'info', 'success', 'warning', 'error'].includes(notification.type)
+          break
+        case 'customers':
+          matchesTab = notification.type === 'customer'
+          break
+        case 'inventory':
+          matchesTab = notification.type === 'inventory'
+          break
+        case 'all':
+        default:
+          matchesTab = true
+          break
+      }
+      
+      return matchesSearch && matchesTab
+    })
+    .sort((a, b) => {
+      // First sort by read status (unread first)
+      if (a.is_read !== b.is_read) {
+        return a.is_read ? 1 : -1
+      }
+      // Then sort by creation date (newest first)
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -361,7 +426,6 @@ export default function NotificationsPage() {
     filteredNotifications.every(n => selectedNotifications.has(n.id))
   const someSelected = filteredNotifications.some(n => selectedNotifications.has(n.id))
 
-  const uniqueTypes = Array.from(new Set(notifications.map(n => n.type)))
 
   return (
     <MainLayout>
@@ -445,15 +509,18 @@ export default function NotificationsPage() {
           </Card>
         </div>
 
-        {/* Filters and Actions */}
+        {/* Search and Tabs */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Filters & Actions</CardTitle>
+            <CardTitle className="text-lg">Notifications</CardTitle>
+            <CardDescription>
+              {filteredNotifications.length} of {notifications.length} notifications
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col gap-4 md:flex-row md:items-center">
+            <div className="space-y-4">
               {/* Search */}
-              <div className="relative flex-1">
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search notifications..."
@@ -463,32 +530,59 @@ export default function NotificationsPage() {
                 />
               </div>
               
-              {/* Type Filter */}
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {uniqueTypes.map(type => (
-                    <SelectItem key={type} value={type}>
-                      {type.replace('_', ' ')}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              {/* Status Filter */}
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="unread">Unread</SelectItem>
-                  <SelectItem value="read">Read</SelectItem>
-                </SelectContent>
-              </Select>
+              {/* Tabs */}
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+                  <TabsTrigger value="all" className="flex items-center gap-2">
+                    All
+                    <Badge variant="secondary" className="ml-1">
+                      {tabCounts.all}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="unread" className="flex items-center gap-2">
+                    Unread
+                    <Badge variant="destructive" className="ml-1">
+                      {tabCounts.unread}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="work_orders" className="flex items-center gap-2">
+                    Work Orders
+                    <Badge variant="outline" className="ml-1">
+                      {tabCounts.work_orders}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="repair_tickets" className="flex items-center gap-2">
+                    Tickets
+                    <Badge variant="outline" className="ml-1">
+                      {tabCounts.repair_tickets}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="machines" className="flex items-center gap-2">
+                    Machines
+                    <Badge variant="outline" className="ml-1">
+                      {tabCounts.machines}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="customers" className="flex items-center gap-2">
+                    Customers
+                    <Badge variant="outline" className="ml-1">
+                      {tabCounts.customers}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="inventory" className="flex items-center gap-2">
+                    Inventory
+                    <Badge variant="outline" className="ml-1">
+                      {tabCounts.inventory}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="system" className="flex items-center gap-2">
+                    System
+                    <Badge variant="outline" className="ml-1">
+                      {tabCounts.system}
+                    </Badge>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
             
             {/* Bulk Actions */}
