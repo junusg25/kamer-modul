@@ -183,7 +183,6 @@ export default function MachineDetail() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editFormData, setEditFormData] = useState({
-    name: '',
     description: '',
     warranty_expiry_date: '',
     warranty_active: true,
@@ -230,7 +229,6 @@ export default function MachineDetail() {
   const handleEditClick = () => {
     if (machine) {
       setEditFormData({
-        name: machine.name || '',
         description: machine.description || '',
         warranty_expiry_date: machine.warranty_expiry_date || '',
         warranty_active: machine.warranty_active,
@@ -250,7 +248,6 @@ export default function MachineDetail() {
       setIsEditing(true)
       
       const updateData = {
-        name: editFormData.name,
         description: editFormData.description,
         warranty_expiry_date: editFormData.warranty_expiry_date || null,
         warranty_active: editFormData.warranty_active,
@@ -411,7 +408,7 @@ export default function MachineDetail() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">{machine.name}</h1>
+              <h1 className="text-3xl font-bold tracking-tight">{machine.model_name}</h1>
               <p className="text-muted-foreground">
                 Serial: {machine.serial_number} • {machine.manufacturer}
               </p>
@@ -506,10 +503,6 @@ export default function MachineDetail() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Name</p>
-                      <p className="text-sm">{machine.name}</p>
-                    </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Model</p>
                       <p className="text-sm">{machine.model_name}</p>
@@ -782,15 +775,6 @@ export default function MachineDetail() {
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Machine Name</Label>
-                <Input
-                  id="name"
-                  value={editFormData.name}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter machine name"
-                />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="machine_condition">Condition</Label>
                 <Select
                   value={editFormData.machine_condition}
@@ -898,7 +882,7 @@ export default function MachineDetail() {
                   </p>
                 </div>
                 <div className="mt-4 space-y-1">
-                  <p><strong>Machine:</strong> {machine?.name}</p>
+                  <p><strong>Model:</strong> {machine?.model_name}</p>
                   <p><strong>Serial:</strong> {machine?.serial_number}</p>
                   <p><strong>Customer:</strong> {machine?.customer_name}</p>
                 </div>
