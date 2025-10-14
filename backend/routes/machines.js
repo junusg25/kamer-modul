@@ -1277,9 +1277,30 @@ router.post('/', async (req, res, next) => {
   try {
     const { customer_id, name, model_name, catalogue_number, serial_number, description, manufacturer, bought_at, category_id, receipt_number, purchase_date, received_date, repair_status, condition_on_receipt, warranty_covered, received_by_user_id, purchased_at, warranty_expiry_date, sale_price, machine_condition } = req.body;
     
-    // For machine model creation, only name and manufacturer are required
-    if (!name || !manufacturer) {
-      return res.status(400).json({ status: 'fail', message: 'name and manufacturer are required' });
+    // For repair machine creation, only name is required (manufacturer will be fetched from machine_models)
+    if (!name) {
+      return res.status(400).json({ status: 'fail', message: 'name is required' });
+    }
+    
+    // Get machine model data if manufacturer is not provided
+    let finalManufacturer = manufacturer;
+    let finalCatalogueNumber = catalogue_number;
+    let finalCategoryId = category_id;
+    
+    if (!finalManufacturer) {
+      const modelQuery = await db.query(
+        'SELECT manufacturer, catalogue_number, category_id FROM machine_models WHERE name = $1',
+        [name]
+      );
+      
+      if (modelQuery.rows.length === 0) {
+        return res.status(400).json({ status: 'fail', message: 'Machine model not found. Please create the machine model first.' });
+      }
+      
+      const modelData = modelQuery.rows[0];
+      finalManufacturer = modelData.manufacturer;
+      finalCatalogueNumber = finalCatalogueNumber || modelData.catalogue_number;
+      finalCategoryId = finalCategoryId || modelData.category_id;
     }
     
     const result = await db.query(
@@ -1292,8 +1313,8 @@ router.post('/', async (req, res, next) => {
                 warranty_expiry_date, warranty_active, updated_at, manufacturer, bought_at, category_id, 
                 receipt_number, purchase_date, received_date, repair_status, condition_on_receipt, 
                 warranty_covered, received_by_user_id, purchased_at, sale_price, machine_condition`,
-      [customer_id || null, name, model_name || null, catalogue_number || null, serial_number || null, description || null, 
-       manufacturer, bought_at || null, category_id || null, receipt_number || null, purchase_date || null,
+      [customer_id || null, name, model_name || null, finalCatalogueNumber || null, serial_number || null, description || null, 
+       finalManufacturer, bought_at || null, finalCategoryId || null, receipt_number || null, purchase_date || null,
        received_date || null, repair_status || null, condition_on_receipt || null, warranty_covered || null, 
        received_by_user_id || null, purchased_at || null, warranty_expiry_date || null, sale_price || null, machine_condition || null]
     );
