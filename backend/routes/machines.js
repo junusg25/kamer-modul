@@ -1216,7 +1216,7 @@ router.get('/:id', async (req, res, next) => {
 // CREATE machine
 router.post('/', async (req, res, next) => {
   try {
-    const { customer_id, name, model_name, catalogue_number, serial_number, description, manufacturer, bought_at, category_id, receipt_number, purchase_date } = req.body;
+    const { customer_id, name, model_name, catalogue_number, serial_number, description, manufacturer, bought_at, category_id, receipt_number, purchase_date, received_date, repair_status, condition_on_receipt, warranty_covered, received_by_user_id, purchased_at, warranty_expiry_date, sale_price, machine_condition } = req.body;
     
     // For machine model creation, only name and manufacturer are required
     if (!name || !manufacturer) {
@@ -1225,13 +1225,18 @@ router.post('/', async (req, res, next) => {
     
     const result = await db.query(
       `INSERT INTO machines (customer_id, name, model_name, catalogue_number, serial_number, description, 
-                           manufacturer, bought_at, category_id, receipt_number, purchase_date) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
+                           manufacturer, bought_at, category_id, receipt_number, purchase_date, received_date, 
+                           repair_status, condition_on_receipt, warranty_covered, received_by_user_id, 
+                           purchased_at, warranty_expiry_date, sale_price, machine_condition) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) 
        RETURNING id, customer_id, name, model_name, catalogue_number, serial_number, description, 
                 warranty_expiry_date, warranty_active, updated_at, manufacturer, bought_at, category_id, 
-                receipt_number, purchase_date`,
+                receipt_number, purchase_date, received_date, repair_status, condition_on_receipt, 
+                warranty_covered, received_by_user_id, purchased_at, sale_price, machine_condition`,
       [customer_id || null, name, model_name || null, catalogue_number || null, serial_number || null, description || null, 
-       manufacturer, bought_at || null, category_id || null, receipt_number || null, purchase_date || null]
+       manufacturer, bought_at || null, category_id || null, receipt_number || null, purchase_date || null,
+       received_date || null, repair_status || null, condition_on_receipt || null, warranty_covered || null, 
+       received_by_user_id || null, purchased_at || null, warranty_expiry_date || null, sale_price || null, machine_condition || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {

@@ -535,7 +535,13 @@ export default function CreateWarrantyRepairTicket() {
         repair_status: 'in_repair', // Use correct column name
         condition_on_receipt: 'unknown',
         warranty_covered: true, // Warranty repair tickets assume warranty coverage
-        received_by_user_id: user?.id
+        received_by_user_id: user?.id,
+        // Add these fields as null to prevent fallback to sold_machines data
+        receipt_number: null,
+        purchased_at: null,
+        warranty_expiry_date: null,
+        sale_price: null,
+        machine_condition: null
       }
       
       const repairResponse = await apiService.createMachine(repairMachineData) as any
