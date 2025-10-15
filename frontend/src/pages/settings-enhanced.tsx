@@ -838,9 +838,9 @@ export default function Settings() {
           <TabsContent value="permissions" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-foreground">Available Permissions</CardTitle>
+                <CardTitle className="text-foreground">{t('pages.settings.available_permissions')}</CardTitle>
                 <CardDescription>
-                  View all available permissions and their default role assignments
+                  {t('pages.settings.permissions_description')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -848,7 +848,7 @@ export default function Settings() {
                   {Object.entries(availablePermissions).map(([category, perms]) => (
                     <div key={category} className="space-y-3">
                       <h3 className="text-lg font-semibold capitalize text-foreground">
-                        {category.replace(/_/g, ' ')}
+                        {t(`permissions.categories.${category}`)}
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {Object.entries(perms).map(([key, value]) => (
@@ -859,7 +859,7 @@ export default function Settings() {
                                   <div className="flex-1">
                                     <p className="font-medium text-sm text-foreground">{key}</p>
                                     <p className="text-xs text-muted-foreground mt-1">
-                                      {value.description}
+                                      {t(`permissions.descriptions.${key.replace(/:/g, '_')}`)}
                                     </p>
                                   </div>
                                 </div>

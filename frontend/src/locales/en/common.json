@@ -1124,6 +1124,54 @@
     "permissions": "Permissions",
     "translations": "Translations"
   },
+  "permissions": {
+    "categories": {
+      "work_orders": "Work Orders",
+      "repair_tickets": "Repair Tickets",
+      "inventory": "Inventory",
+      "customers": "Customers",
+      "machines": "Machines",
+      "reports": "Reports",
+      "sales": "Sales",
+      "admin": "Administration"
+    },
+    "descriptions": {
+      "view_work_orders": "View work orders",
+      "create_edit_work_orders": "Create and edit work orders",
+      "delete_work_orders": "Delete work orders",
+      "view_repair_tickets": "View repair tickets",
+      "create_edit_repair_tickets": "Create and edit repair tickets",
+      "delete_repair_tickets": "Delete repair tickets",
+      "view_inventory": "View inventory",
+      "create_edit_inventory": "Create and edit inventory",
+      "delete_inventory": "Delete inventory",
+      "view_customers": "View customers",
+      "create_edit_customers": "Create and edit customers",
+      "delete_customers": "Delete customers",
+      "view_machines": "View machines",
+      "create_edit_machines": "Create and edit machines",
+      "assign_machines": "Assign machines to customers",
+      "view_reports": "View reports",
+      "view_analytics": "View analytics",
+      "view_sales_pipeline": "View sales pipeline",
+      "manage_sales_pipeline": "Manage sales pipeline",
+      "delete_pipeline_items": "Delete pipeline items",
+      "view_quotes": "View quotes",
+      "create_edit_quotes": "Create and edit quotes",
+      "delete_quotes": "Delete quotes",
+      "view_sales_reports": "View sales reports",
+      "manage_sales_reports": "Manage sales reports",
+      "delete_sales_reports": "Delete sales reports",
+      "view_sales_targets": "View sales targets",
+      "manage_sales_targets": "Manage sales targets",
+      "view_users": "View users",
+      "create_edit_users": "Create and edit users",
+      "delete_users": "Delete users",
+      "view_settings": "View settings",
+      "manage_settings": "Manage settings",
+      "manage_user_permissions": "Manage user permissions"
+    }
+  },
   "pages": {
     "settings": {
       "description": "Manage users, permissions, and system configuration",
@@ -1131,7 +1179,9 @@
       "select_user_description": "Select a user to manage their permissions",
       "permission_overrides": "Permission Overrides",
       "select_user_to_manage": "Select a user to view and manage their permissions",
-      "select_user_from_list": "Select a user from the list to view their permissions"
+      "select_user_from_list": "Select a user from the list to view their permissions",
+      "available_permissions": "Available Permissions",
+      "permissions_description": "View all available permissions and their default role assignments"
     },
     "admin": {
       "real_time_connected": "Real-time Connected",

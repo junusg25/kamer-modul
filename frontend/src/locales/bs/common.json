@@ -1124,6 +1124,54 @@
     "permissions": "Dozvole",
     "translations": "Prijevodi"
   },
+  "permissions": {
+    "categories": {
+      "work_orders": "Radni Nalozi",
+      "repair_tickets": "Servisni Tiketi",
+      "inventory": "Inventar",
+      "customers": "Kupci",
+      "machines": "Mašine",
+      "reports": "Izvještaji",
+      "sales": "Prodaja",
+      "admin": "Administracija"
+    },
+    "descriptions": {
+      "view_work_orders": "Pregled radnih naloga",
+      "create_edit_work_orders": "Kreiranje i uređivanje radnih naloga",
+      "delete_work_orders": "Brisanje radnih naloga",
+      "view_repair_tickets": "Pregled servisnih tiketa",
+      "create_edit_repair_tickets": "Kreiranje i uređivanje servisnih tiketa",
+      "delete_repair_tickets": "Brisanje servisnih tiketa",
+      "view_inventory": "Pregled inventara",
+      "create_edit_inventory": "Kreiranje i uređivanje inventara",
+      "delete_inventory": "Brisanje inventara",
+      "view_customers": "Pregled kupaca",
+      "create_edit_customers": "Kreiranje i uređivanje kupaca",
+      "delete_customers": "Brisanje kupaca",
+      "view_machines": "Pregled mašina",
+      "create_edit_machines": "Kreiranje i uređivanje mašina",
+      "assign_machines": "Dodjeljivanje mašina kupcima",
+      "view_reports": "Pregled izvještaja",
+      "view_analytics": "Pregled analitike",
+      "view_sales_pipeline": "Pregled prodajnog kanala",
+      "manage_sales_pipeline": "Upravljanje prodajnim kanalom",
+      "delete_pipeline_items": "Brisanje stavki kanala",
+      "view_quotes": "Pregled ponuda",
+      "create_edit_quotes": "Kreiranje i uređivanje ponuda",
+      "delete_quotes": "Brisanje ponuda",
+      "view_sales_reports": "Pregled prodajnih izvještaja",
+      "manage_sales_reports": "Upravljanje prodajnim izvještajima",
+      "delete_sales_reports": "Brisanje prodajnih izvještaja",
+      "view_sales_targets": "Pregled prodajnih ciljeva",
+      "manage_sales_targets": "Upravljanje prodajnim ciljevima",
+      "view_users": "Pregled korisnika",
+      "create_edit_users": "Kreiranje i uređivanje korisnika",
+      "delete_users": "Brisanje korisnika",
+      "view_settings": "Pregled postavki",
+      "manage_settings": "Upravljanje postavkama",
+      "manage_user_permissions": "Upravljanje dozvolama korisnika"
+    }
+  },
   "pages": {
     "settings": {
       "description": "Upravljajte korisnicima, dozvolama i sistemskim konfiguracijama",
@@ -1131,7 +1179,9 @@
       "select_user_description": "Odaberite korisnika za upravljanje njegovim dozvolama",
       "permission_overrides": "Zamjene Dozvola",
       "select_user_to_manage": "Odaberite korisnika za pregled i upravljanje njegovim dozvolama",
-      "select_user_from_list": "Odaberite korisnika sa liste za pregled njegovih dozvola"
+      "select_user_from_list": "Odaberite korisnika sa liste za pregled njegovih dozvola",
+      "available_permissions": "Dostupne Dozvole",
+      "permissions_description": "Pregledajte sve dostupne dozvole i njihove zadane dodjele uloga"
     },
     "admin": {
       "real_time_connected": "Real-time Povezan",
