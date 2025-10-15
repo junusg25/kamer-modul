@@ -481,9 +481,9 @@ const DashboardOverview = () => {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <LineChart className="h-5 w-5" />
-                    Sales Performance Trend
+                    {t('pages.overview.sales_performance_trend')}
                   </CardTitle>
-                  <CardDescription>Revenue and sales metrics over time</CardDescription>
+                  <CardDescription>{t('pages.overview.revenue_metrics_description')}</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                   {/* Time Period Selector */}
@@ -499,11 +499,11 @@ const DashboardOverview = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="week">Last 7 days</SelectItem>
-                      <SelectItem value="month">Last 30 days</SelectItem>
-                      <SelectItem value="quarter">Last 3 months</SelectItem>
-                      <SelectItem value="year">Last year</SelectItem>
-                      <SelectItem value="custom">Custom Range</SelectItem>
+                      <SelectItem value="week">{t('pages.overview.last_7_days')}</SelectItem>
+                      <SelectItem value="month">{t('pages.overview.last_30_days')}</SelectItem>
+                      <SelectItem value="quarter">{t('pages.overview.last_3_months')}</SelectItem>
+                      <SelectItem value="year">{t('pages.overview.last_year')}</SelectItem>
+                      <SelectItem value="custom">{t('pages.overview.custom_range')}</SelectItem>
                     </SelectContent>
                   </Select>
                   
@@ -546,15 +546,15 @@ const DashboardOverview = () => {
                   <ChartContainer
                     config={{
                       revenue: {
-                        label: "Revenue",
+                        label: t('pages.overview.chart_labels.revenue'),
                         color: "hsl(var(--chart-1))",
                       },
                       sales: {
-                        label: "Sales",
+                        label: t('pages.overview.chart_labels.sales'),
                         color: "hsl(var(--chart-2))",
                       },
                       customers: {
-                        label: "Customers",
+                        label: t('pages.overview.chart_labels.customers'),
                         color: "hsl(var(--chart-3))",
                       },
                     }}
@@ -653,19 +653,19 @@ const DashboardOverview = () => {
                       <div className="text-2xl font-bold text-blue-600">
                         {formatCurrency(trends.reduce((sum, t) => sum + (t.revenue || 0), 0))}
                       </div>
-                      <div className="text-sm text-muted-foreground">Total Revenue</div>
+                      <div className="text-sm text-muted-foreground">{t('pages.overview.chart_metrics.total_revenue')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">
                         {trends.reduce((sum, t) => sum + (t.sales || 0), 0)}
                       </div>
-                      <div className="text-sm text-muted-foreground">Total Sales</div>
+                      <div className="text-sm text-muted-foreground">{t('pages.overview.chart_metrics.total_sales')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">
                         {trends.reduce((sum, t) => sum + (t.customers || 0), 0)}
                       </div>
-                      <div className="text-sm text-muted-foreground">Total Customers</div>
+                      <div className="text-sm text-muted-foreground">{t('pages.overview.chart_metrics.total_customers')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-orange-600">
@@ -675,7 +675,7 @@ const DashboardOverview = () => {
                           return formatCurrency(totalSales > 0 ? totalRevenue / totalSales : 0);
                         })() : '0.00 KM'}
                       </div>
-                      <div className="text-sm text-muted-foreground">Avg Sale Value</div>
+                      <div className="text-sm text-muted-foreground">{t('pages.overview.chart_metrics.avg_sale_value')}</div>
                     </div>
                   </div>
                 </div>
@@ -692,9 +692,9 @@ const DashboardOverview = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <PieChart className="h-5 w-5" />
-                Repair Status
+                {t('pages.overview.repair_status')}
               </CardTitle>
-              <CardDescription>Current repair distribution</CardDescription>
+              <CardDescription>{t('pages.overview.current_repair_distribution')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -729,13 +729,13 @@ const DashboardOverview = () => {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="h-5 w-5" />
-                    Recent Sales
+                    {t('pages.overview.recent_sales')}
                   </CardTitle>
-                  <CardDescription>Latest sales transactions</CardDescription>
+                  <CardDescription>{t('pages.overview.latest_sales_transactions')}</CardDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => exportToCSV(recentSales, 'recent-sales.csv')}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export
+                  {t('pages.overview.export')}
                 </Button>
               </div>
             </CardHeader>
@@ -771,13 +771,13 @@ const DashboardOverview = () => {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Star className="h-5 w-5" />
-                    Top Customers
+                    {t('pages.overview.top_customers')}
                   </CardTitle>
-                  <CardDescription>Highest value customers</CardDescription>
+                  <CardDescription>{t('pages.overview.highest_value_customers')}</CardDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => exportToCSV(topCustomers, 'top-customers.csv')}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export
+                  {t('pages.overview.export')}
                 </Button>
               </div>
             </CardHeader>
@@ -798,7 +798,7 @@ const DashboardOverview = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium">{formatCurrency(customer.totalRevenue || 0)}</p>
-                      <p className="text-xs text-muted-foreground">{customer.totalDeals} deals</p>
+                      <p className="text-xs text-muted-foreground">{customer.totalDeals} {t('pages.overview.deals')}</p>
                     </div>
                   </div>
                 ))}
@@ -816,13 +816,13 @@ const DashboardOverview = () => {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <UserCheck className="h-5 w-5" />
-                    Technician Workload
+                    {t('pages.overview.technician_workload')}
                   </CardTitle>
-                  <CardDescription>Current technician assignments and workload</CardDescription>
+                  <CardDescription>{t('pages.overview.current_assignments')}</CardDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => exportToCSV([...workOrders, ...warrantyWorkOrders], 'technician-workload.csv')}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export
+                  {t('pages.overview.export')}
                 </Button>
               </div>
             </CardHeader>
@@ -913,13 +913,13 @@ const DashboardOverview = () => {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5" />
-                    Team Performance
+                    {t('pages.overview.team_performance')}
                   </CardTitle>
-                  <CardDescription>Sales team metrics</CardDescription>
+                  <CardDescription>{t('pages.overview.sales_team_metrics')}</CardDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => exportToCSV(team, 'team-performance.csv')}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export
+                  {t('pages.overview.export')}
                 </Button>
               </div>
             </CardHeader>
@@ -935,7 +935,7 @@ const DashboardOverview = () => {
                       </Avatar>
                       <div>
                         <p className="text-sm font-medium">{member.name}</p>
-                        <p className="text-xs text-muted-foreground">{member.totalSales} sales</p>
+                        <p className="text-xs text-muted-foreground">{member.totalSales} {t('pages.overview.sales_label')}</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -961,13 +961,13 @@ const DashboardOverview = () => {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Wrench className="h-5 w-5" />
-                    Recent Repair Tickets
+                    {t('pages.overview.recent_repair_tickets')}
                   </CardTitle>
-                  <CardDescription>Latest repair ticket submissions</CardDescription>
+                  <CardDescription>{t('pages.overview.latest_repair_submissions')}</CardDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => exportToCSV([...repairTickets, ...warrantyRepairTickets], 'repair-tickets.csv')}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export
+                  {t('pages.overview.export')}
                 </Button>
               </div>
             </CardHeader>
@@ -1003,13 +1003,13 @@ const DashboardOverview = () => {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5" />
-                    Active Work Orders
+                    {t('pages.overview.active_work_orders')}
                   </CardTitle>
-                  <CardDescription>Current work orders in progress</CardDescription>
+                  <CardDescription>{t('pages.overview.current_work_orders')}</CardDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => exportToCSV([...workOrders, ...warrantyWorkOrders], 'work-orders.csv')}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export
+                  {t('pages.overview.export')}
                 </Button>
               </div>
             </CardHeader>
@@ -1048,13 +1048,13 @@ const DashboardOverview = () => {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Wrench className="h-5 w-5" />
-                    Most Repaired Machines
+                    {t('pages.overview.most_repaired_machines')}
                   </CardTitle>
-                  <CardDescription>Machine models with most paid repairs</CardDescription>
+                  <CardDescription>{t('pages.overview.machine_models_most_paid')}</CardDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => exportToCSV(workOrders, 'most-repaired-machines.csv')}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export
+                  {t('pages.overview.export')}
                 </Button>
               </div>
             </CardHeader>
@@ -1119,13 +1119,13 @@ const DashboardOverview = () => {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Package className="h-5 w-5" />
-                    Most Used Parts
+                    {t('pages.overview.most_used_parts')}
                   </CardTitle>
-                  <CardDescription>Inventory items used most frequently</CardDescription>
+                  <CardDescription>{t('pages.overview.inventory_most_frequent')}</CardDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => exportToCSV(mostUsedParts, 'most-used-parts.csv')}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export
+                  {t('pages.overview.export')}
                 </Button>
               </div>
             </CardHeader>
@@ -1178,13 +1178,13 @@ const DashboardOverview = () => {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5" />
-                    Most Warranty Machines
+                    {t('pages.overview.most_warranty_machines')}
                   </CardTitle>
-                  <CardDescription>Machine models with most warranty repairs</CardDescription>
+                  <CardDescription>{t('pages.overview.machine_models_most_warranty')}</CardDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => exportToCSV(warrantyWorkOrders, 'most-warranty-machines.csv')}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export
+                  {t('pages.overview.export')}
                 </Button>
               </div>
             </CardHeader>
