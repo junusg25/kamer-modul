@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { MainLayout } from '../components/layout/main-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
@@ -75,6 +76,7 @@ interface LanguageSettings {
 
 export default function Settings() {
   const { user: currentUser, refreshPermissions } = useAuth()
+  const { i18n } = useTranslation()
   const [activeTab, setActiveTab] = useState('users')
   const [users, setUsers] = useState<User[]>([])
   const [usersLoading, setUsersLoading] = useState(true)
