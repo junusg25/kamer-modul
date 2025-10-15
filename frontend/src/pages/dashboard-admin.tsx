@@ -387,7 +387,7 @@ export default function AdminDashboard() {
             <div className="flex items-center space-x-2 text-sm">
               <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
               <span className="text-muted-foreground">
-                {isConnected ? 'Real-time Connected' : 'Disconnected'}
+                {isConnected ? t('pages.admin.real_time_connected') : t('common.disconnected')}
               </span>
             </div>
             <Button
@@ -397,10 +397,10 @@ export default function AdminDashboard() {
               disabled={isLoading}
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh
+              {t('common.refresh')}
             </Button>
             <div className="text-sm text-muted-foreground">
-              Last updated: {formatDateTime(lastRefresh.toISOString())}
+              {t('common.last_updated')}: {formatDateTime(lastRefresh.toISOString())}
             </div>
           </div>
         </div>
@@ -416,11 +416,11 @@ export default function AdminDashboard() {
               <div className="flex items-center space-x-2">
                 {systemHealth && getStatusIcon(systemHealth.server_status)}
                 <span className={`text-sm font-medium ${getStatusColor(systemHealth?.server_status || 'offline')}`}>
-                  {systemHealth?.server_status || 'Loading...'}
+                  {systemHealth?.server_status || t('common.loading') + '...'}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Uptime: {systemHealth?.uptime || 'N/A'}
+                {t('pages.admin.uptime')}: {systemHealth?.uptime || t('common.n_a')}
               </p>
             </CardContent>
           </Card>
@@ -434,11 +434,11 @@ export default function AdminDashboard() {
               <div className="flex items-center space-x-2">
                 {systemHealth && getStatusIcon(systemHealth.database_status)}
                 <span className={`text-sm font-medium ${getStatusColor(systemHealth?.database_status || 'disconnected')}`}>
-                  {systemHealth?.database_status || 'Loading...'}
+                  {systemHealth?.database_status || t('common.loading') + '...'}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Response: {systemHealth?.api_response_time || 0}ms
+                {t('pages.admin.response')}: {systemHealth?.api_response_time || 0}ms
               </p>
             </CardContent>
           </Card>
@@ -453,7 +453,7 @@ export default function AdminDashboard() {
                 {userActivity.filter(user => user.status === 'online').length}
               </div>
               <p className="text-xs text-muted-foreground">
-                of {userActivity.length} total users
+                {t('common.of')} {userActivity.length} {t('pages.admin.total_users')}
               </p>
             </CardContent>
           </Card>
@@ -468,7 +468,7 @@ export default function AdminDashboard() {
                 {systemAlerts.filter(alert => !alert.resolved && alert.severity === 'critical').length}
               </div>
               <p className="text-xs text-muted-foreground">
-                critical alerts
+                {t('pages.admin.critical_alerts')}
               </p>
             </CardContent>
           </Card>
@@ -477,8 +477,8 @@ export default function AdminDashboard() {
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="users">User Management</TabsTrigger>
+            <TabsTrigger value="overview">{t('tabs.overview')}</TabsTrigger>
+            <TabsTrigger value="users">{t('tabs.user_management')}</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -489,10 +489,10 @@ export default function AdminDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Activity className="h-5 w-5 mr-2" />
-                    Recent System Activity
+                    {t('pages.admin.recent_system_activity')}
                   </CardTitle>
                   <CardDescription>
-                    Latest user actions and system events
+                    {t('pages.admin.latest_user_actions')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -523,7 +523,7 @@ export default function AdminDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Cpu className="h-5 w-5 mr-2" />
-                    Performance Metrics
+                    {t('pages.admin.performance_metrics')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -531,14 +531,14 @@ export default function AdminDashboard() {
                     <div className="space-y-4">
                       <div>
                         <div className="flex justify-between text-sm mb-1">
-                          <span>Memory Usage (Heap)</span>
+                          <span>{t('pages.admin.memory_usage_heap')}</span>
                           <span>{systemHealth.memory_usage}%</span>
                         </div>
                         <Progress value={systemHealth.memory_usage} />
                       </div>
                       <div>
                         <div className="flex justify-between text-sm mb-1">
-                          <span>Active DB Connections</span>
+                          <span>{t('pages.admin.active_db_connections')}</span>
                           <span>{systemHealth.active_connections}</span>
                         </div>
                         <Progress value={Math.min((systemHealth.active_connections / 20) * 100, 100)} />
@@ -548,7 +548,7 @@ export default function AdminDashboard() {
                       </div>
                       <div>
                         <div className="flex justify-between text-sm mb-1">
-                          <span>API Response Time</span>
+                          <span>{t('pages.admin.api_response_time')}</span>
                           <span>{systemHealth.api_response_time}ms</span>
                         </div>
                         <Progress value={Math.min((systemHealth.api_response_time / 1000) * 100, 100)} />
@@ -566,22 +566,22 @@ export default function AdminDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Wifi className="h-5 w-5 mr-2" />
-                    Network & Connections
+                    {t('pages.admin.network_connections')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {systemHealth && (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Active Connections</span>
+                        <span className="text-sm font-medium">{t('pages.admin.active_connections')}</span>
                         <span className="text-sm font-bold">{systemHealth.active_connections}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">API Response Time</span>
+                        <span className="text-sm font-medium">{t('pages.admin.api_response_time')}</span>
                         <span className="text-sm font-bold">{systemHealth.api_response_time}ms</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Server Uptime</span>
+                        <span className="text-sm font-medium">{t('pages.admin.server_uptime')}</span>
                         <span className="text-sm font-bold">{systemHealth.uptime}</span>
                       </div>
                     </div>
@@ -594,10 +594,10 @@ export default function AdminDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Bell className="h-5 w-5 mr-2" />
-                    System Alerts & Notifications
+                    {t('pages.admin.system_alerts_notifications')}
                   </CardTitle>
                   <CardDescription>
-                    Monitor system alerts and critical events
+                    {t('pages.admin.monitor_system_alerts')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
