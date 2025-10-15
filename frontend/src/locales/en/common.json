@@ -2,6 +2,7 @@
   "save": "Save",
   "cancel": "Cancel",
   "delete": "Delete",
+  "resolved": "Resolved",
   "edit": "Edit",
   "add": "Add",
   "create": "Create",
@@ -1137,7 +1138,14 @@
       "active_connections": "Active Connections",
       "server_uptime": "Server Uptime",
       "system_alerts_notifications": "System Alerts & Notifications",
-      "monitor_system_alerts": "Monitor system alerts and critical events"
+      "monitor_system_alerts": "Monitor system alerts and critical events",
+      "system_update_available": "System Update Available",
+      "system_update_message": "A new system update is available for installation",
+      "backup_completed": "Backup Completed",
+      "backup_success_message": "Daily backup completed successfully",
+      "resolve": "Resolve",
+      "max_pool_size": "Max pool size",
+      "target_response_time": "Target"
     }
   }
 }

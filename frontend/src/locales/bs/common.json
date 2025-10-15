@@ -2,6 +2,7 @@
   "save": "Sačuvaj",
   "cancel": "Otkaži",
   "delete": "Obriši",
+  "resolved": "Riješeno",
   "edit": "Uredi",
   "add": "Dodaj",
   "create": "Kreiraj",
@@ -1137,7 +1138,14 @@
       "active_connections": "Aktivne Konekcije",
       "server_uptime": "Radno Vrijeme Servera",
       "system_alerts_notifications": "Sistemska Upozorenja i Obavještenja",
-      "monitor_system_alerts": "Pratite sistemska upozorenja i kritične događaje"
+      "monitor_system_alerts": "Pratite sistemska upozorenja i kritične događaje",
+      "system_update_available": "Dostupno Ažuriranje Sistema",
+      "system_update_message": "Dostupno je novo ažuriranje sistema za instalaciju",
+      "backup_completed": "Backup Završen",
+      "backup_success_message": "Dnevni backup je uspješno završen",
+      "resolve": "Riješi",
+      "max_pool_size": "Maksimalna veličina pool-a",
+      "target_response_time": "Cilj"
     }
   }
 }

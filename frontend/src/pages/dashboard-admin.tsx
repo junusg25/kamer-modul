@@ -543,7 +543,7 @@ export default function AdminDashboard() {
                         </div>
                         <Progress value={Math.min((systemHealth.active_connections / 20) * 100, 100)} />
                         <p className="text-xs text-muted-foreground mt-1">
-                          Max pool size: 20
+                          {t('pages.admin.max_pool_size')}: 20
                         </p>
                       </div>
                       <div>
@@ -553,7 +553,7 @@ export default function AdminDashboard() {
                         </div>
                         <Progress value={Math.min((systemHealth.api_response_time / 1000) * 100, 100)} />
                         <p className="text-xs text-muted-foreground mt-1">
-                          Target: &lt; 1000ms
+                          {t('pages.admin.target_response_time')}: &lt; 1000ms
                         </p>
                       </div>
                     </div>
@@ -616,7 +616,7 @@ export default function AdminDashboard() {
                               {alert.severity}
                             </Badge>
                             {alert.resolved && (
-                              <Badge variant="outline">Resolved</Badge>
+                              <Badge variant="outline">{t('common.resolved')}</Badge>
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground mb-2">
@@ -628,7 +628,7 @@ export default function AdminDashboard() {
                         </div>
                         {!alert.resolved && (
                           <Button variant="outline" size="sm">
-                            Resolve
+                            {t('pages.admin.resolve')}
                           </Button>
                         )}
                       </div>
