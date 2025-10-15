@@ -161,6 +161,7 @@ app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/permissions', require('./routes/permissions'));
 app.use('/api/table-preferences', require('./routes/tablePreferences'));
 app.use('/api/action-logs', require('./routes/actionLogs'));
+app.use('/api/system-settings', require('./routes/systemSettings'));
 app.use('/history/customers', require('./routes/history/customerHistory'));
 app.use('/history/machines', require('./routes/history/machineHistory'));
 app.use('/history/users', require('./routes/history/userHistory'));

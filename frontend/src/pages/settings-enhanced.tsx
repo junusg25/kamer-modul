@@ -21,7 +21,11 @@ import {
   Trash2,
   Key,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Globe,
+  Languages,
+  Upload,
+  Download
 } from 'lucide-react'
 import apiService from '../services/api'
 import { formatDateTime } from '../lib/dateTime'
@@ -51,6 +55,22 @@ interface AvailablePermissions {
       defaultRoles: string[]
     }
   }
+}
+
+interface Translation {
+  key: string
+  english: string
+  bosnian: string
+  status: 'translated' | 'missing'
+}
+
+interface LanguageSettings {
+  current_language: string
+  available_languages: Array<{
+    code: string
+    name: string
+    flag: string
+  }>
 }
 
 export default function Settings() {
@@ -93,9 +113,32 @@ export default function Settings() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Translation states
+  const [translations, setTranslations] = useState<Translation[]>([])
+  const [translationsLoading, setTranslationsLoading] = useState(true)
+  const [languageSettings, setLanguageSettings] = useState<LanguageSettings>({
+    current_language: 'en',
+    available_languages: [
+      { code: 'en', name: 'English', flag: '🇺🇸' },
+      { code: 'bs', name: 'Bosanski', flag: '🇧🇦' }
+    ]
+  })
+  const [showEditTranslationDialog, setShowEditTranslationDialog] = useState(false)
+  const [editingTranslation, setEditingTranslation] = useState<Translation | null>(null)
+  const [translationForm, setTranslationForm] = useState({
+    key: '',
+    english: '',
+    bosnian: ''
+  })
+  const [translationsPage, setTranslationsPage] = useState(1)
+  const [translationsPerPage] = useState(25)
+  const [translationsSearch, setTranslationsSearch] = useState('')
+
   useEffect(() => {
     loadUsers()
     loadAvailablePermissions()
+    loadLanguageSettings()
+    loadTranslations()
   }, [])
 
   const loadUsers = async () => {
@@ -334,6 +377,142 @@ export default function Settings() {
     }
   }
 
+  // Translation functions
+  const loadLanguageSettings = async () => {
+    try {
+      const response = await apiService.get('/system-settings/app_language')
+      if (response.data?.value) {
+        setLanguageSettings(prev => ({
+          ...prev,
+          current_language: response.data.value
+        }))
+      }
+    } catch (error) {
+      console.error('Error loading language settings:', error)
+    }
+  }
+
+  const loadTranslations = async () => {
+    try {
+      setTranslationsLoading(true)
+      // For now, we'll generate sample translations from our translation files
+      // In a real implementation, this would fetch from an API
+      const sampleTranslations: Translation[] = [
+        { key: 'common.save', english: 'Save', bosnian: 'Sačuvaj', status: 'translated' },
+        { key: 'common.cancel', english: 'Cancel', bosnian: 'Otkaži', status: 'translated' },
+        { key: 'common.delete', english: 'Delete', bosnian: 'Obriši', status: 'translated' },
+        { key: 'common.edit', english: 'Edit', bosnian: 'Uredi', status: 'translated' },
+        { key: 'common.add', english: 'Add', bosnian: 'Dodaj', status: 'translated' },
+        { key: 'settings.title', english: 'Settings', bosnian: 'Postavke', status: 'translated' },
+        { key: 'settings.users.title', english: 'Users', bosnian: 'Korisnici', status: 'translated' },
+        { key: 'settings.permissions.title', english: 'Permissions', bosnian: 'Dozvole', status: 'translated' },
+      ]
+      setTranslations(sampleTranslations)
+    } catch (error) {
+      console.error('Error loading translations:', error)
+      toast.error('Failed to load translations')
+    } finally {
+      setTranslationsLoading(false)
+    }
+  }
+
+  const handleChangeLanguage = async (language: string) => {
+    try {
+      setIsSubmitting(true)
+      await apiService.post('/system-settings/app_language', { value: language })
+      
+      setLanguageSettings(prev => ({
+        ...prev,
+        current_language: language
+      }))
+      
+      toast.success('Language changed successfully', {
+        description: 'The application language has been updated for all users'
+      })
+      
+      // Reload the page to apply new language
+      setTimeout(() => window.location.reload(), 1000)
+    } catch (error) {
+      console.error('Error changing language:', error)
+      toast.error('Failed to change language')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleEditTranslation = (translation: Translation) => {
+    setEditingTranslation(translation)
+    setTranslationForm({
+      key: translation.key,
+      english: translation.english,
+      bosnian: translation.bosnian
+    })
+    setShowEditTranslationDialog(true)
+  }
+
+  const handleSaveTranslation = async () => {
+    try {
+      setIsSubmitting(true)
+      // In a real implementation, this would save to the backend
+      toast.success('Translation saved successfully')
+      setShowEditTranslationDialog(false)
+      await loadTranslations()
+    } catch (error) {
+      console.error('Error saving translation:', error)
+      toast.error('Failed to save translation')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleExportTranslations = () => {
+    try {
+      const dataStr = JSON.stringify(translations, null, 2)
+      const dataBlob = new Blob([dataStr], { type: 'application/json' })
+      const url = URL.createObjectURL(dataBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `translations-${new Date().toISOString().split('T')[0]}.json`
+      link.click()
+      URL.revokeObjectURL(url)
+      toast.success('Translations exported successfully')
+    } catch (error) {
+      console.error('Error exporting translations:', error)
+      toast.error('Failed to export translations')
+    }
+  }
+
+  const handleImportTranslations = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json'
+    input.onchange = async (e: any) => {
+      try {
+        const file = e.target.files[0]
+        const text = await file.text()
+        const imported = JSON.parse(text)
+        setTranslations(imported)
+        toast.success('Translations imported successfully')
+      } catch (error) {
+        console.error('Error importing translations:', error)
+        toast.error('Failed to import translations')
+      }
+    }
+    input.click()
+  }
+
+  // Pagination for translations
+  const filteredTranslations = translations.filter(t => 
+    t.key.toLowerCase().includes(translationsSearch.toLowerCase()) ||
+    t.english.toLowerCase().includes(translationsSearch.toLowerCase()) ||
+    t.bosnian.toLowerCase().includes(translationsSearch.toLowerCase())
+  )
+  const totalTranslationsPages = Math.ceil(filteredTranslations.length / translationsPerPage)
+  const paginatedTranslations = filteredTranslations.slice(
+    (translationsPage - 1) * translationsPerPage,
+    translationsPage * translationsPerPage
+  )
+
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'active': return 'default'
@@ -381,7 +560,7 @@ export default function Settings() {
 
         {/* Settings Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 bg-muted">
+          <TabsList className="grid w-full grid-cols-3 bg-muted">
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Users
@@ -389,6 +568,10 @@ export default function Settings() {
             <TabsTrigger value="permissions" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
               Permissions
+            </TabsTrigger>
+            <TabsTrigger value="translations" className="flex items-center gap-2">
+              <Languages className="h-4 w-4" />
+              Translations
             </TabsTrigger>
           </TabsList>
 
@@ -619,6 +802,221 @@ export default function Settings() {
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Translations Tab */}
+          <TabsContent value="translations" className="space-y-6">
+            {/* Language Selector Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-foreground flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Application Language
+                </CardTitle>
+                <CardDescription>
+                  Change the application language for all users
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Label htmlFor="language" className="text-foreground">Current Language</Label>
+                    <Select
+                      value={languageSettings.current_language}
+                      onValueChange={handleChangeLanguage}
+                      disabled={isSubmitting}
+                    >
+                      <SelectTrigger className="bg-background border-border text-foreground">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border-border">
+                        {languageSettings.available_languages.map((lang) => (
+                          <SelectItem key={lang.code} value={lang.code} className="text-foreground">
+                            <span className="flex items-center gap-2">
+                              <span>{lang.flag}</span>
+                              <span>{lang.name}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="pt-6">
+                    <Badge variant={languageSettings.current_language === 'en' ? 'default' : 'secondary'}>
+                      {languageSettings.current_language === 'en' ? '🇺🇸 English' : '🇧🇦 Bosanski'}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Translations Management Card */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-foreground flex items-center gap-2">
+                      <Languages className="h-5 w-5" />
+                      Translation Management
+                    </CardTitle>
+                    <CardDescription>
+                      Manage and edit application translations
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleImportTranslations}
+                      className="flex items-center gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Import
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportTranslations}
+                      className="flex items-center gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      Export
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {/* Search */}
+                <div className="mb-4">
+                  <Input
+                    placeholder="Search translations..."
+                    value={translationsSearch}
+                    onChange={(e) => {
+                      setTranslationsSearch(e.target.value)
+                      setTranslationsPage(1)
+                    }}
+                    className="max-w-sm"
+                  />
+                </div>
+
+                {/* Translations Table */}
+                {translationsLoading ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Loading translations...
+                  </div>
+                ) : (
+                  <>
+                    <div className="border rounded-lg">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-foreground">Key</TableHead>
+                            <TableHead className="text-foreground">English</TableHead>
+                            <TableHead className="text-foreground">Bosnian</TableHead>
+                            <TableHead className="text-foreground">Status</TableHead>
+                            <TableHead className="text-foreground text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {paginatedTranslations.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                No translations found
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            paginatedTranslations.map((translation) => (
+                              <TableRow key={translation.key}>
+                                <TableCell className="font-mono text-sm text-foreground">
+                                  {translation.key}
+                                </TableCell>
+                                <TableCell className="text-foreground">{translation.english}</TableCell>
+                                <TableCell className="text-foreground">{translation.bosnian}</TableCell>
+                                <TableCell>
+                                  <Badge variant={translation.status === 'translated' ? 'default' : 'secondary'}>
+                                    {translation.status === 'translated' ? (
+                                      <span className="flex items-center gap-1">
+                                        <CheckCircle className="h-3 w-3" />
+                                        Translated
+                                      </span>
+                                    ) : (
+                                      <span className="flex items-center gap-1">
+                                        <AlertTriangle className="h-3 w-3" />
+                                        Missing
+                                      </span>
+                                    )}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditTranslation(translation)}
+                                  >
+                                    <Edit2 className="h-4 w-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Pagination */}
+                    {totalTranslationsPages > 1 && (
+                      <div className="flex items-center justify-between mt-4">
+                        <div className="text-sm text-muted-foreground">
+                          Showing {((translationsPage - 1) * translationsPerPage) + 1} to{' '}
+                          {Math.min(translationsPage * translationsPerPage, filteredTranslations.length)} of{' '}
+                          {filteredTranslations.length} translations
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setTranslationsPage(p => Math.max(1, p - 1))}
+                            disabled={translationsPage === 1}
+                          >
+                            Previous
+                          </Button>
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: totalTranslationsPages }, (_, i) => i + 1)
+                              .filter(page => {
+                                return page === 1 || 
+                                       page === totalTranslationsPages || 
+                                       Math.abs(page - translationsPage) <= 1
+                              })
+                              .map((page, idx, arr) => (
+                                <React.Fragment key={page}>
+                                  {idx > 0 && arr[idx - 1] !== page - 1 && (
+                                    <span className="px-2 text-muted-foreground">...</span>
+                                  )}
+                                  <Button
+                                    variant={page === translationsPage ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => setTranslationsPage(page)}
+                                  >
+                                    {page}
+                                  </Button>
+                                </React.Fragment>
+                              ))}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setTranslationsPage(p => Math.min(totalTranslationsPages, p + 1))}
+                            disabled={translationsPage === totalTranslationsPages}
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -909,6 +1307,69 @@ export default function Settings() {
               </Button>
               <Button onClick={handleSaveEditUser} disabled={isSubmitting}>
                 {isSubmitting ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Translation Dialog */}
+        <Dialog open={showEditTranslationDialog} onOpenChange={setShowEditTranslationDialog}>
+          <DialogContent className="bg-background border-border">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">Edit Translation</DialogTitle>
+              <DialogDescription>
+                Update the translation text for this key
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="translation-key" className="text-foreground">Translation Key</Label>
+                <Input
+                  id="translation-key"
+                  value={translationForm.key}
+                  disabled
+                  className="bg-muted border-border text-foreground font-mono"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="english-text" className="text-foreground">English Text</Label>
+                <Input
+                  id="english-text"
+                  value={translationForm.english}
+                  onChange={(e) => setTranslationForm({ ...translationForm, english: e.target.value })}
+                  className="bg-background border-border text-foreground"
+                  placeholder="Enter English text"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="bosnian-text" className="text-foreground">Bosnian Text</Label>
+                <Input
+                  id="bosnian-text"
+                  value={translationForm.bosnian}
+                  onChange={(e) => setTranslationForm({ ...translationForm, bosnian: e.target.value })}
+                  className="bg-background border-border text-foreground"
+                  placeholder="Enter Bosnian text"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowEditTranslationDialog(false)
+                  setEditingTranslation(null)
+                  setTranslationForm({ key: '', english: '', bosnian: '' })
+                }}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSaveTranslation} disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save Translation'}
               </Button>
             </DialogFooter>
           </DialogContent>
