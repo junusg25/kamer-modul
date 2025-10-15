@@ -533,6 +533,9 @@ export default function Settings() {
       toast.success('Translation saved successfully')
       setShowEditTranslationDialog(false)
       await loadTranslations()
+      
+      // Reload i18n translations to reflect changes in the UI
+      await i18n.reloadResources(currentLanguage)
     } catch (error) {
       console.error('Error saving translation:', error)
       toast.error('Failed to save translation')
