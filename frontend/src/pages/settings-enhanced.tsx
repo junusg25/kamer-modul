@@ -400,63 +400,84 @@ export default function Settings() {
     try {
       setTranslationsLoading(true)
       
-      // Get all translation resources from i18n
-      const resources = i18n.store.data
+      // Load both English and Bosnian translation files directly from server
+      const [englishResponse, bosnianResponse] = await Promise.all([
+        fetch('/api/translations/en/common.json'),
+        fetch('/api/translations/bs/common.json')
+      ])
+      
+      if (!englishResponse.ok || !bosnianResponse.ok) {
+        throw new Error('Failed to load translation files')
+      }
+      
+      const englishData = await englishResponse.json()
+      const bosnianData = await bosnianResponse.json()
+      
       const allTranslations: Translation[] = []
       
-      // Extract all translation keys from all namespaces and languages
-      Object.keys(resources).forEach(language => {
-        const languageData = resources[language]
-        
-        Object.keys(languageData).forEach(namespace => {
-          const namespaceData = languageData[namespace]
+      // Helper function to recursively extract keys from nested objects
+      const extractKeys = (obj: any, prefix = '') => {
+        Object.keys(obj).forEach(key => {
+          const fullKey = prefix ? `${prefix}.${key}` : key
+          const value = obj[key]
           
-          // Recursively extract all keys from nested objects
-          const extractKeys = (obj: any, prefix = '') => {
-            Object.keys(obj).forEach(key => {
-              const fullKey = prefix ? `${prefix}.${key}` : key
-              const value = obj[key]
-              
-              if (typeof value === 'object' && value !== null) {
-                // Recursively process nested objects
-                extractKeys(value, fullKey)
-              } else if (typeof value === 'string') {
-                // This is a translation string
-                const translationKey = `${namespace}.${fullKey}`
-                
-                // Find existing translation or create new one
-                let existingTranslation = allTranslations.find(t => t.key === translationKey)
-                if (!existingTranslation) {
-                  existingTranslation = {
-                    key: translationKey,
-                    english: '',
-                    bosnian: '',
-                    status: 'missing'
-                  }
-                  allTranslations.push(existingTranslation)
-                }
-                
-                // Set the value for the current language
-                if (language === 'en') {
-                  existingTranslation.english = value
-                } else if (language === 'bs') {
-                  existingTranslation.bosnian = value
-                }
-                
-                // Update status based on whether both languages have values
-                if (existingTranslation.english && existingTranslation.bosnian) {
-                  existingTranslation.status = 'translated'
-                } else if (existingTranslation.english || existingTranslation.bosnian) {
-                  existingTranslation.status = 'partial'
-                } else {
-                  existingTranslation.status = 'missing'
-                }
+          if (typeof value === 'object' && value !== null) {
+            // Recursively process nested objects
+            extractKeys(value, fullKey)
+          } else if (typeof value === 'string') {
+            // This is a translation string
+            const translationKey = `common.${fullKey}`
+            
+            // Find existing translation or create new one
+            let existingTranslation = allTranslations.find(t => t.key === translationKey)
+            if (!existingTranslation) {
+              existingTranslation = {
+                key: translationKey,
+                english: '',
+                bosnian: '',
+                status: 'missing'
               }
-            })
+              allTranslations.push(existingTranslation)
+            }
+            
+            // Set the value for the current language
+            existingTranslation.english = value
           }
-          
-          extractKeys(namespaceData)
         })
+      }
+      
+      // Extract keys from both languages
+      extractKeys(englishData)
+      
+      // Now add Bosnian translations to existing keys
+      const addBosnianKeys = (obj: any, prefix = '') => {
+        Object.keys(obj).forEach(key => {
+          const fullKey = prefix ? `${prefix}.${key}` : key
+          const value = obj[key]
+          
+          if (typeof value === 'object' && value !== null) {
+            addBosnianKeys(value, fullKey)
+          } else if (typeof value === 'string') {
+            const translationKey = `common.${fullKey}`
+            const existingTranslation = allTranslations.find(t => t.key === translationKey)
+            if (existingTranslation) {
+              existingTranslation.bosnian = value
+            }
+          }
+        })
+      }
+      
+      addBosnianKeys(bosnianData)
+      
+      // Update status for all translations
+      allTranslations.forEach(translation => {
+        if (translation.english && translation.bosnian) {
+          translation.status = 'translated'
+        } else if (translation.english || translation.bosnian) {
+          translation.status = 'partial'
+        } else {
+          translation.status = 'missing'
+        }
       })
       
       // Sort translations by key for better organization
