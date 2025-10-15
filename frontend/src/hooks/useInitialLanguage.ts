@@ -25,7 +25,7 @@ export const useInitialLanguage = () => {
         const response = await apiService.request('/system-settings/app_language', { 
           method: 'GET' 
         })
-        const language = response?.data?.value || 'en'
+        const language = response?.data?.value || 'bs'
         
         // Only change language if it's different from current
         if (i18n.language !== language) {
@@ -34,8 +34,8 @@ export const useInitialLanguage = () => {
       } catch (error) {
         console.error('Error loading language from server:', error)
         // Fallback to default language
-        if (i18n.language !== 'en') {
-          await i18n.changeLanguage('en')
+        if (i18n.language !== 'bs') {
+          await i18n.changeLanguage('bs')
         }
       } finally {
         isLanguageLoading = false

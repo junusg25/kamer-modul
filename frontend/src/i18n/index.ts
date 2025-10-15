@@ -9,8 +9,8 @@ i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    lng: 'en', // default language
-    fallbackLng: 'en',
+    lng: 'bs', // default language
+    fallbackLng: 'bs',
     ns: ['common', 'settings'],
     defaultNS: 'common',
     interpolation: {
