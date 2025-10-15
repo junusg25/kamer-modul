@@ -1119,9 +1119,20 @@
     "documents": "Dokumenti",
     "status_updates": "Ažuriranja Statusa",
     "assignments": "Dodjeljivanja",
-    "user_management": "Upravljanje Korisnicima"
+    "user_management": "Upravljanje Korisnicima",
+    "users": "Korisnici",
+    "permissions": "Dozvole",
+    "translations": "Prijevodi"
   },
   "pages": {
+    "settings": {
+      "description": "Upravljajte korisnicima, dozvolama i sistemskim konfiguracijama",
+      "all_users": "Svi Korisnici",
+      "select_user_description": "Odaberite korisnika za upravljanje njegovim dozvolama",
+      "permission_overrides": "Zamjene Dozvola",
+      "select_user_to_manage": "Odaberite korisnika za pregled i upravljanje njegovim dozvolama",
+      "select_user_from_list": "Odaberite korisnika sa liste za pregled njegovih dozvola"
+    },
     "admin": {
       "real_time_connected": "Real-time Povezan",
       "uptime": "Radno Vrijeme",

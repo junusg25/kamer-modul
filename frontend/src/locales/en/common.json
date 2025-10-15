@@ -1119,9 +1119,20 @@
     "documents": "Documents",
     "status_updates": "Status Updates",
     "assignments": "Assignments",
-    "user_management": "User Management"
+    "user_management": "User Management",
+    "users": "Users",
+    "permissions": "Permissions",
+    "translations": "Translations"
   },
   "pages": {
+    "settings": {
+      "description": "Manage users, permissions, and system configuration",
+      "all_users": "All Users",
+      "select_user_description": "Select a user to manage their permissions",
+      "permission_overrides": "Permission Overrides",
+      "select_user_to_manage": "Select a user to view and manage their permissions",
+      "select_user_from_list": "Select a user from the list to view their permissions"
+    },
     "admin": {
       "real_time_connected": "Real-time Connected",
       "uptime": "Uptime",
