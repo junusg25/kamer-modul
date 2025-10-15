@@ -22,7 +22,7 @@ interface HeaderProps {
 }
 
 export function Header({ className, onMenuClick }: HeaderProps) {
-  const { t } = useTranslation()
+  const { t, ready } = useTranslation()
   const { theme, setTheme } = useTheme()
   const { user, logout } = useAuth()
   const { unreadCount } = useNotifications()
@@ -64,7 +64,7 @@ export function Header({ className, onMenuClick }: HeaderProps) {
         
         <div className="hidden md:block">
           <p className="text-sm text-muted-foreground">
-{t('common:welcome_back', { name: user?.name || 'User' })}
+            {ready ? t('common:welcome_back', { name: user?.name || 'User' }) : 'Loading...'}
           </p>
         </div>
       </div>
@@ -102,7 +102,7 @@ export function Header({ className, onMenuClick }: HeaderProps) {
           variant="ghost" 
           size="icon"
           onClick={() => navigate('/settings')}
-          title={t('common:navigation.settings')}
+          title={ready ? t('common:navigation.settings') : 'Settings'}
         >
           <Settings className="h-5 w-5" />
         </Button>

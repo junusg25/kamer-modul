@@ -2,6 +2,7 @@ import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import './i18n' // Initialize i18n
+import { useInitialLanguage } from './hooks/useInitialLanguage'
 import { ThemeProvider } from './contexts/theme-context'
 import { AuthProvider } from './contexts/auth-context'
 import { NotificationsProvider } from './contexts/notifications-context'
@@ -53,6 +54,16 @@ import RentalAnalytics from './pages/rental-analytics'
 import DynamicPricing from './pages/dynamic-pricing'
 
 function App() {
+  const { loading } = useInitialLanguage()
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Loading...</div>
+      </div>
+    )
+  }
+
   return (
     <ThemeProvider>
       <AuthProvider>

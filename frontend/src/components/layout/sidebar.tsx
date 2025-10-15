@@ -206,7 +206,7 @@ const getNavigationItems = (t: any, counts: SidebarCounts | null, userRole?: str
 
 
 export function Sidebar({ className }: SidebarProps) {
-  const { t } = useTranslation()
+  const { t, i18n, ready } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const { user, hasPermission } = useAuth()
@@ -237,6 +237,8 @@ export function Sidebar({ className }: SidebarProps) {
 
   // Auto-open dropdowns when on child pages
   React.useEffect(() => {
+    if (!ready) return // Don't run until translations are ready
+    
     const navigationItems = getNavigationItems(t, sidebarCounts, user?.role, unreadFeedbackCount)
     const autoOpenDropdowns: string[] = []
     
@@ -253,7 +255,7 @@ export function Sidebar({ className }: SidebarProps) {
       const newOpenDropdowns = [...new Set([...prev, ...autoOpenDropdowns])]
       return newOpenDropdowns
     })
-  }, [location.pathname, sidebarCounts, user?.role, unreadFeedbackCount, t])
+  }, [location.pathname, sidebarCounts, user?.role, unreadFeedbackCount, t, ready])
 
   const toggleDropdown = (itemName: string) => {
     setOpenDropdowns(prev => 
@@ -296,16 +298,21 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-2 py-1">
-        {getNavigationItems(t, sidebarCounts, user?.role, unreadFeedbackCount)
-          .filter((item) => {
-            // Filter Sales Targets based on permission
-            if (item.name === t('common:navigation.sales_targets')) {
-              const canAccess = hasPermission('sales_targets:read')
-              
-              return canAccess
-            }
-            return true
-          })
+        {!ready ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-sm text-muted-foreground">Loading...</div>
+          </div>
+        ) : (
+          getNavigationItems(t, sidebarCounts, user?.role, unreadFeedbackCount)
+            .filter((item) => {
+              // Filter Sales Targets based on permission
+              if (item.name === t('common:navigation.sales_targets')) {
+                const canAccess = hasPermission('sales_targets:read')
+                
+                return canAccess
+              }
+              return true
+            })
           .map((item) => {
           if (item.type === 'label') {
             return (
@@ -394,7 +401,8 @@ export function Sidebar({ className }: SidebarProps) {
           }
 
           return null
-        })}
+        })
+        )}
       </nav>
     </div>
   )
