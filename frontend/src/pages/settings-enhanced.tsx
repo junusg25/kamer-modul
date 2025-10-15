@@ -76,7 +76,7 @@ interface LanguageSettings {
 
 export default function Settings() {
   const { user: currentUser, refreshPermissions } = useAuth()
-  const { i18n } = useTranslation()
+  const { i18n, t } = useTranslation()
   const [activeTab, setActiveTab] = useState('users')
   const [users, setUsers] = useState<User[]>([])
   const [usersLoading, setUsersLoading] = useState(true)
@@ -624,9 +624,9 @@ export default function Settings() {
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('common:navigation.settings')}</h1>
             <p className="text-muted-foreground">
-              Manage users, permissions, and system configuration
+              {t('pages.settings.description')}
             </p>
           </div>
           <Button
@@ -634,7 +634,7 @@ export default function Settings() {
             className="flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
-            Add User
+            {t('common.add_user')}
           </Button>
         </div>
 
@@ -643,15 +643,15 @@ export default function Settings() {
           <TabsList className="grid w-full grid-cols-3 bg-muted">
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Users
+              {t('tabs.users')}
             </TabsTrigger>
             <TabsTrigger value="permissions" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
-              Permissions
+              {t('tabs.permissions')}
             </TabsTrigger>
             <TabsTrigger value="translations" className="flex items-center gap-2">
               <Languages className="h-4 w-4" />
-              Translations
+              {t('tabs.translations')}
             </TabsTrigger>
           </TabsList>
 
@@ -661,12 +661,12 @@ export default function Settings() {
               {/* Users List */}
               <Card className="lg:col-span-1">
                 <CardHeader>
-                  <CardTitle className="text-foreground">All Users</CardTitle>
-                  <CardDescription>Select a user to manage their permissions</CardDescription>
+                  <CardTitle className="text-foreground">{t('pages.settings.all_users')}</CardTitle>
+                  <CardDescription>{t('pages.settings.select_user_description')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {usersLoading ? (
-                    <div className="text-center py-4 text-muted-foreground">Loading users...</div>
+                    <div className="text-center py-4 text-muted-foreground">{t('common.loading')}...</div>
                   ) : (
                     <div className="space-y-2">
                       {users.map((user) => (
@@ -703,7 +703,7 @@ export default function Settings() {
                                   className="h-7 text-xs"
                                 >
                                   <Edit2 className="h-3 w-3 mr-1" />
-                                  Edit
+                                  {t('common.edit')}
                                 </Button>
                                 <Button
                                   size="sm"
@@ -715,7 +715,7 @@ export default function Settings() {
                                   className="h-7 text-xs"
                                 >
                                   <Key className="h-3 w-3 mr-1" />
-                                  Password
+                                  {t('common.password')}
                                 </Button>
                               </div>
                             </div>
@@ -733,19 +733,19 @@ export default function Settings() {
                   <div className="flex items-center justify-between">
                     <div>
                       <CardTitle className="text-foreground">
-                        {selectedUser ? `${selectedUser.name}'s Permissions` : 'Permission Overrides'}
+                        {selectedUser ? `${selectedUser.name}'s ${t('pages.settings.permissions')}` : t('pages.settings.permission_overrides')}
                       </CardTitle>
                       <CardDescription>
                         {selectedUser 
-                          ? `Manage custom permissions for ${selectedUser.name} (${selectedUser.role})`
-                          : 'Select a user to view and manage their permissions'
+                          ? `${t('pages.settings.manage_custom_permissions')} ${selectedUser.name} (${selectedUser.role})`
+                          : t('pages.settings.select_user_to_manage')
                         }
                       </CardDescription>
                     </div>
                     {selectedUser && (
                       <Button onClick={handleGrantPermission} size="sm">
                         <Plus className="h-4 w-4 mr-2" />
-                        Grant Permission
+                        {t('pages.settings.grant_permission')}
                       </Button>
                     )}
                   </div>
@@ -754,13 +754,13 @@ export default function Settings() {
                   {!selectedUser ? (
                     <div className="text-center py-12 text-muted-foreground">
                       <Shield className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                      <p>Select a user from the list to view their permissions</p>
+                      <p>{t('pages.settings.select_user_from_list')}</p>
                     </div>
                   ) : userPermissions.length === 0 ? (
                     <div className="text-center py-12 text-muted-foreground">
                       <Key className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                      <p className="mb-2">No custom permissions</p>
-                      <p className="text-sm">This user has default role-based permissions only</p>
+                      <p className="mb-2">{t('pages.settings.no_custom_permissions')}</p>
+                      <p className="text-sm">{t('pages.settings.default_role_permissions_only')}</p>
                     </div>
                   ) : (
                     <Table>
