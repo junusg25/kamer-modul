@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useLocation } from 'react-router-dom'
 import apiService from '../services/api'
 
 // Global flag to prevent multiple simultaneous language loads
@@ -8,11 +9,13 @@ let isLanguageLoading = false
 export const useInitialLanguage = () => {
   const { i18n } = useTranslation()
   const [loading, setLoading] = useState(true)
+  const location = useLocation()
 
   useEffect(() => {
     const loadLanguageFromServer = async () => {
-      // Prevent multiple simultaneous calls
-      if (isLanguageLoading) {
+      // Skip language loading on login page or if already loading
+      if (location.pathname === '/login' || isLanguageLoading) {
+        setLoading(false)
         return
       }
       
@@ -44,7 +47,7 @@ export const useInitialLanguage = () => {
     if (i18n.isInitialized && loading) {
       loadLanguageFromServer()
     }
-  }, [i18n, loading])
+  }, [i18n, loading, location.pathname])
 
   return { loading }
 }
