@@ -1,12 +1,23 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import apiService from '../services/api'
 
+// Global flag to prevent multiple simultaneous language loads
+let isLanguageLoading = false
+
 export const useInitialLanguage = () => {
   const { i18n } = useTranslation()
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadLanguageFromServer = async () => {
+      // Prevent multiple simultaneous calls
+      if (isLanguageLoading) {
+        return
+      }
+      
+      isLanguageLoading = true
+      
       try {
         const response = await apiService.request('/system-settings/app_language', { 
           method: 'GET' 
@@ -23,11 +34,17 @@ export const useInitialLanguage = () => {
         if (i18n.language !== 'en') {
           await i18n.changeLanguage('en')
         }
+      } finally {
+        isLanguageLoading = false
+        setLoading(false)
       }
     }
 
-    loadLanguageFromServer()
-  }, [i18n])
+    // Only load if i18n is ready and we haven't loaded yet
+    if (i18n.isInitialized && loading) {
+      loadLanguageFromServer()
+    }
+  }, [i18n, loading])
 
-  return { loading: !i18n.isInitialized }
+  return { loading }
 }

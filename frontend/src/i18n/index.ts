@@ -18,8 +18,8 @@ i18n
     },
     detection: {
       // Disable automatic language detection since we'll control it via admin settings
-      order: ['localStorage', 'navigator'],
-      caches: ['localStorage'],
+      order: [],
+      caches: [],
     },
     backend: {
       // Load translation files from the server
