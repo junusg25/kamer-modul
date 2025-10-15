@@ -522,7 +522,7 @@ export default function Settings() {
       
       // Determine which language to update based on what was edited
       const currentLanguage = languageSettings.current_language
-      const valueToSave = currentLanguage === 'bs' ? editingTranslation.bosnian : editingTranslation.english
+      const valueToSave = currentLanguage === 'bs' ? translationForm.bosnian : translationForm.english
       
       // Call the backend API to update the translation
       await apiService.request(`/translations/${currentLanguage}/${namespace}/${key}`, {
