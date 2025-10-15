@@ -10,7 +10,7 @@ async function runMigration() {
     process.exit(1);
   }
   
-  const migrationPath = path.join(__dirname, 'db', 'migrations', migrationFile);
+  const migrationPath = path.join(__dirname, 'migrations', migrationFile);
   
   if (!fs.existsSync(migrationPath)) {
     console.error(`Migration file not found: ${migrationPath}`);
