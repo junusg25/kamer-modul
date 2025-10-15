@@ -486,7 +486,7 @@ export default function Customers() {
         <div className="flex items-center justify-center h-64">
           <div className="flex items-center space-x-2">
             <Loader2 className="h-6 w-6 animate-spin" />
-            <span>{t('pages.customers.loading')}...</span>
+                      <span>{t('pages.customers.searching')}...</span>
           </div>
         </div>
       </MainLayout>
@@ -566,13 +566,13 @@ export default function Customers() {
                         }}
                       >
                         <SelectTrigger className="h-8">
-                          <SelectValue placeholder="All statuses" />
+                          <SelectValue placeholder={t('pages.customers.all_statuses')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="clear">Clear Status</SelectItem>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
-                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="clear">{t('pages.customers.clear_status')}</SelectItem>
+                          <SelectItem value="active">{t('common.active')}</SelectItem>
+                          <SelectItem value="inactive">{t('common.inactive')}</SelectItem>
+                          <SelectItem value="pending">{t('common.pending')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -588,12 +588,12 @@ export default function Customers() {
                         }}
                       >
                         <SelectTrigger className="h-8">
-                          <SelectValue placeholder="All owners" />
+                          <SelectValue placeholder={t('pages.customers.all_owners')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="clear">Clear Owner</SelectItem>
-                          <SelectItem value="assigned">Assigned</SelectItem>
-                          <SelectItem value="unassigned">Unassigned</SelectItem>
+                          <SelectItem value="clear">{t('pages.customers.clear_owner')}</SelectItem>
+                          <SelectItem value="assigned">{t('pages.customers.assigned')}</SelectItem>
+                          <SelectItem value="unassigned">{t('pages.customers.unassigned')}</SelectItem>
                           {getUniqueOwners().map(owner => (
                             <SelectItem key={owner} value={owner || ''}>{owner}</SelectItem>
                           ))}
@@ -612,12 +612,12 @@ export default function Customers() {
                         }}
                       >
                         <SelectTrigger className="h-8">
-                          <SelectValue placeholder="All types" />
+                          <SelectValue placeholder={t('pages.customers.all_types')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="clear">Clear Type</SelectItem>
-                          <SelectItem value="private">Private Personnel</SelectItem>
-                          <SelectItem value="company">Company</SelectItem>
+                          <SelectItem value="clear">{t('pages.customers.clear_type')}</SelectItem>
+                          <SelectItem value="private">{t('pages.customers.private_personnel')}</SelectItem>
+                          <SelectItem value="company">{t('pages.customers.company')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

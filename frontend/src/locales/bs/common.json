@@ -1124,6 +1124,22 @@
     "permissions": "Dozvole",
     "translations": "Prijevodi"
   },
+  "tables": {
+    "customer": "Kupac",
+    "customers": "Kupci",
+    "machines": "Mašine",
+    "repair_tickets": "Servisni Tiketi",
+    "work_orders": "Radni Nalozi",
+    "warranty_repair_tickets": "Garancijski Servisni Tiketi",
+    "warranty_work_orders": "Garancijski Radni Nalozi",
+    "inventory": "Inventar",
+    "users": "Korisnici",
+    "reports": "Izvještaji",
+    "sales": "Prodaja",
+    "quotes": "Ponude",
+    "leads": "Potencijalni Klijenti",
+    "rentals": "Iznajmljivanja"
+  },
   "permissions": {
     "categories": {
       "work_orders": "Radni Nalozi",
@@ -1182,6 +1198,28 @@
       "select_user_from_list": "Odaberite korisnika sa liste za pregled njegovih dozvola",
       "available_permissions": "Dostupne Dozvole",
       "permissions_description": "Pregledajte sve dostupne dozvole i njihove zadane dodjele uloga"
+    },
+    "customers": {
+      "title": "Kupci",
+      "description": "Upravljanje svim kupcima i njihovim informacijama",
+      "add_customer": "Dodaj Kupca",
+      "search_placeholder": "Pretraži kupce po imenu, emailu ili kompaniji...",
+      "search_results_found": "Pronađeno {{count}} kupaca za '{{query}}'",
+      "no_search_results": "Nema rezultata za '{{query}}'",
+      "loading": "Učitavanje kupaca...",
+      "filter_by": "Filtriraj po",
+      "clear_filters": "Obriši Filtre",
+      "clear_status": "Obriši Status",
+      "clear_owner": "Obriši Vlasnika",
+      "clear_type": "Obriši Tip",
+      "assigned": "Dodijeljen",
+      "unassigned": "Nije Dodijeljen",
+      "private_personnel": "Privatna Osoba",
+      "company": "Kompanija",
+      "searching": "Pretraživanje...",
+      "all_statuses": "Svi Statusi",
+      "all_owners": "Svi Vlasnici",
+      "all_types": "Svi Tipovi"
     },
     "overview": {
       "title": "Analytics Command Center",

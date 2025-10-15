@@ -1124,6 +1124,22 @@
     "permissions": "Permissions",
     "translations": "Translations"
   },
+  "tables": {
+    "customer": "Customer",
+    "customers": "Customers",
+    "machines": "Machines",
+    "repair_tickets": "Repair Tickets",
+    "work_orders": "Work Orders",
+    "warranty_repair_tickets": "Warranty Repair Tickets",
+    "warranty_work_orders": "Warranty Work Orders",
+    "inventory": "Inventory",
+    "users": "Users",
+    "reports": "Reports",
+    "sales": "Sales",
+    "quotes": "Quotes",
+    "leads": "Leads",
+    "rentals": "Rentals"
+  },
   "permissions": {
     "categories": {
       "work_orders": "Work Orders",
@@ -1182,6 +1198,28 @@
       "select_user_from_list": "Select a user from the list to view their permissions",
       "available_permissions": "Available Permissions",
       "permissions_description": "View all available permissions and their default role assignments"
+    },
+    "customers": {
+      "title": "Customers",
+      "description": "Manage all customers and their information",
+      "add_customer": "Add Customer",
+      "search_placeholder": "Search customers by name, email, or company...",
+      "search_results_found": "Found {{count}} customers for '{{query}}'",
+      "no_search_results": "No results found for '{{query}}'",
+      "loading": "Loading customers...",
+      "filter_by": "Filter by",
+      "clear_filters": "Clear Filters",
+      "clear_status": "Clear Status",
+      "clear_owner": "Clear Owner",
+      "clear_type": "Clear Type",
+      "assigned": "Assigned",
+      "unassigned": "Unassigned",
+      "private_personnel": "Private Personnel",
+      "company": "Company",
+      "searching": "Searching...",
+      "all_statuses": "All statuses",
+      "all_owners": "All owners",
+      "all_types": "All types"
     },
     "overview": {
       "title": "Analytics Command Center",
