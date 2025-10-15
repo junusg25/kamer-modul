@@ -1,5 +1,5 @@
 const express = require('express')
-const { authenticateToken, requireRole } = require('../middleware/auth')
+const { authenticateToken, authorizeRoles } = require('../middleware/auth')
 const db = require('../db')
 const router = express.Router()
 
@@ -77,7 +77,7 @@ router.get('/:key', authenticateToken, async (req, res) => {
 })
 
 // Update system setting (Admin only)
-router.post('/:key', authenticateToken, requireRole(['admin']), async (req, res) => {
+router.post('/:key', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
     const { key } = req.params
     const { value } = req.body
@@ -127,7 +127,7 @@ router.post('/:key', authenticateToken, requireRole(['admin']), async (req, res)
 })
 
 // Create new system setting (Admin only)
-router.post('/', authenticateToken, requireRole(['admin']), async (req, res) => {
+router.post('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
     const { key, value, description } = req.body
 
@@ -178,7 +178,7 @@ router.post('/', authenticateToken, requireRole(['admin']), async (req, res) => 
 })
 
 // Delete system setting (Admin only)
-router.delete('/:key', authenticateToken, requireRole(['admin']), async (req, res) => {
+router.delete('/:key', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
     const { key } = req.params
 
