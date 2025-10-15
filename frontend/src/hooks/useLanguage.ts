@@ -15,8 +15,8 @@ export const useLanguage = () => {
   const loadCurrentLanguage = async () => {
     try {
       setLoading(true)
-      const response = await apiService.get('/system-settings/app_language')
-      const language = response.data?.value || 'en'
+      const response = await apiService.request('/system-settings/app_language', { method: 'GET' })
+      const language = response?.value || 'en'
       setCurrentLanguage(language)
       i18n.changeLanguage(language)
     } catch (error) {
@@ -32,8 +32,9 @@ export const useLanguage = () => {
   const changeLanguage = async (language: string) => {
     try {
       // Update on server
-      await apiService.post('/system-settings/app_language', {
-        value: language
+      await apiService.request('/system-settings/app_language', {
+        method: 'POST',
+        body: JSON.stringify({ value: language })
       })
       
       // Update locally
