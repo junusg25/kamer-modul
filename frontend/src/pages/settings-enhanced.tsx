@@ -61,7 +61,7 @@ interface Translation {
   key: string
   english: string
   bosnian: string
-  status: 'translated' | 'missing'
+  status: 'translated' | 'missing' | 'partial'
 }
 
 interface LanguageSettings {
@@ -397,19 +397,70 @@ export default function Settings() {
   const loadTranslations = async () => {
     try {
       setTranslationsLoading(true)
-      // For now, we'll generate sample translations from our translation files
-      // In a real implementation, this would fetch from an API
-      const sampleTranslations: Translation[] = [
-        { key: 'common.save', english: 'Save', bosnian: 'Sačuvaj', status: 'translated' },
-        { key: 'common.cancel', english: 'Cancel', bosnian: 'Otkaži', status: 'translated' },
-        { key: 'common.delete', english: 'Delete', bosnian: 'Obriši', status: 'translated' },
-        { key: 'common.edit', english: 'Edit', bosnian: 'Uredi', status: 'translated' },
-        { key: 'common.add', english: 'Add', bosnian: 'Dodaj', status: 'translated' },
-        { key: 'settings.title', english: 'Settings', bosnian: 'Postavke', status: 'translated' },
-        { key: 'settings.users.title', english: 'Users', bosnian: 'Korisnici', status: 'translated' },
-        { key: 'settings.permissions.title', english: 'Permissions', bosnian: 'Dozvole', status: 'translated' },
-      ]
-      setTranslations(sampleTranslations)
+      
+      // Get all translation resources from i18n
+      const resources = i18n.store.data
+      const allTranslations: Translation[] = []
+      
+      // Extract all translation keys from all namespaces and languages
+      Object.keys(resources).forEach(language => {
+        const languageData = resources[language]
+        
+        Object.keys(languageData).forEach(namespace => {
+          const namespaceData = languageData[namespace]
+          
+          // Recursively extract all keys from nested objects
+          const extractKeys = (obj: any, prefix = '') => {
+            Object.keys(obj).forEach(key => {
+              const fullKey = prefix ? `${prefix}.${key}` : key
+              const value = obj[key]
+              
+              if (typeof value === 'object' && value !== null) {
+                // Recursively process nested objects
+                extractKeys(value, fullKey)
+              } else if (typeof value === 'string') {
+                // This is a translation string
+                const translationKey = `${namespace}.${fullKey}`
+                
+                // Find existing translation or create new one
+                let existingTranslation = allTranslations.find(t => t.key === translationKey)
+                if (!existingTranslation) {
+                  existingTranslation = {
+                    key: translationKey,
+                    english: '',
+                    bosnian: '',
+                    status: 'missing'
+                  }
+                  allTranslations.push(existingTranslation)
+                }
+                
+                // Set the value for the current language
+                if (language === 'en') {
+                  existingTranslation.english = value
+                } else if (language === 'bs') {
+                  existingTranslation.bosnian = value
+                }
+                
+                // Update status based on whether both languages have values
+                if (existingTranslation.english && existingTranslation.bosnian) {
+                  existingTranslation.status = 'translated'
+                } else if (existingTranslation.english || existingTranslation.bosnian) {
+                  existingTranslation.status = 'partial'
+                } else {
+                  existingTranslation.status = 'missing'
+                }
+              }
+            })
+          }
+          
+          extractKeys(namespaceData)
+        })
+      })
+      
+      // Sort translations by key for better organization
+      allTranslations.sort((a, b) => a.key.localeCompare(b.key))
+      
+      setTranslations(allTranslations)
     } catch (error) {
       console.error('Error loading translations:', error)
       toast.error('Failed to load translations')
@@ -857,6 +908,45 @@ export default function Settings() {
               </CardContent>
             </Card>
 
+            {/* Translation Statistics Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-foreground flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Translation Statistics
+                </CardTitle>
+                <CardDescription>
+                  Overview of translation completion status
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-foreground">{translations.length}</div>
+                    <div className="text-sm text-muted-foreground">Total Keys</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">
+                      {translations.filter(t => t.status === 'translated').length}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Translated</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-yellow-600">
+                      {translations.filter(t => t.status === 'partial').length}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Partial</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-red-600">
+                      {translations.filter(t => t.status === 'missing').length}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Missing</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Translations Management Card */}
             <Card>
               <CardHeader>
@@ -940,11 +1030,20 @@ export default function Settings() {
                                 <TableCell className="text-foreground">{translation.english}</TableCell>
                                 <TableCell className="text-foreground">{translation.bosnian}</TableCell>
                                 <TableCell>
-                                  <Badge variant={translation.status === 'translated' ? 'default' : 'secondary'}>
+                                  <Badge variant={
+                                    translation.status === 'translated' ? 'default' : 
+                                    translation.status === 'partial' ? 'secondary' : 
+                                    'destructive'
+                                  }>
                                     {translation.status === 'translated' ? (
                                       <span className="flex items-center gap-1">
                                         <CheckCircle className="h-3 w-3" />
                                         Translated
+                                      </span>
+                                    ) : translation.status === 'partial' ? (
+                                      <span className="flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        Partial
                                       </span>
                                     ) : (
                                       <span className="flex items-center gap-1">
