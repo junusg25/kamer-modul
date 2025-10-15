@@ -54,6 +54,25 @@ import RentalAnalytics from './pages/rental-analytics'
 import DynamicPricing from './pages/dynamic-pricing'
 
 function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <WebSocketProvider>
+          <NotificationsProvider>
+            <FeedbackProvider>
+              <Toaster position="top-right" expand={false} richColors closeButton />
+              <Router>
+                <AppContent />
+              </Router>
+            </FeedbackProvider>
+          </NotificationsProvider>
+        </WebSocketProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  )
+}
+
+function AppContent() {
   const { loading } = useInitialLanguage()
 
   if (loading) {
@@ -65,14 +84,8 @@ function App() {
   }
 
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <WebSocketProvider>
-          <NotificationsProvider>
-            <FeedbackProvider>
-              <Toaster position="top-right" expand={false} richColors closeButton />
-              <Router>
-                <CommandPalette />
+    <>
+      <CommandPalette />
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/" element={
@@ -279,12 +292,7 @@ function App() {
                 </RoleProtectedRoute>
               } />
             </Routes>
-            </Router>
-            </FeedbackProvider>
-          </NotificationsProvider>
-        </WebSocketProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    </>
   )
 }
 
