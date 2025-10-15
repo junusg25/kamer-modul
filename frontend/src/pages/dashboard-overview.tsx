@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { MainLayout } from '../components/layout/main-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
@@ -86,6 +87,7 @@ import { formatStatus, getStatusBadgeVariant, getStatusBadgeColor } from '../lib
 
 const DashboardOverview = () => {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [timeFilter, setTimeFilter] = useState('month') // For metrics cards only
   const [activeTab, setActiveTab] = useState('overview')
   const [chartTimeFilter, setChartTimeFilter] = useState('month') // For chart only
@@ -383,24 +385,24 @@ const DashboardOverview = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Analytics Command Center</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('pages.overview.title')}</h1>
             <p className="text-muted-foreground">
-              Comprehensive business intelligence and performance analytics
+              {t('pages.overview.description')}
             </p>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <Label className="text-sm text-muted-foreground">Metrics Period:</Label>
+              <Label className="text-sm text-muted-foreground">{t('pages.overview.metrics_period')}</Label>
               <Select value={timeFilter} onValueChange={setTimeFilter}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Time period" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="7d">Last 7 Days</SelectItem>
-                  <SelectItem value="30d">Last 30 Days</SelectItem>
-                  <SelectItem value="month">This Month</SelectItem>
-                  <SelectItem value="quarter">This Quarter</SelectItem>
-                  <SelectItem value="year">This Year</SelectItem>
+                  <SelectItem value="7d">{t('pages.overview.last_7_days')}</SelectItem>
+                  <SelectItem value="30d">{t('pages.overview.last_30_days')}</SelectItem>
+                  <SelectItem value="month">{t('pages.overview.this_month')}</SelectItem>
+                  <SelectItem value="quarter">{t('pages.overview.this_quarter')}</SelectItem>
+                  <SelectItem value="year">{t('pages.overview.this_year')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -409,7 +411,7 @@ const DashboardOverview = () => {
               refetchSales()
             }}>
               <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
+              {t('pages.overview.refresh')}
             </Button>
           </div>
         </div>
@@ -418,53 +420,53 @@ const DashboardOverview = () => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.overview.total_revenue')}</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 {getChangeIcon(sales.revenueChange || 0)}
-                <span>{sales.revenueChange || 0}% from last period</span>
+                <span>{sales.revenueChange || 0}{t('pages.overview.from_last_period')}</span>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Repairs</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.overview.active_repairs')}</CardTitle>
               <Wrench className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalActiveWorkOrders}</div>
               <p className="text-xs text-muted-foreground">
-                {activeRegularWorkOrders} regular, {activeWarrantyWorkOrders} warranties
+                {activeRegularWorkOrders} {t('pages.overview.regular_warranties')} {activeWarrantyWorkOrders}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Sales Pipeline</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.overview.sales_pipeline')}</CardTitle>
               <Target className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{opportunities.length}</div>
               <p className="text-xs text-muted-foreground">
-                {formatCurrency(opportunities.reduce((sum: number, opp: any) => sum + (opp.potential_value || 0), 0))} potential value
+                {formatCurrency(opportunities.reduce((sum: number, opp: any) => sum + (opp.potential_value || 0), 0))} {t('pages.overview.potential_value')}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Customer Base</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.overview.customer_base')}</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalCustomers}</div>
               <p className="text-xs text-muted-foreground">
-                Active customers
+                {t('pages.overview.active_customers')}
               </p>
             </CardContent>
           </Card>
