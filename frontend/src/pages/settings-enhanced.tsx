@@ -380,11 +380,13 @@ export default function Settings() {
   // Translation functions
   const loadLanguageSettings = async () => {
     try {
-      const response = await apiService.get('/system-settings/app_language')
-      if (response.data?.value) {
+      const response: any = await apiService.request('/system-settings/app_language', {
+        method: 'GET'
+      })
+      if (response?.value) {
         setLanguageSettings(prev => ({
           ...prev,
-          current_language: response.data.value
+          current_language: response.value
         }))
       }
     } catch (error) {
@@ -419,7 +421,10 @@ export default function Settings() {
   const handleChangeLanguage = async (language: string) => {
     try {
       setIsSubmitting(true)
-      await apiService.post('/system-settings/app_language', { value: language })
+      await apiService.request('/system-settings/app_language', {
+        method: 'POST',
+        body: JSON.stringify({ value: language })
+      })
       
       setLanguageSettings(prev => ({
         ...prev,
