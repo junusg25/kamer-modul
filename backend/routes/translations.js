@@ -4,6 +4,59 @@ const path = require('path')
 const { authenticateToken, authorizeRoles } = require('../middleware/auth')
 const router = express.Router()
 
+// Get specific translation file (for i18next-http-backend)
+router.get('/:language/:namespace.json', async (req, res) => {
+  try {
+    const { language, namespace } = req.params
+
+    // Validate language
+    if (!['en', 'bs'].includes(language)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid language'
+      })
+    }
+
+    // Validate namespace
+    if (!['common', 'settings'].includes(namespace)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid namespace'
+      })
+    }
+
+    // Construct file path
+    const filePath = path.join(__dirname, '../../frontend/src/locales', language, `${namespace}.json`)
+    
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        error: 'Translation file not found'
+      })
+    }
+
+    // Read and return the translation file
+    try {
+      const content = fs.readFileSync(filePath, 'utf8')
+      const translations = JSON.parse(content)
+      res.json(translations)
+    } catch (error) {
+      console.error(`Error reading ${filePath}:`, error)
+      res.status(500).json({
+        success: false,
+        error: 'Failed to read translation file'
+      })
+    }
+  } catch (error) {
+    console.error('Error getting translation file:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get translation file'
+    })
+  }
+})
+
 // Get all translations (Admin only)
 router.get('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {

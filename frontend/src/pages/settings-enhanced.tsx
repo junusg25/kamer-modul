@@ -535,10 +535,8 @@ export default function Settings() {
       await loadTranslations()
       
       // Reload i18n translations to reflect changes in the UI
-      // Force reload by changing language and back
-      const originalLanguage = i18n.language
-      await i18n.changeLanguage('en')
-      await i18n.changeLanguage(originalLanguage)
+      // Since we're using dynamic loading, just reload the resources
+      await i18n.reloadResources(currentLanguage)
     } catch (error) {
       console.error('Error saving translation:', error)
       toast.error('Failed to save translation')
