@@ -387,7 +387,7 @@ export default function AdminDashboard() {
             <div className="flex items-center space-x-2 text-sm">
               <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
               <span className="text-muted-foreground">
-                {isConnected ? t('pages.admin.real_time_connected') : t('common.disconnected')}
+                {isConnected ? t('pages.admin.real_time_connected') : 'Disconnected'}
               </span>
             </div>
             <Button
@@ -397,10 +397,10 @@ export default function AdminDashboard() {
               disabled={isLoading}
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              {t('common.refresh')}
+              {t('refresh')}
             </Button>
             <div className="text-sm text-muted-foreground">
-              {t('common.last_updated')}: {formatDateTime(lastRefresh.toISOString())}
+              {t('last_updated')}: {formatDateTime(lastRefresh.toISOString())}
             </div>
           </div>
         </div>
@@ -416,11 +416,11 @@ export default function AdminDashboard() {
               <div className="flex items-center space-x-2">
                 {systemHealth && getStatusIcon(systemHealth.server_status)}
                 <span className={`text-sm font-medium ${getStatusColor(systemHealth?.server_status || 'offline')}`}>
-                  {systemHealth?.server_status || t('common.loading') + '...'}
+                  {systemHealth?.server_status || t('loading') + '...'}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {t('pages.admin.uptime')}: {systemHealth?.uptime || t('common.n_a')}
+                {t('pages.admin.uptime')}: {systemHealth?.uptime || 'N/A'}
               </p>
             </CardContent>
           </Card>
@@ -434,7 +434,7 @@ export default function AdminDashboard() {
               <div className="flex items-center space-x-2">
                 {systemHealth && getStatusIcon(systemHealth.database_status)}
                 <span className={`text-sm font-medium ${getStatusColor(systemHealth?.database_status || 'disconnected')}`}>
-                  {systemHealth?.database_status || t('common.loading') + '...'}
+                  {systemHealth?.database_status || t('loading') + '...'}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -453,7 +453,7 @@ export default function AdminDashboard() {
                 {userActivity.filter(user => user.status === 'online').length}
               </div>
               <p className="text-xs text-muted-foreground">
-                {t('common.of')} {userActivity.length} {t('pages.admin.total_users')}
+                {t('of')} {userActivity.length} {t('pages.admin.total_users')}
               </p>
             </CardContent>
           </Card>
@@ -616,7 +616,7 @@ export default function AdminDashboard() {
                               {alert.severity}
                             </Badge>
                             {alert.resolved && (
-                              <Badge variant="outline">{t('common.resolved')}</Badge>
+                              <Badge variant="outline">{t('resolved')}</Badge>
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground mb-2">

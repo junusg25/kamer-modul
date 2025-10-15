@@ -185,12 +185,12 @@ export default function Customers() {
   // Define columns with translations
   const CUSTOMER_COLUMNS = defineColumns([
     { key: 'customer', label: t('tables.customer') },
-    { key: 'type', label: t('common.type') },
-    { key: 'contact', label: t('common.contact') },
-    { key: 'status', label: t('common.status') },
-    { key: 'machines', label: t('common.machines') },
-    { key: 'total_spent', label: t('common.total_spent') },
-    { key: 'owner', label: t('common.owner') },
+    { key: 'type', label: t('tables.headers.type') },
+    { key: 'contact', label: t('tables.headers.address') },
+    { key: 'status', label: t('tables.headers.status') },
+    { key: 'machines', label: t('machines') },
+    { key: 'total_spent', label: 'Total Spent' },
+    { key: 'owner', label: t('tables.headers.assigned_to') },
   ])
   
   const [customers, setCustomers] = useState<Customer[]>([])
@@ -548,16 +548,16 @@ export default function Customers() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline">
                       <Filter className="mr-2 h-4 w-4" />
-                      {t('common.filter')}
+                      {t('filter')}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>{t('common.filter_by')}</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t('pages.customers.filter_by')}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     
                     {/* Status Filter */}
                     <div className="p-2">
-                      <Label className="text-xs font-medium text-muted-foreground">{t('common.status')}</Label>
+                      <Label className="text-xs font-medium text-muted-foreground">{t('status')}</Label>
                       <Select
                         value={filters.status}
                         onValueChange={(value) => {
@@ -570,16 +570,16 @@ export default function Customers() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="clear">{t('pages.customers.clear_status')}</SelectItem>
-                          <SelectItem value="active">{t('common.active')}</SelectItem>
-                          <SelectItem value="inactive">{t('common.inactive')}</SelectItem>
-                          <SelectItem value="pending">{t('common.pending')}</SelectItem>
+                          <SelectItem value="active">{t('active')}</SelectItem>
+                          <SelectItem value="inactive">{t('inactive')}</SelectItem>
+                          <SelectItem value="pending">{t('pending')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     {/* Owner Filter */}
                     <div className="p-2">
-                      <Label className="text-xs font-medium text-muted-foreground">{t('common.owner')}</Label>
+                      <Label className="text-xs font-medium text-muted-foreground">{t('tables.headers.assigned_to')}</Label>
                       <Select
                         value={filters.owner}
                         onValueChange={(value) => {
@@ -603,7 +603,7 @@ export default function Customers() {
 
                     {/* Customer Type Filter */}
                     <div className="p-2">
-                      <Label className="text-xs font-medium text-muted-foreground">{t('common.type')}</Label>
+                      <Label className="text-xs font-medium text-muted-foreground">{t('tables.headers.type')}</Label>
                       <Select
                         value={filters.customer_type}
                         onValueChange={(value) => {
@@ -630,7 +630,7 @@ export default function Customers() {
                       }}
                       className="text-center"
                     >
-                      {t('common.clear_filters')}
+                      {t('pages.customers.clear_filters')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -641,7 +641,7 @@ export default function Customers() {
                     {isLoading ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>{t('common.searching')}...</span>
+                        <span>{t('pages.customers.searching')}...</span>
                       </>
                     ) : (
                       <>
@@ -664,13 +664,13 @@ export default function Customers() {
               <TableHeader>
                 <TableRow>
                   {isColumnVisible('customer') && <TableHead>{t('tables.customer')}</TableHead>}
-                  {isColumnVisible('type') && <TableHead>{t('common.type')}</TableHead>}
-                  {isColumnVisible('contact') && <TableHead>{t('common.contact')}</TableHead>}
-                  {isColumnVisible('status') && <TableHead>{t('common.status')}</TableHead>}
-                  {isColumnVisible('machines') && <TableHead>{t('common.machines')}</TableHead>}
-                  {isColumnVisible('total_spent') && <TableHead>{t('common.total_spent')}</TableHead>}
-                  {isColumnVisible('owner') && <TableHead>{t('common.owner')}</TableHead>}
-                  <TableHead className="text-right">{t('common.actions')}</TableHead>
+                  {isColumnVisible('type') && <TableHead>{t('tables.headers.type')}</TableHead>}
+                  {isColumnVisible('contact') && <TableHead>{t('tables.headers.address')}</TableHead>}
+                  {isColumnVisible('status') && <TableHead>{t('tables.headers.status')}</TableHead>}
+                  {isColumnVisible('machines') && <TableHead>{t('machines')}</TableHead>}
+                  {isColumnVisible('total_spent') && <TableHead>Total Spent</TableHead>}
+                  {isColumnVisible('owner') && <TableHead>{t('tables.headers.assigned_to')}</TableHead>}
+                  <TableHead className="text-right">{t('tables.headers.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -736,17 +736,17 @@ export default function Customers() {
                     )}
                     {isColumnVisible('machines') && (
                       <TableCell>
-                        <Badge variant="outline">{customer.total_machines || 0} {t('common.machines')}</Badge>
+                        <Badge variant="outline">{customer.total_machines || 0} {t('machines')}</Badge>
                       </TableCell>
                     )}
                     {isColumnVisible('total_spent') && (
                       <TableCell className="text-sm text-muted-foreground">
-                        {customer.total_spent ? formatCurrency(customer.total_spent) : t('common.n_a')}
+                        {customer.total_spent ? formatCurrency(customer.total_spent) : 'N/A'}
                       </TableCell>
                     )}
                     {isColumnVisible('owner') && (
                       <TableCell className="text-sm text-muted-foreground">
-                        {customer.owner_name || t('common.n_a')}
+                        {customer.owner_name || 'N/A'}
                       </TableCell>
                     )}
                     <TableCell className="text-right">
@@ -769,7 +769,7 @@ export default function Customers() {
                             }}
                           >
                             <Eye className="mr-2 h-4 w-4" />
-                            {t('common.view_details')}
+                            {t('view_details')}
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={(e) => {
@@ -778,7 +778,7 @@ export default function Customers() {
                             }}
                           >
                             <Edit className="mr-2 h-4 w-4" />
-                            {t('common.edit_customer')}
+                            {t('edit')}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
@@ -789,7 +789,7 @@ export default function Customers() {
                             }}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            {t('common.delete')}
+                            {t('delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -873,7 +873,7 @@ export default function Customers() {
           onOpenChange={setMachineAlertOpen}
           title={t('modals.cannot_delete_customer.title')}
           description={t('modals.cannot_delete_customer.description', { name: customerWithMachines?.name, count: customerWithMachines?.total_machines })}
-          confirmText={t('common.ok')}
+          confirmText={t('ok')}
           showCancel={false}
         />
 
@@ -1087,18 +1087,18 @@ export default function Customers() {
             <DialogFooter className="flex justify-end space-x-2">
               <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
                 <X className="mr-2 h-4 w-4" />
-                {t('common.cancel')}
+                {t('cancel')}
               </Button>
               <Button onClick={handleSaveCustomer} disabled={isSaving || !editFormData.name.trim()}>
                 {isSaving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t('common.saving')}...
+                    {t('saving')}...
                   </>
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    {t('common.save_changes')}
+                    {t('save')}
                   </>
                 )}
               </Button>

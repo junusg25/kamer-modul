@@ -655,7 +655,7 @@ export default function Settings() {
             className="flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
-            {t('common.add_user')}
+            {t('add_user')}
           </Button>
         </div>
 
@@ -687,7 +687,7 @@ export default function Settings() {
                 </CardHeader>
                 <CardContent>
                   {usersLoading ? (
-                    <div className="text-center py-4 text-muted-foreground">{t('common.loading')}...</div>
+                    <div className="text-center py-4 text-muted-foreground">{t('loading')}...</div>
                   ) : (
                     <div className="space-y-2">
                       {users.map((user) => (
@@ -724,7 +724,7 @@ export default function Settings() {
                                   className="h-7 text-xs"
                                 >
                                   <Edit2 className="h-3 w-3 mr-1" />
-                                  {t('common.edit')}
+                                  {t('edit')}
                                 </Button>
                                 <Button
                                   size="sm"
@@ -736,7 +736,7 @@ export default function Settings() {
                                   className="h-7 text-xs"
                                 >
                                   <Key className="h-3 w-3 mr-1" />
-                                  {t('common.password')}
+                                  {t('password')}
                                 </Button>
                               </div>
                             </div>
