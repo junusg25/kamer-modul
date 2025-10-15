@@ -60,13 +60,13 @@ const getNavigationItems = (t: any, counts: SidebarCounts | null, userRole?: str
   const baseItems: NavigationItem[] = [
   // General Section
   { name: t('common:navigation.general'), href: '#', icon: null, badge: null, type: 'label' },
-  { 
-    name: userRole === 'admin' ? t('common:navigation.admin_dashboard') : userRole === 'manager' ? 'Dashboard' : 'My Work', 
-    href: userRole === 'admin' ? '/dashboard/admin' : userRole === 'manager' ? '/dashboard/manager' : '/dashboard/my-work', 
-    icon: Home, 
-    badge: null, 
-    type: 'single' 
-  },
+      { 
+        name: userRole === 'admin' ? t('common:navigation.admin_dashboard') : userRole === 'manager' ? t('common:dashboard') : t('common:my_work'), 
+        href: userRole === 'admin' ? '/dashboard/admin' : userRole === 'manager' ? '/dashboard/manager' : '/dashboard/my-work', 
+        icon: Home, 
+        badge: null, 
+        type: 'single' 
+      },
   { name: t('common:navigation.overview'), href: '/dashboard/overview', icon: BarChart3, badge: null, type: 'single' },
   { name: t('common:navigation.customers'), href: '/customers', icon: Users, badge: null, type: 'single' },
   { name: t('common:navigation.machines'), href: '/machines', icon: Wrench, badge: null, type: 'single' },
@@ -81,13 +81,13 @@ const getNavigationItems = (t: any, counts: SidebarCounts | null, userRole?: str
     type: 'dropdown',
     children: [
       { 
-        name: 'Repair Tickets', 
+        name: t('common:repair_tickets'), 
         href: '/repair-tickets', 
         icon: FileText, 
         badge: counts?.repair_tickets ? counts.repair_tickets.toString() : null 
       },
       { 
-        name: 'Work Orders', 
+        name: t('common:work_orders'), 
         href: '/work-orders', 
         icon: ClipboardList, 
         badge: null 
@@ -101,13 +101,13 @@ const getNavigationItems = (t: any, counts: SidebarCounts | null, userRole?: str
     type: 'dropdown',
     children: [
       { 
-        name: 'Warranty Repair Tickets', 
+        name: t('common:warranty_repair_tickets'), 
         href: '/warranty-repair-tickets', 
         icon: FileText, 
         badge: counts?.warranty_repair_tickets ? counts.warranty_repair_tickets.toString() : null 
       },
       { 
-        name: 'Warranty Work Orders', 
+        name: t('common:warranty_work_orders'), 
         href: '/warranty-work-orders', 
         icon: ClipboardList, 
         badge: null 

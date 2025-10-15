@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { MainLayout } from '../components/layout/main-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
@@ -102,6 +103,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { socket, isConnected } = useWebSocket()
+  const { t } = useTranslation()
   const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null)
   const [userActivity, setUserActivity] = useState<UserActivity[]>([])
   const [systemAlerts, setSystemAlerts] = useState<SystemAlert[]>([])
@@ -375,9 +377,9 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold">{t('common:navigation.admin_dashboard')}</h1>
             <p className="text-muted-foreground">
-              System overview and administrative controls
+              {t('common:system_overview')} and {t('common:administrative_controls').toLowerCase()}
             </p>
           </div>
           <div className="flex items-center space-x-2">
@@ -407,7 +409,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Server Status</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('common:server_status')}</CardTitle>
               <Server className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -425,7 +427,7 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Database</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('common:database')}</CardTitle>
               <Database className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -443,7 +445,7 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('common:active_users')}</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -458,7 +460,7 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">System Alerts</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('common:system_alerts')}</CardTitle>
               <AlertCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
