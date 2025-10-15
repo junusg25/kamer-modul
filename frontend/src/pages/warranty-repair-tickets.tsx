@@ -75,7 +75,7 @@ interface WarrantyRepairTicket {
   status: string
   priority?: string
   converted_to_warranty_work_order_id?: string
-  converted_work_order_formatted_number?: string
+  converted_warranty_work_order_formatted_number?: string
   converted_by_technician_id?: string
   converted_by_technician_name?: string
   converted_at?: string

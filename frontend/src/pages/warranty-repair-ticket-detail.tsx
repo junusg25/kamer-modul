@@ -106,7 +106,7 @@ interface WarrantyRepairTicket {
   status: string
   priority?: string
   converted_to_warranty_work_order_id?: string
-  converted_work_order_formatted_number?: string
+  converted_warranty_work_order_formatted_number?: string
   converted_work_order_year_created?: number
   converted_by_technician_id?: string
   converted_by_technician_name?: string
@@ -807,7 +807,7 @@ export default function WarrantyRepairTicketDetail() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Work Order Number</p>
-                      <p className="text-sm">{warrantyRepairTicket.converted_work_order_formatted_number || 'N/A'}</p>
+                      <p className="text-sm">{warrantyRepairTicket.converted_warranty_work_order_formatted_number || 'N/A'}</p>
                     </div>
                   </div>
                   {warrantyRepairTicket.converted_to_warranty_work_order_id && (
