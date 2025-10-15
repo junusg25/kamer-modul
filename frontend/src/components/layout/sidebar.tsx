@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { cn } from '../../lib/utils'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
@@ -55,26 +56,26 @@ interface NavigationItem {
   children?: NavigationChild[]
 }
 
-const getNavigationItems = (counts: SidebarCounts | null, userRole?: string, unreadFeedbackCount: number = 0): NavigationItem[] => {
+const getNavigationItems = (t: any, counts: SidebarCounts | null, userRole?: string, unreadFeedbackCount: number = 0): NavigationItem[] => {
   const baseItems: NavigationItem[] = [
   // General Section
-  { name: 'General', href: '#', icon: null, badge: null, type: 'label' },
+  { name: t('common:navigation.general'), href: '#', icon: null, badge: null, type: 'label' },
   { 
-    name: userRole === 'admin' ? 'Admin Dashboard' : userRole === 'manager' ? 'Dashboard' : 'My Work', 
+    name: userRole === 'admin' ? t('common:navigation.admin_dashboard') : userRole === 'manager' ? 'Dashboard' : 'My Work', 
     href: userRole === 'admin' ? '/dashboard/admin' : userRole === 'manager' ? '/dashboard/manager' : '/dashboard/my-work', 
     icon: Home, 
     badge: null, 
     type: 'single' 
   },
-  { name: 'Overview', href: '/dashboard/overview', icon: BarChart3, badge: null, type: 'single' },
-  { name: 'Customers', href: '/customers', icon: Users, badge: null, type: 'single' },
-  { name: 'Machines', href: '/machines', icon: Wrench, badge: null, type: 'single' },
-  { name: 'Inventory', href: '/inventory', icon: Package, badge: null, type: 'single' },
+  { name: t('common:navigation.overview'), href: '/dashboard/overview', icon: BarChart3, badge: null, type: 'single' },
+  { name: t('common:navigation.customers'), href: '/customers', icon: Users, badge: null, type: 'single' },
+  { name: t('common:navigation.machines'), href: '/machines', icon: Wrench, badge: null, type: 'single' },
+  { name: t('common:navigation.inventory'), href: '/inventory', icon: Package, badge: null, type: 'single' },
   
   // Repairs Management Section
-  { name: 'Repairs Management', href: '#', icon: null, badge: null, type: 'label' },
+  { name: t('common:navigation.repairs_management'), href: '#', icon: null, badge: null, type: 'label' },
   { 
-    name: 'Non-Warranty', 
+    name: t('common:navigation.non_warranty'), 
     icon: AlertTriangle, 
     badge: counts?.non_warranty_total ? counts.non_warranty_total.toString() : null, 
     type: 'dropdown',
@@ -94,7 +95,7 @@ const getNavigationItems = (counts: SidebarCounts | null, userRole?: string, unr
     ]
   },
   { 
-    name: 'Warranty', 
+    name: t('common:navigation.warranty'), 
     icon: Award, 
     badge: counts?.warranty_total ? counts.warranty_total.toString() : null, 
     type: 'dropdown',
@@ -115,30 +116,30 @@ const getNavigationItems = (counts: SidebarCounts | null, userRole?: string, unr
   },
   
   // Sales Management Section
-  { name: 'Sales Management', href: '#', icon: null, badge: null, type: 'label' },
+  { name: t('common:navigation.sales_management'), href: '#', icon: null, badge: null, type: 'label' },
   { 
-    name: 'Pipeline & Leads', 
+    name: t('common:navigation.pipeline_leads'), 
     href: '/pipeline-leads', 
     icon: TrendingUp, 
     badge: null, 
     type: 'single' 
   },
   { 
-    name: 'Quote Management', 
+    name: t('common:navigation.quote_management'), 
     href: '/quote-management', 
     icon: FileText, 
     badge: null, 
     type: 'single' 
   },
   { 
-    name: 'Sales Reports', 
+    name: t('common:navigation.sales_reports'), 
     href: '/sales-reports', 
     icon: BarChart3, 
     badge: null, 
     type: 'single' 
   },
   { 
-    name: 'Sales Targets', 
+    name: t('common:navigation.sales_targets'), 
     href: '/sales-targets', 
     icon: Target, 
     badge: null, 
@@ -146,30 +147,30 @@ const getNavigationItems = (counts: SidebarCounts | null, userRole?: string, unr
   },
   
   // Rental Management Section
-  { name: 'Rental Management', href: '#', icon: null, badge: null, type: 'label' },
+  { name: t('common:navigation.rental_management'), href: '#', icon: null, badge: null, type: 'label' },
   { 
-    name: 'Rental Fleet', 
+    name: t('common:navigation.rental_fleet'), 
     href: '/rental-machines', 
     icon: Truck, 
     badge: null, 
     type: 'single' 
   },
   { 
-    name: 'Active Rentals', 
+    name: t('common:navigation.active_rentals'), 
     href: '/machine-rentals', 
     icon: Calendar, 
     badge: null, 
     type: 'single' 
   },
   { 
-    name: 'Rental Analytics', 
+    name: t('common:navigation.rental_analytics'), 
     href: '/rental-analytics', 
     icon: BarChart3, 
     badge: null, 
     type: 'single' 
   },
   { 
-    name: 'Dynamic Pricing', 
+    name: t('common:navigation.dynamic_pricing'), 
     href: '/dynamic-pricing', 
     icon: DollarSign, 
     badge: null, 
@@ -178,9 +179,9 @@ const getNavigationItems = (counts: SidebarCounts | null, userRole?: string, unr
   
   // Admin Section
   ...(userRole === 'admin' ? [
-    { name: 'Admin', href: '#', icon: null, badge: null, type: 'label' },
+    { name: t('common:navigation.admin'), href: '#', icon: null, badge: null, type: 'label' },
     { 
-      name: 'User Feedback', 
+      name: t('common:navigation.user_feedback'), 
       href: '/admin-feedback', 
       icon: MessageSquare, 
       badge: unreadFeedbackCount > 0 ? unreadFeedbackCount.toString() : null, 
@@ -205,6 +206,7 @@ const getNavigationItems = (counts: SidebarCounts | null, userRole?: string, unr
 
 
 export function Sidebar({ className }: SidebarProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const { user, hasPermission } = useAuth()
@@ -235,7 +237,7 @@ export function Sidebar({ className }: SidebarProps) {
 
   // Auto-open dropdowns when on child pages
   React.useEffect(() => {
-    const navigationItems = getNavigationItems(sidebarCounts, user?.role, unreadFeedbackCount)
+    const navigationItems = getNavigationItems(t, sidebarCounts, user?.role, unreadFeedbackCount)
     const autoOpenDropdowns: string[] = []
     
     navigationItems.forEach(item => {
@@ -251,7 +253,7 @@ export function Sidebar({ className }: SidebarProps) {
       const newOpenDropdowns = [...new Set([...prev, ...autoOpenDropdowns])]
       return newOpenDropdowns
     })
-  }, [location.pathname, sidebarCounts, user?.role, unreadFeedbackCount])
+  }, [location.pathname, sidebarCounts, user?.role, unreadFeedbackCount, t])
 
   const toggleDropdown = (itemName: string) => {
     setOpenDropdowns(prev => 
@@ -294,10 +296,10 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-2 py-1">
-        {getNavigationItems(sidebarCounts, user?.role, unreadFeedbackCount)
+        {getNavigationItems(t, sidebarCounts, user?.role, unreadFeedbackCount)
           .filter((item) => {
             // Filter Sales Targets based on permission
-            if (item.name === 'Sales Targets') {
+            if (item.name === t('common:navigation.sales_targets')) {
               const canAccess = hasPermission('sales_targets:read')
               
               return canAccess

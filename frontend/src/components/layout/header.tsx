@@ -1,5 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -21,6 +22,7 @@ interface HeaderProps {
 }
 
 export function Header({ className, onMenuClick }: HeaderProps) {
+  const { t } = useTranslation()
   const { theme, setTheme } = useTheme()
   const { user, logout } = useAuth()
   const { unreadCount } = useNotifications()
@@ -62,7 +64,7 @@ export function Header({ className, onMenuClick }: HeaderProps) {
         
         <div className="hidden md:block">
           <p className="text-sm text-muted-foreground">
-            Welcome back, {user?.name || 'User'}
+{t('common:welcome_back', { name: user?.name || 'User' })}
           </p>
         </div>
       </div>
@@ -100,7 +102,7 @@ export function Header({ className, onMenuClick }: HeaderProps) {
           variant="ghost" 
           size="icon"
           onClick={() => navigate('/settings')}
-          title="Settings"
+          title={t('common:navigation.settings')}
         >
           <Settings className="h-5 w-5" />
         </Button>
