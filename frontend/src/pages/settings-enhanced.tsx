@@ -509,9 +509,27 @@ export default function Settings() {
   }
 
   const handleSaveTranslation = async () => {
+    if (!editingTranslation) return
+
     try {
       setIsSubmitting(true)
-      // In a real implementation, this would save to the backend
+      
+      // Parse the translation key to extract language, namespace, and key
+      // Format: "namespace.key" (e.g., "common.navigation.customers")
+      const keyParts = editingTranslation.key.split('.')
+      const namespace = keyParts[0]
+      const key = keyParts.slice(1).join('.')
+      
+      // Determine which language to update based on what was edited
+      const currentLanguage = languageSettings.current_language
+      const valueToSave = currentLanguage === 'bs' ? editingTranslation.bosnian : editingTranslation.english
+      
+      // Call the backend API to update the translation
+      await apiService.request(`/translations/${currentLanguage}/${namespace}/${key}`, {
+        method: 'PUT',
+        body: JSON.stringify({ value: valueToSave })
+      })
+      
       toast.success('Translation saved successfully')
       setShowEditTranslationDialog(false)
       await loadTranslations()
