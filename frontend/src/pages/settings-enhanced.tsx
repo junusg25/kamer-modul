@@ -383,10 +383,10 @@ export default function Settings() {
       const response: any = await apiService.request('/system-settings/app_language', {
         method: 'GET'
       })
-      if (response?.value) {
+      if (response?.data?.value) {
         setLanguageSettings(prev => ({
           ...prev,
-          current_language: response.value
+          current_language: response.data.value
         }))
       }
     } catch (error) {
