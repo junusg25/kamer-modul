@@ -1117,6 +1117,27 @@
     "photos": "Photos",
     "documents": "Documents",
     "status_updates": "Status Updates",
-    "assignments": "Assignments"
+    "assignments": "Assignments",
+    "user_management": "User Management"
+  },
+  "pages": {
+    "admin": {
+      "real_time_connected": "Real-time Connected",
+      "uptime": "Uptime",
+      "response": "Response",
+      "total_users": "total users",
+      "critical_alerts": "critical alerts",
+      "recent_system_activity": "Recent System Activity",
+      "latest_user_actions": "Latest user actions and system events",
+      "performance_metrics": "Performance Metrics",
+      "memory_usage_heap": "Memory Usage (Heap)",
+      "active_db_connections": "Active DB Connections",
+      "api_response_time": "API Response Time",
+      "network_connections": "Network & Connections",
+      "active_connections": "Active Connections",
+      "server_uptime": "Server Uptime",
+      "system_alerts_notifications": "System Alerts & Notifications",
+      "monitor_system_alerts": "Monitor system alerts and critical events"
+    }
   }
 }

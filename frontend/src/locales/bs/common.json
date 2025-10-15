@@ -1117,6 +1117,27 @@
     "photos": "Fotografije",
     "documents": "Dokumenti",
     "status_updates": "Ažuriranja Statusa",
-    "assignments": "Dodjeljivanja"
+    "assignments": "Dodjeljivanja",
+    "user_management": "Upravljanje Korisnicima"
+  },
+  "pages": {
+    "admin": {
+      "real_time_connected": "Real-time Povezan",
+      "uptime": "Radno Vrijeme",
+      "response": "Odgovor",
+      "total_users": "ukupnih korisnika",
+      "critical_alerts": "kritična upozorenja",
+      "recent_system_activity": "Nedavna Sistemska Aktivnost",
+      "latest_user_actions": "Najnovije akcije korisnika i sistemski događaji",
+      "performance_metrics": "Metrije Performansi",
+      "memory_usage_heap": "Korištenje Memorije (Heap)",
+      "active_db_connections": "Aktivne DB Konekcije",
+      "api_response_time": "Vrijeme Odgovora API-ja",
+      "network_connections": "Mrežne Konekcije",
+      "active_connections": "Aktivne Konekcije",
+      "server_uptime": "Radno Vrijeme Servera",
+      "system_alerts_notifications": "Sistemska Upozorenja i Obavještenja",
+      "monitor_system_alerts": "Pratite sistemska upozorenja i kritične događaje"
+    }
   }
 }
