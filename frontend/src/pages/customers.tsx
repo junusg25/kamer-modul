@@ -165,8 +165,7 @@ const sampleCustomers: Customer[] = [
   }
 ]
 
-const getStatusBadge = (status: Customer['status']) => {
-  const { t } = useTranslation()
+const getStatusBadge = (status: Customer['status'], t: any) => {
   if (!status) return <Badge variant="outline">{t('status.unknown')}</Badge>
   
   return (
@@ -732,7 +731,7 @@ export default function Customers() {
                     )}
                     {isColumnVisible('status') && (
                       <TableCell>
-                        {getStatusBadge(customer.status || 'active')}
+                        {getStatusBadge(customer.status || 'active', t)}
                       </TableCell>
                     )}
                     {isColumnVisible('machines') && (
