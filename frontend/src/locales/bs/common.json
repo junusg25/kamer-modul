@@ -352,6 +352,10 @@
       "cancel": "Otkaži",
       "delete": "Obriši",
       "deleting": "Brisanje..."
+    },
+    "edit_customer": {
+      "title": "Uredi Kupca",
+      "description": "Ažuriraj informacije o kupcu i kontaktne podatke"
     }
   },
   "tabs": {

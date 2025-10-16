@@ -353,6 +353,10 @@
       "cancel": "Cancel",
       "delete": "Delete",
       "deleting": "Deleting..."
+    },
+    "edit_customer": {
+      "title": "Edit Customer",
+      "description": "Update customer information and contact details"
     }
   },
   "tabs": {

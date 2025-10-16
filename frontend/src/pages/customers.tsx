@@ -890,17 +890,17 @@ export default function Customers() {
             <div className="space-y-6">
               {/* Customer Type */}
               <div className="space-y-2">
-                <Label htmlFor="customer_type">Customer Type</Label>
+                <Label htmlFor="customer_type">{t('pages.customer_detail.customer_type')}</Label>
                 <Select 
                   value={editFormData.customer_type} 
                   onValueChange={(value: 'private' | 'company') => handleInputChange('customer_type', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select customer type" />
+                    <SelectValue placeholder={t('pages.customer_detail.select_status')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="private">Private</SelectItem>
-                    <SelectItem value="company">Company</SelectItem>
+                    <SelectItem value="private">{t('status.private')}</SelectItem>
+                    <SelectItem value="company">{t('status.company')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -912,7 +912,7 @@ export default function Customers() {
                   id="name"
                   value={editFormData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="Enter customer name"
+                  placeholder={t('pages.customer_detail.enter_name')}
                   required
                 />
               </div>
@@ -925,7 +925,7 @@ export default function Customers() {
                     id="contact_person"
                     value={editFormData.contact_person || ''}
                     onChange={(e) => handleInputChange('contact_person', e.target.value)}
-                    placeholder="Enter contact person name"
+                    placeholder={t('pages.customer_detail.enter_contact_person')}
                   />
                 </div>
               )}
@@ -933,12 +933,12 @@ export default function Customers() {
               {/* Company Name (for company customers) */}
               {editFormData.customer_type === 'company' && (
                 <div className="space-y-2">
-                  <Label htmlFor="company_name">Company Name</Label>
+                  <Label htmlFor="company_name">{t('common.company')} {t('common.name')}</Label>
                   <Input
                     id="company_name"
                     value={editFormData.company_name || ''}
                     onChange={(e) => handleInputChange('company_name', e.target.value)}
-                    placeholder="Enter company name"
+                    placeholder={t('pages.customer_detail.enter_company_name')}
                   />
                 </div>
               )}
@@ -951,7 +951,7 @@ export default function Customers() {
                     id="vat_number"
                     value={editFormData.vat_number || ''}
                     onChange={(e) => handleInputChange('vat_number', e.target.value)}
-                    placeholder="Enter VAT number"
+                    placeholder={t('pages.customer_detail.enter_vat_number')}
                   />
                 </div>
               )}
@@ -965,7 +965,7 @@ export default function Customers() {
                     type="email"
                     value={editFormData.email || ''}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="Enter email address"
+                    placeholder={t('pages.customer_detail.enter_email')}
                   />
                 </div>
                 <div className="space-y-2">
@@ -974,7 +974,7 @@ export default function Customers() {
                     id="phone"
                     value={editFormData.phone || ''}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
-                    placeholder="Enter phone number"
+                    placeholder={t('pages.customer_detail.enter_phone')}
                   />
                 </div>
               </div>
@@ -986,7 +986,7 @@ export default function Customers() {
                     id="phone2"
                     value={editFormData.phone2 || ''}
                     onChange={(e) => handleInputChange('phone2', e.target.value)}
-                    placeholder="Enter secondary phone"
+                    placeholder={t('pages.customer_detail.enter_secondary_phone')}
                   />
                 </div>
                 <div className="space-y-2">
@@ -995,7 +995,7 @@ export default function Customers() {
                     id="fax"
                     value={editFormData.fax || ''}
                     onChange={(e) => handleInputChange('fax', e.target.value)}
-                    placeholder="Enter fax number"
+                    placeholder={t('pages.customer_detail.enter_fax_number')}
                   />
                 </div>
               </div>
