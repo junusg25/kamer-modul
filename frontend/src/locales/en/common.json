@@ -316,7 +316,8 @@
       "enter_company_name": "Enter company name",
       "enter_vat_number": "Enter VAT number",
       "enter_secondary_phone": "Enter secondary phone",
-      "enter_fax_number": "Enter fax number"
+      "enter_fax_number": "Enter fax number",
+      "enter_ownership_notes": "Enter any additional notes"
     },
     "customers": {
       "title": "Customers",

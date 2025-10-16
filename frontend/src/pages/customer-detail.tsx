@@ -1168,7 +1168,7 @@ export default function CustomerDetail() {
 
               {/* Name */}
               <div className="space-y-2">
-                <Label htmlFor="name">{t('common.name')} *</Label>
+                <Label htmlFor="name">{t('pages.customer_detail.full_name')} *</Label>
                 <Input
                   id="name"
                   value={editFormData.name}
@@ -1334,12 +1334,12 @@ export default function CustomerDetail() {
 
               {/* Ownership Notes */}
               <div className="space-y-2">
-                <Label htmlFor="ownership_notes">Ownership Notes</Label>
+                <Label htmlFor="ownership_notes">{t('pages.customer_detail.ownership_notes')}</Label>
                 <Textarea
                   id="ownership_notes"
                   value={editFormData.ownership_notes || ''}
                   onChange={(e) => handleInputChange('ownership_notes', e.target.value)}
-                  placeholder="Enter any additional notes"
+                  placeholder={t('pages.customer_detail.enter_ownership_notes')}
                   rows={3}
                 />
               </div>

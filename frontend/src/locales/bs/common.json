@@ -315,7 +315,8 @@
       "enter_company_name": "Unesite ime kompanije",
       "enter_vat_number": "Unesite PDV broj",
       "enter_secondary_phone": "Unesite sekundarni telefon",
-      "enter_fax_number": "Unesite fax broj"
+      "enter_fax_number": "Unesite fax broj",
+      "enter_ownership_notes": "Unesite dodatne napomene"
     },
     "customers": {
       "title": "Kupci",
