@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MainLayout } from '../components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
@@ -183,6 +184,7 @@ interface WarrantyWorkOrder {
 
 export default function CustomerDetail() {
   const { id } = useParams<{ id: string }>()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [machines, setMachines] = useState<CustomerMachine[]>([])
@@ -608,11 +610,11 @@ export default function CustomerDetail() {
           <div className="flex items-center space-x-2">
             <Button variant="outline" onClick={handleEditClick}>
               <Edit className="mr-2 h-4 w-4" />
-              Edit Customer
+              {t('pages.customer_detail.edit_customer')}
             </Button>
             <Button variant="destructive" onClick={handleDeleteCustomer}>
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete Customer
+              {t('pages.customer_detail.delete_customer')}
             </Button>
           </div>
         </div>
@@ -621,27 +623,27 @@ export default function CustomerDetail() {
         <div className="grid gap-4 md:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Machines</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.customer_detail.total_machines')}</CardTitle>
               <Wrench className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalMachines}</div>
-              <p className="text-xs text-muted-foreground">Machines owned</p>
+              <p className="text-xs text-muted-foreground">{t('pages.customer_detail.machines_owned')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Warranty</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.customer_detail.active_warranty')}</CardTitle>
               <Shield className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{activeWarrantyMachines}</div>
-              <p className="text-xs text-muted-foreground">Under warranty</p>
+              <p className="text-xs text-muted-foreground">{t('pages.customer_detail.under_warranty')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Work Orders</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.customer_detail.work_orders')}</CardTitle>
               <Wrench className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -651,7 +653,7 @@ export default function CustomerDetail() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Warranty Repairs</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.customer_detail.warranty_work_orders')}</CardTitle>
               <Award className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -674,10 +676,10 @@ export default function CustomerDetail() {
         {/* Main Content */}
         <Tabs defaultValue="details" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="details">Customer Details</TabsTrigger>
-            <TabsTrigger value="machines">Machines ({machines.length})</TabsTrigger>
-            <TabsTrigger value="work-orders">Work Orders ({workOrders.length})</TabsTrigger>
-            <TabsTrigger value="warranty-work-orders">Warranty Work Orders ({warrantyWorkOrders.length})</TabsTrigger>
+            <TabsTrigger value="details">{t('pages.customer_detail.customer_details')}</TabsTrigger>
+            <TabsTrigger value="machines">{t('pages.customer_detail.machines_tab')} ({machines.length})</TabsTrigger>
+            <TabsTrigger value="work-orders">{t('pages.customer_detail.work_orders_tab')} ({workOrders.length})</TabsTrigger>
+            <TabsTrigger value="warranty-work-orders">{t('pages.customer_detail.warranty_work_orders_tab')} ({warrantyWorkOrders.length})</TabsTrigger>
           </TabsList>
 
           {/* Customer Details Tab */}
@@ -817,7 +819,7 @@ export default function CustomerDetail() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Wrench className="h-5 w-5" />
-                  Customer Machines ({machines.length})
+                  {t('pages.customer_detail.customer_machines')} ({machines.length})
                   {machines.length > 0 && (
                     <div className="flex items-center gap-2 ml-4 text-sm font-normal">
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
@@ -935,7 +937,7 @@ export default function CustomerDetail() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Wrench className="h-5 w-5" />
-                  Work Orders ({workOrders.length})
+                  {t('pages.customer_detail.work_orders')} ({workOrders.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1023,7 +1025,7 @@ export default function CustomerDetail() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Award className="h-5 w-5" />
-                  Warranty Work Orders ({warrantyWorkOrders.length})
+                  {t('pages.customer_detail.warranty_work_orders')} ({warrantyWorkOrders.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1111,7 +1113,7 @@ export default function CustomerDetail() {
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
           onConfirm={confirmDeleteCustomer}
-          title="Delete Customer"
+          title={t('pages.customer_detail.delete_customer')}
           itemName={customer?.name}
           itemType="customer"
         />
@@ -1130,7 +1132,7 @@ export default function CustomerDetail() {
         <GeneralAlertDialog
           open={machineAlertOpen}
           onOpenChange={setMachineAlertOpen}
-          title="Cannot Delete Customer"
+          title={t('pages.customer_detail.cannot_delete_customer')}
           description={`Cannot delete ${customer?.name} because they have ${machines.length} machine(s) assigned. Please contact an administrator to reassign or remove the machines first.`}
           confirmText="OK"
           showCancel={false}
@@ -1140,9 +1142,9 @@ export default function CustomerDetail() {
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Edit Customer</DialogTitle>
+              <DialogTitle>{t('pages.customer_detail.edit_customer')}</DialogTitle>
               <DialogDescription>
-                Update customer information and contact details
+                {t('pages.customer_detail.update_customer_info')}
               </DialogDescription>
             </DialogHeader>
             
