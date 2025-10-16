@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next'
 import { MainLayout } from '../components/layout/main-layout'
 import { Card, CardContent, CardHeader } from '../components/ui/card'
 import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
 import { Badge } from '../components/ui/badge'
 import { SmartSearch } from '../components/ui/smart-search'
 import {
@@ -24,10 +23,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu'
+import { Label } from '../components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { apiService } from '../services/api'
 import { formatStatus, formatStatusWithTranslation, getStatusBadgeVariant, getStatusBadgeColor } from '../lib/status'
 import { formatCurrency } from '../lib/currency'
-import { toast } from 'sonner'
 import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '../hooks/useColumnVisibility'
 import { ColumnVisibilityDropdown } from '../components/ui/column-visibility-dropdown'
 import {
@@ -66,27 +66,6 @@ interface Customer {
   created_at: string
   updated_at: string
 }
-
-interface CustomerFormData {
-  customer_type: 'private' | 'company'
-  name: string
-  contact_person?: string
-  email?: string
-  phone?: string
-  phone2?: string
-  fax?: string
-  street_address?: string
-  city?: string
-  postal_code?: string
-  company_name?: string
-  vat_number?: string
-  owner_id?: number
-  ownership_notes?: string
-  status?: 'active' | 'inactive' | 'pending'
-}
-
-// Define columns for the customers table
-// Column definitions will be created inside the component to use translations
 
 const sampleCustomers: Customer[] = [
   {
@@ -202,7 +181,6 @@ export default function Customers() {
     isSyncing
   } = useColumnVisibility('customers', getDefaultColumnKeys(CUSTOMER_COLUMNS))
   
-  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -280,85 +258,6 @@ export default function Customers() {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const handleViewCustomer = (customerId: string | number) => {
-    navigate(`/customers/${customerId}`)
-  }
-
-
-
-
-
-
-  const handleSaveCustomer = async () => {
-    if (!customerToEdit) return
-
-    try {
-      setIsSaving(true)
-      
-      // Prepare update data - only include fields that have values
-      const updateData: any = {
-        customer_type: editFormData.customer_type,
-        name: editFormData.name,
-        status: editFormData.status
-      }
-
-      // Add optional fields only if they have values
-      if (editFormData.contact_person) updateData.contact_person = editFormData.contact_person
-      if (editFormData.email) updateData.email = editFormData.email
-      if (editFormData.phone) updateData.phone = editFormData.phone
-      if (editFormData.phone2) updateData.phone2 = editFormData.phone2
-      if (editFormData.fax) updateData.fax = editFormData.fax
-      if (editFormData.street_address) updateData.street_address = editFormData.street_address
-      if (editFormData.city) updateData.city = editFormData.city
-      if (editFormData.postal_code) updateData.postal_code = editFormData.postal_code
-      if (editFormData.company_name) updateData.company_name = editFormData.company_name
-      if (editFormData.vat_number) updateData.vat_number = editFormData.vat_number
-      if (editFormData.owner_id) updateData.owner_id = editFormData.owner_id
-      if (editFormData.ownership_notes) updateData.ownership_notes = editFormData.ownership_notes
-
-      await apiService.updateCustomer(customerToEdit.id, updateData)
-      
-      // Refresh customers list
-      await fetchCustomers()
-      
-      toast.success('Customer updated successfully')
-      setEditDialogOpen(false)
-    } catch (error: any) {
-      console.error('Error updating customer:', error)
-      
-      // Handle specific error messages from backend
-      if (error.message) {
-        toast.error(error.message)
-      } else {
-        toast.error('Failed to update customer. Please try again.')
-      }
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const handleCancelEdit = () => {
-    setEditDialogOpen(false)
-    setCustomerToEdit(null)
-    setEditFormData({
-      customer_type: 'private',
-      name: '',
-      contact_person: '',
-      email: '',
-      phone: '',
-      phone2: '',
-      fax: '',
-      street_address: '',
-      city: '',
-      postal_code: '',
-      company_name: '',
-      vat_number: '',
-      owner_id: undefined,
-      ownership_notes: '',
-      status: 'active'
-    })
   }
 
   // Get unique owners for filter dropdown (from current page data)
@@ -702,255 +601,6 @@ export default function Customers() {
             </div>
           </div>
         )}
-
-        {/* Delete Confirmation Dialog */}
-        <DeleteConfirmationDialog
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          onConfirm={confirmDeleteCustomer}
-          title={t('modals.delete_customer.title')}
-          itemName={customerToDelete?.name}
-          itemType="customer"
-        />
-
-        {/* Customer with Machines Alert Dialog */}
-        <GeneralAlertDialog
-          open={machineAlertOpen}
-          onOpenChange={setMachineAlertOpen}
-          title={t('modals.cannot_delete_customer.title')}
-          description={t('modals.cannot_delete_customer.description', { name: customerWithMachines?.name, count: customerWithMachines?.total_machines })}
-          confirmText={t('ok')}
-          showCancel={false}
-        />
-
-        {/* Edit Customer Dialog */}
-        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{t('modals.edit_customer.title')}</DialogTitle>
-              <DialogDescription>
-                {t('modals.edit_customer.description')}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-6">
-              {/* Customer Type */}
-              <div className="space-y-2">
-                <Label htmlFor="customer_type">{t('pages.customer_detail.customer_type')}</Label>
-                <Select 
-                  value={editFormData.customer_type} 
-                  onValueChange={(value: 'private' | 'company') => handleInputChange('customer_type', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('pages.customer_detail.select_status')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="private">{t('status.private')}</SelectItem>
-                    <SelectItem value="company">{t('status.company')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Name */}
-              <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
-                <Input
-                  id="name"
-                  value={editFormData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder={t('pages.customer_detail.enter_name')}
-                  required
-                />
-              </div>
-
-              {/* Contact Person (for company customers) */}
-              {editFormData.customer_type === 'company' && (
-                <div className="space-y-2">
-                  <Label htmlFor="contact_person">Contact Person</Label>
-                  <Input
-                    id="contact_person"
-                    value={editFormData.contact_person || ''}
-                    onChange={(e) => handleInputChange('contact_person', e.target.value)}
-                    placeholder={t('pages.customer_detail.enter_contact_person')}
-                  />
-                </div>
-              )}
-
-              {/* Company Name (for company customers) */}
-              {editFormData.customer_type === 'company' && (
-                <div className="space-y-2">
-                  <Label htmlFor="company_name">{t('common.company')} {t('common.name')}</Label>
-                  <Input
-                    id="company_name"
-                    value={editFormData.company_name || ''}
-                    onChange={(e) => handleInputChange('company_name', e.target.value)}
-                    placeholder={t('pages.customer_detail.enter_company_name')}
-                  />
-                </div>
-              )}
-
-              {/* VAT Number (for company customers) */}
-              {editFormData.customer_type === 'company' && (
-                <div className="space-y-2">
-                  <Label htmlFor="vat_number">VAT Number</Label>
-                  <Input
-                    id="vat_number"
-                    value={editFormData.vat_number || ''}
-                    onChange={(e) => handleInputChange('vat_number', e.target.value)}
-                    placeholder={t('pages.customer_detail.enter_vat_number')}
-                  />
-                </div>
-              )}
-
-              {/* Contact Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={editFormData.email || ''}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder={t('pages.customer_detail.enter_email')}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={editFormData.phone || ''}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                    placeholder={t('pages.customer_detail.enter_phone')}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone2">Phone 2</Label>
-                  <Input
-                    id="phone2"
-                    value={editFormData.phone2 || ''}
-                    onChange={(e) => handleInputChange('phone2', e.target.value)}
-                    placeholder={t('pages.customer_detail.enter_secondary_phone')}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="fax">Fax</Label>
-                  <Input
-                    id="fax"
-                    value={editFormData.fax || ''}
-                    onChange={(e) => handleInputChange('fax', e.target.value)}
-                    placeholder={t('pages.customer_detail.enter_fax_number')}
-                  />
-                </div>
-              </div>
-
-              {/* Address Information */}
-              <div className="space-y-2">
-                <Label htmlFor="street_address">Street Address</Label>
-                <Input
-                  id="street_address"
-                  value={editFormData.street_address || ''}
-                  onChange={(e) => handleInputChange('street_address', e.target.value)}
-                  placeholder="Enter street address"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    value={editFormData.city || ''}
-                    onChange={(e) => handleInputChange('city', e.target.value)}
-                    placeholder="Enter city"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="postal_code">Postal Code</Label>
-                  <Input
-                    id="postal_code"
-                    value={editFormData.postal_code || ''}
-                    onChange={(e) => handleInputChange('postal_code', e.target.value)}
-                    placeholder="Enter postal code"
-                  />
-                </div>
-              </div>
-
-              {/* Owner Assignment */}
-              <div className="space-y-2">
-                <Label htmlFor="owner_id">Assigned Owner</Label>
-                <Select 
-                  value={editFormData.owner_id?.toString() || 'none'} 
-                  onValueChange={(value) => handleInputChange('owner_id', value === 'none' ? undefined : parseInt(value))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select owner" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No owner assigned</SelectItem>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id.toString()}>
-                        {user.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Status */}
-              <div className="space-y-2">
-                <Label htmlFor="status">{t('tables.headers.status')}</Label>
-                <Select 
-                  value={editFormData.status || 'active'} 
-                  onValueChange={(value: 'active' | 'inactive' | 'pending') => handleInputChange('status', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('pages.customers.select_status')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">{t('status.active')}</SelectItem>
-                    <SelectItem value="inactive">{t('status.inactive')}</SelectItem>
-                    <SelectItem value="pending">{t('status.pending')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Ownership Notes */}
-              <div className="space-y-2">
-                <Label htmlFor="ownership_notes">Ownership Notes</Label>
-                <Textarea
-                  id="ownership_notes"
-                  value={editFormData.ownership_notes || ''}
-                  onChange={(e) => handleInputChange('ownership_notes', e.target.value)}
-                  placeholder="Enter any additional notes"
-                  rows={3}
-                />
-              </div>
-            </div>
-
-            <DialogFooter className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
-                <X className="mr-2 h-4 w-4" />
-                {t('cancel')}
-              </Button>
-              <Button onClick={handleSaveCustomer} disabled={isSaving || !editFormData.name.trim()}>
-                {isSaving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t('saving')}...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    {t('save')}
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     </MainLayout>
   )
