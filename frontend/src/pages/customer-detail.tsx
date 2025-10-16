@@ -648,7 +648,7 @@ export default function CustomerDetail() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalWorkOrders}</div>
-              <p className="text-xs text-muted-foreground">Total repairs</p>
+              <p className="text-xs text-muted-foreground">{t('pages.customer_detail.total_repairs')}</p>
             </CardContent>
           </Card>
           <Card>
@@ -658,17 +658,17 @@ export default function CustomerDetail() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalWarrantyWorkOrders}</div>
-              <p className="text-xs text-muted-foreground">Warranty repairs</p>
+              <p className="text-xs text-muted-foreground">{t('pages.customer_detail.warranty_repairs')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.customer_detail.total_spent')}</CardTitle>
               <Euro className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{formatCurrency(totalSpent)}</div>
-              <p className="text-xs text-muted-foreground">Total purchases</p>
+              <p className="text-xs text-muted-foreground">{t('pages.customer_detail.total_purchases')}</p>
             </CardContent>
           </Card>
         </div>
@@ -690,7 +690,7 @@ export default function CustomerDetail() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5" />
-                    {customer.customer_type === 'company' ? 'Contact Information' : 'Personal Information'}
+                    {customer.customer_type === 'company' ? t('pages.customer_detail.contact_information') : t('pages.customer_detail.personal_information')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -698,7 +698,7 @@ export default function CustomerDetail() {
                     {customer.customer_type === 'company' ? (
                       <>
                         <div>
-                          <p className="text-sm font-medium text-muted-foreground">Company Name</p>
+                          <p className="text-sm font-medium text-muted-foreground">{t('common.company')} {t('common.name')}</p>
                           <p className="text-sm">{customer.company_name || 'N/A'}</p>
                         </div>
                         <div>
@@ -709,35 +709,35 @@ export default function CustomerDetail() {
                     ) : (
                       <>
                         <div>
-                          <p className="text-sm font-medium text-muted-foreground">Full Name</p>
+                          <p className="text-sm font-medium text-muted-foreground">{t('pages.customer_detail.full_name')}</p>
                           <p className="text-sm">{customer.name}</p>
                         </div>
                         {customer.company_name && (
                           <div>
-                            <p className="text-sm font-medium text-muted-foreground">Company</p>
+                            <p className="text-sm font-medium text-muted-foreground">{t('pages.customer_detail.company')}</p>
                             <p className="text-sm">{customer.company_name}</p>
                           </div>
                         )}
                       </>
                     )}
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Email</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.customer_detail.email')}</p>
                       <p className="text-sm">{customer.email || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.customer_detail.phone')}</p>
                       <p className="text-sm">{customer.phone || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Phone 2</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.customer_detail.phone')} 2</p>
                       <p className="text-sm">{customer.phone2 || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Fax</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.customer_detail.fax')}</p>
                       <p className="text-sm">{customer.fax || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Created</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.customer_detail.created_at')}</p>
                       <p className="text-sm">{formatDate(customer.created_at)}</p>
                     </div>
                   </div>
@@ -749,7 +749,7 @@ export default function CustomerDetail() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Building className="h-5 w-5" />
-                    {customer.customer_type === 'company' ? 'Business Information' : 'Address Information'}
+                    {customer.customer_type === 'company' ? t('pages.customer_detail.business_information') : t('pages.customer_detail.address_information')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -761,23 +761,23 @@ export default function CustomerDetail() {
                       </div>
                     )}
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Address</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.customer_detail.street_address')}</p>
                       <p className="text-sm">{customer.street_address || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">City</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.customer_detail.city')}</p>
                       <p className="text-sm">{customer.city || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Postal Code</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.customer_detail.postal_code')}</p>
                       <p className="text-sm">{customer.postal_code || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Owner</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.customer_detail.owner')}</p>
                       <p className="text-sm">{customer.owner_name || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Assigned At</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.customer_detail.assigned_at')}</p>
                       <p className="text-sm">
                         {customer.assigned_at 
                           ? formatDate(customer.assigned_at)
@@ -786,7 +786,7 @@ export default function CustomerDetail() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.customer_detail.last_updated')}</p>
                       <p className="text-sm">{formatDate(customer.updated_at)}</p>
                     </div>
                   </div>
@@ -799,12 +799,12 @@ export default function CustomerDetail() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <User className="h-5 w-5" />
-                      Ownership Information
+                      {t('pages.customer_detail.ownership_information')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Ownership Notes</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.customer_detail.ownership_notes')}</p>
                       <p className="text-sm bg-muted p-3 rounded mt-2">{customer.ownership_notes}</p>
                     </div>
                   </CardContent>
@@ -847,12 +847,12 @@ export default function CustomerDetail() {
                         <TableHead>{t('pages.customer_detail.machine_type')}</TableHead>
                         <TableHead>{t('pages.customer_detail.serial_number')}</TableHead>
                         <TableHead>{t('pages.customer_detail.model')}</TableHead>
-                        <TableHead>Manufacturer</TableHead>
+                        <TableHead>{t('pages.customer_detail.manufacturer')}</TableHead>
                         <TableHead>{t('pages.customer_detail.condition')}</TableHead>
-                        <TableHead>Date</TableHead>
+                        <TableHead>{t('pages.customer_detail.date')}</TableHead>
                         <TableHead>{t('pages.customer_detail.warranty_active')}</TableHead>
                         <TableHead>{t('pages.customer_detail.sale_price')}</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="text-right">{t('pages.customer_detail.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -958,7 +958,7 @@ export default function CustomerDetail() {
                         <TableHead>{t('pages.customer_detail.assigned_technician')}</TableHead>
                         <TableHead>{t('pages.customer_detail.created_date')}</TableHead>
                         <TableHead>Total Cost</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="text-right">{t('pages.customer_detail.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1046,7 +1046,7 @@ export default function CustomerDetail() {
                         <TableHead>{t('pages.customer_detail.assigned_technician')}</TableHead>
                         <TableHead>{t('pages.customer_detail.created_date')}</TableHead>
                         <TableHead>Total Cost</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="text-right">{t('pages.customer_detail.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

@@ -290,7 +290,22 @@
       "select_country": "Odaberite zemlju",
       "select_status": "Odaberite status",
       "select_owner": "Odaberite vlasnika",
-      "enter_notes": "Unesite napomene"
+      "enter_notes": "Unesite napomene",
+      "total_repairs": "Ukupno popravki",
+      "warranty_repairs": "Garancijske popravke",
+      "total_purchases": "Ukupne kupovine",
+      "full_name": "Puno Ime",
+      "company": "Kompanija",
+      "fax": "Fax",
+      "assigned_at": "Dodijeljeno",
+      "last_updated": "Zadnji Ažuriran",
+      "ownership_information": "Informacije o Vlasništvu",
+      "manufacturer": "Proizvođač",
+      "date": "Datum",
+      "actions": "Radnje",
+      "new": "novo",
+      "used": "korišteno",
+      "no_warranty": "Bez Garancije"
     },
     "customers": {
       "title": "Kupci",

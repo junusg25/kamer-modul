@@ -291,7 +291,22 @@
       "select_country": "Select country",
       "select_status": "Select status",
       "select_owner": "Select owner",
-      "enter_notes": "Enter notes"
+      "enter_notes": "Enter notes",
+      "total_repairs": "Total repairs",
+      "warranty_repairs": "Warranty repairs",
+      "total_purchases": "Total purchases",
+      "full_name": "Full Name",
+      "company": "Company",
+      "fax": "Fax",
+      "assigned_at": "Assigned At",
+      "last_updated": "Last Updated",
+      "ownership_information": "Ownership Information",
+      "manufacturer": "Manufacturer",
+      "date": "Date",
+      "actions": "Actions",
+      "new": "new",
+      "used": "used",
+      "no_warranty": "No Warranty"
     },
     "customers": {
       "title": "Customers",
