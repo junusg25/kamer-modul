@@ -711,7 +711,7 @@ export default function Customers() {
                           variant={customer.customer_type === 'company' ? 'default' : 'secondary'} 
                           className="text-xs"
                         >
-                          {customer.customer_type === 'company' ? 'Company' : 'Private'}
+                          {customer.customer_type === 'company' ? t('status.company') : t('status.private')}
                         </Badge>
                       </TableCell>
                     )}
