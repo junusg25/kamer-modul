@@ -118,6 +118,7 @@
   "manager": "Manager",
   "technician": "Technician",
   "sales": "Sales",
+  "view_details": "View Details",
   "columns": "Columns",
   "column_visibility": "Column Visibility",
   "search_columns": "Search columns...",
