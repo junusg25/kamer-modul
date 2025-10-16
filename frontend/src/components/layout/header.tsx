@@ -64,7 +64,7 @@ export function Header({ className, onMenuClick }: HeaderProps) {
         
         <div className="hidden md:block">
           <p className="text-sm text-muted-foreground">
-            {ready ? t('common:welcome_back', { name: user?.name || 'User' }) : 'Loading...'}
+            {ready ? t('welcome_back', { name: user?.name || t('user') }) : t('loading')}
           </p>
         </div>
       </div>
@@ -76,7 +76,7 @@ export function Header({ className, onMenuClick }: HeaderProps) {
           variant="ghost"
           size="icon"
           onClick={cycleTheme}
-          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+          title={ready ? (theme === 'light' ? t('switch_to_dark_theme') : t('switch_to_light_theme')) : 'Theme'}
         >
           {getThemeIcon()}
         </Button>
@@ -86,7 +86,7 @@ export function Header({ className, onMenuClick }: HeaderProps) {
           variant="ghost"
           size="icon"
           onClick={() => navigate('/notifications')}
-          title="Notifications"
+          title={ready ? t('notifications') : 'Notifications'}
           className="relative"
         >
           <Bell className="h-5 w-5" />
@@ -102,7 +102,7 @@ export function Header({ className, onMenuClick }: HeaderProps) {
           variant="ghost" 
           size="icon"
           onClick={() => navigate('/settings')}
-          title={ready ? t('common:navigation.settings') : 'Settings'}
+          title={ready ? t('navigation.settings') : 'Settings'}
         >
           <Settings className="h-5 w-5" />
         </Button>
@@ -116,10 +116,18 @@ export function Header({ className, onMenuClick }: HeaderProps) {
             </AvatarFallback>
           </Avatar>
           <div className="hidden md:block">
-            <p className="text-sm font-medium">{user?.name || 'User'}</p>
-            <p className="text-xs text-muted-foreground capitalize">{user?.role || 'User'}</p>
+            <p className="text-sm font-medium">{user?.name || (ready ? t('user') : 'User')}</p>
+            <p className="text-xs text-muted-foreground capitalize">
+              {user?.role ? (ready ? t(user.role.toLowerCase()) : user.role) : (ready ? t('user') : 'User')}
+            </p>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleLogout}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8" 
+            onClick={handleLogout}
+            title={ready ? t('logout') : 'Logout'}
+          >
             <LogOut className="h-4 w-4" />
           </Button>
         </div>

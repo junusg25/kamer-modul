@@ -107,6 +107,17 @@
   "updated": "Updated",
   "assigned_to": "Assigned To",
   "owner": "Owner",
+  "welcome_back": "Welcome back, {{name}}",
+  "notifications": "Notifications",
+  "switch_to_dark_theme": "Switch to dark theme",
+  "switch_to_light_theme": "Switch to light theme",
+  "user": "User",
+  "logout": "Logout",
+  "theme": "Theme",
+  "admin": "Admin",
+  "manager": "Manager",
+  "technician": "Technician",
+  "sales": "Sales",
   "tables": {
     "headers": {
       "actions": "Actions",

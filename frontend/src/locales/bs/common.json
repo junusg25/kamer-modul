@@ -107,6 +107,17 @@
   "updated": "Ažuriran",
   "assigned_to": "Dodijeljeno",
   "owner": "Vlasnik",
+  "welcome_back": "Dobrodošli nazad, {{name}}",
+  "notifications": "Obavještenja",
+  "switch_to_dark_theme": "Prebaci na tamnu temu",
+  "switch_to_light_theme": "Prebaci na svijetlu temu",
+  "user": "Korisnik",
+  "logout": "Odjavi se",
+  "theme": "Tema",
+  "admin": "Admin",
+  "manager": "Menadžer",
+  "technician": "Tehničar",
+  "sales": "Prodaja",
   "tables": {
     "headers": {
       "actions": "Radnje",
