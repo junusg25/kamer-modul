@@ -160,7 +160,7 @@ export default function AdminDashboard() {
           updated[userIndex] = {
             ...updated[userIndex],
             status: data.status as 'online' | 'offline' | 'away',
-            session_duration: data.status === 'offline' ? 'N/A' : updated[userIndex].session_duration
+            session_duration: data.status === 'offline' ? t('pages.admin.na') : updated[userIndex].session_duration
           }
         } else {
           // Add new user (if they just came online)
@@ -387,7 +387,7 @@ export default function AdminDashboard() {
             <div className="flex items-center space-x-2 text-sm">
               <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
               <span className="text-muted-foreground">
-                {isConnected ? t('pages.admin.real_time_connected') : 'Disconnected'}
+                {isConnected ? t('pages.admin.real_time_connected') : t('pages.admin.disconnected')}
               </span>
             </div>
             <Button
@@ -420,7 +420,7 @@ export default function AdminDashboard() {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {t('pages.admin.uptime')}: {systemHealth?.uptime || 'N/A'}
+                {t('pages.admin.uptime')}: {systemHealth?.uptime || t('pages.admin.na')}
               </p>
             </CardContent>
           </Card>
@@ -780,7 +780,7 @@ export default function AdminDashboard() {
                   id="name"
                   value={userFormData.name}
                   onChange={(e) => setUserFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter name"
+                  placeholder={t('pages.admin.enter_name')}
                 />
               </div>
 
@@ -792,7 +792,7 @@ export default function AdminDashboard() {
                   type="email"
                   value={userFormData.email}
                   onChange={(e) => setUserFormData(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="Enter email"
+                  placeholder={t('pages.admin.enter_email')}
                 />
               </div>
 
@@ -804,7 +804,7 @@ export default function AdminDashboard() {
                   onValueChange={(value) => setUserFormData(prev => ({ ...prev, role: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
+                    <SelectValue placeholder={t('pages.admin.select_role')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">Admin</SelectItem>
