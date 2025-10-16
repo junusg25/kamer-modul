@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { MainLayout } from '../components/layout/main-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
@@ -79,6 +80,7 @@ interface EntityBreakdown {
 export default function UserActivityHistory() {
   const { userId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [logs, setLogs] = useState<ActionLog[]>([])
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [statistics, setStatistics] = useState<Statistics | null>(null)
@@ -115,7 +117,7 @@ export default function UserActivityHistory() {
       setTotalPages(response.pagination.pages)
     } catch (error: any) {
       console.error('Error fetching action logs:', error)
-      toast.error('Failed to load action logs')
+      toast.error(t('pages.admin.failed_to_load_action_logs'))
     } finally {
       setLoading(false)
     }
@@ -138,7 +140,7 @@ export default function UserActivityHistory() {
 
   const handleExport = () => {
     // Export to CSV
-    const headers = ['Date', 'Action', 'Entity Type', 'Entity Name', 'Details', 'IP Address']
+    const headers = [t('pages.admin.date_time'), t('pages.admin.action'), t('pages.admin.entity_type'), t('pages.admin.entity'), t('pages.admin.details'), t('pages.admin.ip_address')]
     const csvData = logs.map(log => [
       formatDateTime(log.created_at),
       getActionLabel(log.action_type),
@@ -160,7 +162,7 @@ export default function UserActivityHistory() {
     a.download = `user-${userId}-activity-${new Date().toISOString().split('T')[0]}.csv`
     a.click()
     window.URL.revokeObjectURL(url)
-    toast.success('Activity log exported successfully')
+    toast.success(t('pages.admin.activity_log_exported_successfully'))
   }
 
   const getActionIcon = (actionType: string) => {
@@ -184,7 +186,7 @@ export default function UserActivityHistory() {
   }
 
   const getActionLabel = (actionType: string) => {
-    return actionType.charAt(0).toUpperCase() + actionType.slice(1)
+    return t(`pages.admin.${actionType}`)
   }
 
   const getEntityIcon = (entityType: string) => {
@@ -207,9 +209,7 @@ export default function UserActivityHistory() {
   }
 
   const getEntityLabel = (entityType: string) => {
-    return entityType.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ')
+    return t(`pages.admin.${entityType}`)
   }
 
   const getActionColor = (actionType: string) => {
@@ -248,10 +248,10 @@ export default function UserActivityHistory() {
               onClick={() => navigate('/dashboard/admin')}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Admin Dashboard
+{t('pages.admin.back_to_admin_dashboard')}
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">User Activity History</h1>
+              <h1 className="text-3xl font-bold">{t('pages.admin.user_activity_history')}</h1>
               {userInfo && (
                 <p className="text-muted-foreground">
                   {userInfo.name} ({userInfo.email}) • {userInfo.role}
@@ -266,7 +266,7 @@ export default function UserActivityHistory() {
               onClick={fetchActionLogs}
             >
               <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
+{t('pages.admin.refresh')}
             </Button>
             <Button
               variant="outline"
@@ -274,7 +274,7 @@ export default function UserActivityHistory() {
               onClick={handleExport}
             >
               <Download className="h-4 w-4 mr-2" />
-              Export CSV
+{t('pages.admin.export_csv')}
             </Button>
           </div>
         </div>
@@ -284,52 +284,52 @@ export default function UserActivityHistory() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Actions</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('pages.admin.total_actions')}</CardTitle>
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{statistics.total_actions}</div>
                 <p className="text-xs text-muted-foreground">
-                  {statistics.today_actions} today
+{statistics.today_actions} {t('pages.admin.today')}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Creates</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('pages.admin.creates')}</CardTitle>
                 <Plus className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">{statistics.creates}</div>
                 <p className="text-xs text-muted-foreground">
-                  New items created
+{t('pages.admin.new_items_created')}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Updates</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('pages.admin.updates')}</CardTitle>
                 <Edit className="h-4 w-4 text-blue-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-blue-600">{statistics.updates}</div>
                 <p className="text-xs text-muted-foreground">
-                  Items modified
+{t('pages.admin.items_modified')}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Deletes</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('pages.admin.deletes')}</CardTitle>
                 <Trash2 className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-red-600">{statistics.deletes}</div>
                 <p className="text-xs text-muted-foreground">
-                  Items removed
+{t('pages.admin.items_removed')}
                 </p>
               </CardContent>
             </Card>
@@ -340,9 +340,9 @@ export default function UserActivityHistory() {
         {breakdown.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Activity Breakdown by Entity Type</CardTitle>
+              <CardTitle>{t('pages.admin.activity_breakdown_by_entity')}</CardTitle>
               <CardDescription>
-                Distribution of actions across different entity types
+{t('pages.admin.distribution_of_actions')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -358,15 +358,15 @@ export default function UserActivityHistory() {
                     </div>
                     <div className="text-xs text-muted-foreground space-y-1">
                       <div className="flex justify-between">
-                        <span>Creates:</span>
+                        <span>{t('pages.admin.creates')}:</span>
                         <span className="text-green-600">{item.creates}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Updates:</span>
+                        <span>{t('pages.admin.updates')}:</span>
                         <span className="text-blue-600">{item.updates}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Deletes:</span>
+                        <span>{t('pages.admin.deletes')}:</span>
                         <span className="text-red-600">{item.deletes}</span>
                       </div>
                     </div>
@@ -384,10 +384,10 @@ export default function UserActivityHistory() {
               <div>
                 <CardTitle className="flex items-center">
                   <Filter className="h-5 w-5 mr-2" />
-                  Filters
+{t('pages.admin.filters')}
                 </CardTitle>
                 <CardDescription>
-                  Filter activity logs by action type, entity, and date range
+{t('pages.admin.filter_activity_logs')}
                 </CardDescription>
               </div>
               {getActiveFiltersCount() > 0 && (
@@ -396,7 +396,7 @@ export default function UserActivityHistory() {
                   size="sm"
                   onClick={handleClearFilters}
                 >
-                  Clear Filters ({getActiveFiltersCount()})
+{t('pages.admin.clear_filters')} ({getActiveFiltersCount()})
                 </Button>
               )}
             </div>
@@ -405,68 +405,68 @@ export default function UserActivityHistory() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {/* Action Type Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Action Type</label>
+                <label className="text-sm font-medium">{t('pages.admin.action_type')}</label>
                 <Select
                   value={filters.action_type || 'all'}
                   onValueChange={(value) => handleFilterChange('action_type', value === 'all' ? '' : value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="All actions" />
+                    <SelectValue placeholder={t('pages.admin.all_actions')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All actions</SelectItem>
-                    <SelectItem value="create">Create</SelectItem>
-                    <SelectItem value="update">Update</SelectItem>
-                    <SelectItem value="delete">Delete</SelectItem>
-                    <SelectItem value="convert">Convert</SelectItem>
-                    <SelectItem value="assign">Assign</SelectItem>
-                    <SelectItem value="sell">Sell</SelectItem>
+                    <SelectItem value="all">{t('pages.admin.all_actions')}</SelectItem>
+                    <SelectItem value="create">{t('pages.admin.create')}</SelectItem>
+                    <SelectItem value="update">{t('pages.admin.update')}</SelectItem>
+                    <SelectItem value="delete">{t('pages.admin.delete')}</SelectItem>
+                    <SelectItem value="convert">{t('pages.admin.convert')}</SelectItem>
+                    <SelectItem value="assign">{t('pages.admin.assign')}</SelectItem>
+                    <SelectItem value="sell">{t('pages.admin.sell')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Entity Type Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Entity Type</label>
+                <label className="text-sm font-medium">{t('pages.admin.entity_type')}</label>
                 <Select
                   value={filters.entity_type || 'all'}
                   onValueChange={(value) => handleFilterChange('entity_type', value === 'all' ? '' : value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="All entities" />
+                    <SelectValue placeholder={t('pages.admin.all_entities')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All entities</SelectItem>
-                    <SelectItem value="customer">Customer</SelectItem>
-                    <SelectItem value="machine">Machine</SelectItem>
-                    <SelectItem value="work_order">Work Order</SelectItem>
-                    <SelectItem value="warranty_work_order">Warranty Work Order</SelectItem>
-                    <SelectItem value="repair_ticket">Repair Ticket</SelectItem>
-                    <SelectItem value="warranty_repair_ticket">Warranty Repair Ticket</SelectItem>
-                    <SelectItem value="inventory">Inventory</SelectItem>
-                    <SelectItem value="lead">Lead</SelectItem>
-                    <SelectItem value="quote">Quote</SelectItem>
+                    <SelectItem value="all">{t('pages.admin.all_entities')}</SelectItem>
+                    <SelectItem value="customer">{t('pages.admin.customer')}</SelectItem>
+                    <SelectItem value="machine">{t('pages.admin.machine')}</SelectItem>
+                    <SelectItem value="work_order">{t('pages.admin.work_order')}</SelectItem>
+                    <SelectItem value="warranty_work_order">{t('pages.admin.warranty_work_order')}</SelectItem>
+                    <SelectItem value="repair_ticket">{t('pages.admin.repair_ticket')}</SelectItem>
+                    <SelectItem value="warranty_repair_ticket">{t('pages.admin.warranty_repair_ticket')}</SelectItem>
+                    <SelectItem value="inventory">{t('pages.admin.inventory')}</SelectItem>
+                    <SelectItem value="lead">{t('pages.admin.lead')}</SelectItem>
+                    <SelectItem value="quote">{t('pages.admin.quote')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Start Date Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Start Date</label>
+                <label className="text-sm font-medium">{t('pages.admin.start_date')}</label>
                 <DatePicker
                   value={filters.start_date}
                   onChange={(value) => handleFilterChange('start_date', value)}
-                  placeholder="Select start date"
+                  placeholder={t('pages.admin.select_start_date')}
                 />
               </div>
 
               {/* End Date Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">End Date</label>
+                <label className="text-sm font-medium">{t('pages.admin.end_date')}</label>
                 <DatePicker
                   value={filters.end_date}
                   onChange={(value) => handleFilterChange('end_date', value)}
-                  placeholder="Select end date"
+                  placeholder={t('pages.admin.select_end_date')}
                 />
               </div>
             </div>
@@ -476,28 +476,28 @@ export default function UserActivityHistory() {
         {/* Activity Timeline */}
         <Card>
           <CardHeader>
-            <CardTitle>Activity Timeline</CardTitle>
+            <CardTitle>{t('pages.admin.activity_timeline')}</CardTitle>
             <CardDescription>
-              Detailed log of all user actions
+{t('pages.admin.detailed_log_user_actions')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8">Loading activity logs...</div>
+              <div className="text-center py-8">{t('pages.admin.loading_activity_logs')}</div>
             ) : logs.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No activity logs found for this user with the selected filters.
+{t('pages.admin.no_activity_logs_found')}
               </div>
             ) : (
               <>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date & Time</TableHead>
-                      <TableHead>Action</TableHead>
-                      <TableHead>Entity</TableHead>
-                      <TableHead>Details</TableHead>
-                      <TableHead>IP Address</TableHead>
+                      <TableHead>{t('pages.admin.date_time')}</TableHead>
+                      <TableHead>{t('pages.admin.action')}</TableHead>
+                      <TableHead>{t('pages.admin.entity')}</TableHead>
+                      <TableHead>{t('pages.admin.details')}</TableHead>
+                      <TableHead>{t('pages.admin.ip_address')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -530,22 +530,22 @@ export default function UserActivityHistory() {
                             <div className="text-sm">
                               {log.action_details.updated_fields && (
                                 <div className="text-muted-foreground">
-                                  Updated: {log.action_details.updated_fields.join(', ')}
+{t('pages.admin.updated')}: {log.action_details.updated_fields.join(', ')}
                                 </div>
                               )}
                               {log.action_details.status_change && (
                                 <div className="text-muted-foreground">
-                                  Status: {log.action_details.status_change.from} → {log.action_details.status_change.to}
+{t('pages.admin.status')}: {log.action_details.status_change.from} → {log.action_details.status_change.to}
                                 </div>
                               )}
                               {log.action_details.converted_to && (
                                 <div className="text-muted-foreground">
-                                  Converted to {log.action_details.converted_to}
+{t('pages.admin.converted_to')} {log.action_details.converted_to}
                                 </div>
                               )}
                               {log.action_details.sale_price && (
                                 <div className="text-muted-foreground">
-                                  Sale Price: ${log.action_details.sale_price}
+{t('pages.admin.sale_price')}: ${log.action_details.sale_price}
                                 </div>
                               )}
                             </div>
@@ -563,7 +563,7 @@ export default function UserActivityHistory() {
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between mt-4">
                     <div className="text-sm text-muted-foreground">
-                      Page {page} of {totalPages}
+{t('pages.admin.page')} {page} {t('pages.admin.of')} {totalPages}
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button
@@ -572,7 +572,7 @@ export default function UserActivityHistory() {
                         onClick={() => setPage(prev => Math.max(1, prev - 1))}
                         disabled={page === 1}
                       >
-                        Previous
+{t('pages.admin.previous')}
                       </Button>
                       <Button
                         variant="outline"
@@ -580,7 +580,7 @@ export default function UserActivityHistory() {
                         onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
                         disabled={page === totalPages}
                       >
-                        Next
+{t('pages.admin.next')}
                       </Button>
                     </div>
                   </div>
