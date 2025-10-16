@@ -317,7 +317,10 @@
       "enter_vat_number": "Enter VAT number",
       "enter_secondary_phone": "Enter secondary phone",
       "enter_fax_number": "Enter fax number",
-      "enter_ownership_notes": "Enter any additional notes"
+      "enter_ownership_notes": "Enter any additional notes",
+      "delete_machine": "Delete Machine",
+      "ok": "OK",
+      "cannot_delete_customer_reason": "Cannot delete {{customerName}} because they have {{machineCount}} machine(s) assigned. Please contact an administrator to reassign or remove the machines first."
     },
     "customers": {
       "title": "Customers",

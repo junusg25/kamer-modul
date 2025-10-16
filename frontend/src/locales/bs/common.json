@@ -316,7 +316,10 @@
       "enter_vat_number": "Unesite PDV broj",
       "enter_secondary_phone": "Unesite sekundarni telefon",
       "enter_fax_number": "Unesite fax broj",
-      "enter_ownership_notes": "Unesite dodatne napomene"
+      "enter_ownership_notes": "Unesite dodatne napomene",
+      "delete_machine": "Obriši Mašinu",
+      "ok": "U redu",
+      "cannot_delete_customer_reason": "Ne može se obrisati {{customerName}} jer ima {{machineCount}} mašina dodijeljenih. Molimo kontaktirajte administratora da preusmjeri ili ukloni mašine prvo."
     },
     "customers": {
       "title": "Kupci",

@@ -1123,7 +1123,7 @@ export default function CustomerDetail() {
           open={machineDeleteDialogOpen}
           onOpenChange={setMachineDeleteDialogOpen}
           onConfirm={confirmDeleteMachine}
-          title="Delete Machine"
+          title={t('pages.customer_detail.delete_machine')}
           itemName={machineToDelete?.name}
           itemType="machine"
         />
@@ -1133,8 +1133,8 @@ export default function CustomerDetail() {
           open={machineAlertOpen}
           onOpenChange={setMachineAlertOpen}
           title={t('pages.customer_detail.cannot_delete_customer')}
-          description={`Cannot delete ${customer?.name} because they have ${machines.length} machine(s) assigned. Please contact an administrator to reassign or remove the machines first.`}
-          confirmText="OK"
+          description={t('pages.customer_detail.cannot_delete_customer_reason', { customerName: customer?.name, machineCount: machines.length })}
+          confirmText={t('pages.customer_detail.ok')}
           showCancel={false}
         />
 
