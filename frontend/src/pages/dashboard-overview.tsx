@@ -207,7 +207,7 @@ const DashboardOverview = () => {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground">Loading comprehensive analytics dashboard...</p>
+            <p className="text-muted-foreground">{t('pages.overview.loading_dashboard')}</p>
           </div>
         </div>
       </MainLayout>
@@ -318,16 +318,16 @@ const DashboardOverview = () => {
 
   // Define all possible statuses with colors and display names
   const statusConfig: { [key: string]: { color: string; displayName: string } } = {
-    'pending': { color: 'bg-yellow-500', displayName: 'Pending' },
-    'in_progress': { color: 'bg-blue-500', displayName: 'In Progress' },
-    'completed': { color: 'bg-green-500', displayName: 'Completed' },
-    'cancelled': { color: 'bg-red-500', displayName: 'Cancelled' },
-    'testing': { color: 'bg-purple-500', displayName: 'Testing' },
-    'parts_ordered': { color: 'bg-orange-500', displayName: 'Parts Ordered' },
-    'waiting_approval': { color: 'bg-indigo-500', displayName: 'Waiting Approval' },
-    'waiting_supplier': { color: 'bg-pink-500', displayName: 'Waiting Supplier' },
-    'service_cancelled': { color: 'bg-red-600', displayName: 'Service Cancelled' },
-    'warranty_declined': { color: 'bg-red-700', displayName: 'Warranty Declined' }
+    'pending': { color: 'bg-yellow-500', displayName: t('status.pending') },
+    'in_progress': { color: 'bg-blue-500', displayName: t('status.in_progress') },
+    'completed': { color: 'bg-green-500', displayName: t('status.completed') },
+    'cancelled': { color: 'bg-red-500', displayName: t('status.cancelled') },
+    'testing': { color: 'bg-purple-500', displayName: t('status.testing') },
+    'parts_ordered': { color: 'bg-orange-500', displayName: t('status.parts_ordered') },
+    'waiting_approval': { color: 'bg-indigo-500', displayName: t('status.waiting_approval') },
+    'waiting_supplier': { color: 'bg-pink-500', displayName: t('status.waiting_supplier') },
+    'service_cancelled': { color: 'bg-red-600', displayName: t('status.service_cancelled') },
+    'warranty_declined': { color: 'bg-red-700', displayName: t('status.warranty_declined') }
   }
   
   // Calculate real repair status data from actual work orders
@@ -395,7 +395,7 @@ const DashboardOverview = () => {
               <Label className="text-sm text-muted-foreground">{t('pages.overview.metrics_period')}</Label>
               <Select value={timeFilter} onValueChange={setTimeFilter}>
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Time period" />
+                  <SelectValue placeholder={t('pages.overview.metrics_period')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="7d">{t('pages.overview.last_7_days')}</SelectItem>
@@ -616,7 +616,7 @@ const DashboardOverview = () => {
                           <ChartTooltipContent
                             labelFormatter={(value) => formatDate(value)}
                             formatter={(value, name) => [
-                              name === 'revenue' ? `${formatCurrency(Number(value))} Revenue` : `${value} ${name === 'sales' ? 'Sales' : 'Customers'}`,
+                              name === 'revenue' ? `${formatCurrency(Number(value))} ${t('pages.overview.revenue')}` : `${value} ${name === 'sales' ? t('pages.overview.sales') : t('pages.overview.customers')}`,
                               ''
                             ]}
                           />
@@ -836,7 +836,7 @@ const DashboardOverview = () => {
                   
                   for (const order of allOrders) {
                     const techId = order.technician_id || order.owner_technician_id
-                    const techName = order.technician_name || order.owner_technician_name || 'Unassigned'
+                    const techName = order.technician_name || order.owner_technician_name || t('pages.overview.unassigned')
                     
                     if (!technicianWorkload[techId]) {
                       technicianWorkload[techId] = {
