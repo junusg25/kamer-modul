@@ -1093,12 +1093,12 @@ const DashboardOverview = () => {
                         <div className="flex-1">
                           <p className="text-sm font-medium">{machine.displayName}</p>
                           <p className="text-xs text-muted-foreground">
-                            {machine.count} paid repairs
+                            {machine.count} {t('pages.overview.paid_repairs')}
                           </p>
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-medium">{machine.count} repairs</p>
-                          <p className="text-xs text-muted-foreground">#{index + 1} most repaired</p>
+                          <p className="text-xs text-muted-foreground">#{index + 1} {t('pages.overview.most_repaired')}</p>
                         </div>
                       </div>
                     ))
@@ -1132,7 +1132,7 @@ const DashboardOverview = () => {
             <CardContent>
               {mostUsedPartsLoading ? (
                 <div className="flex items-center justify-center h-32">
-                  <div className="text-sm text-muted-foreground">Loading most used parts...</div>
+                  <div className="text-sm text-muted-foreground">{t('pages.overview.loading_most_used_parts')}</div>
                 </div>
               ) : mostUsedParts.length > 0 ? (
                 <div className="space-y-3 max-h-80 overflow-y-auto">
@@ -1146,12 +1146,12 @@ const DashboardOverview = () => {
                           <p className="text-sm font-medium">{part.name}</p>
                           <p className="text-xs text-muted-foreground">{part.category}</p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Used in {part.work_orders_count} work orders
+                            {t('pages.overview.used_in_work_orders', { count: part.work_orders_count })}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-medium">{part.total_quantity_used} units</p>
-                          <p className="text-xs text-muted-foreground">#{index + 1} most used</p>
+                          <p className="text-sm font-medium">{part.total_quantity_used} {t('pages.overview.units')}</p>
+                          <p className="text-xs text-muted-foreground">#{index + 1} {t('pages.overview.most_used')}</p>
                           <div className="w-16 h-2 bg-gray-200 rounded-full mt-1">
                             <div 
                               className="h-2 bg-green-500 rounded-full" 
@@ -1223,12 +1223,12 @@ const DashboardOverview = () => {
                         <div className="flex-1">
                           <p className="text-sm font-medium">{machine.displayName}</p>
                           <p className="text-xs text-muted-foreground">
-                            {machine.count} warranty repairs
+                            {machine.count} {t('pages.overview.warranty_repairs')}
                           </p>
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-medium">{machine.count} repairs</p>
-                          <p className="text-xs text-muted-foreground">#{index + 1} most warranty</p>
+                          <p className="text-xs text-muted-foreground">#{index + 1} {t('pages.overview.most_warranty')}</p>
                         </div>
                       </div>
                     ))

@@ -239,17 +239,37 @@
       "sales_label": "prodaja",
       "loading_dashboard": "Učitavanje sveobuhvatne analitičke kontrolne table...",
       "sales_performance_trend": "Trend Prodajnih Performansi",
-      "chart_metrics": {
-        "total_revenue": "Ukupni Prihod",
-        "total_customers": "Ukupno Kupaca"
-      },
       "repair_status": "Status Popravki",
       "team_performance": "Performanse Tima",
       "recent_repair_tickets": "Nedavni Tiketi za Popravku",
       "active_work_orders": "Aktivni Radni Nalozi",
       "most_repaired_machines": "Najviše Popravljanih Mašina",
       "most_used_parts": "Najviše Korištenih Dijelova",
-      "most_warranty_machines": "Najviše Garancijskih Mašina"
+      "most_warranty_machines": "Najviše Garancijskih Mašina",
+      "potential_value": "Potencijalna Vrijednost",
+      "active_customers": "Aktivni Kupci",
+      "revenue_metrics_description": "Opis Metrika Prihoda",
+      "current_repair_distribution": "Trenutna Distribucija Popravki",
+      "chart_metrics": {
+        "total_revenue": "Ukupni Prihod",
+        "total_customers": "Ukupno Kupaca",
+        "total_sales": "Ukupna Prodaja",
+        "avg_sale_value": "Prosječna Vrijednost Prodaje"
+      },
+      "sales_team_metrics": "Metrike Prodajnog Tima",
+      "latest_repair_submissions": "Najnoviji Tiketi za Popravku",
+      "current_work_orders": "Trenutni Radni Nalozi",
+      "machine_models_most_paid": "Modeli mašina s najviše plaćenih popravki",
+      "inventory_most_frequent": "Najčešće korišteni dijelovi iz inventara",
+      "machine_models_most_warranty": "Modeli mašina s najviše garancijskih popravki",
+      "paid_repairs": "plaćene popravke",
+      "most_repaired": "najviše popravljanih",
+      "used_in_work_orders": "Korišteno u {{count}} radnim nalozima",
+      "units": "jedinica",
+      "most_used": "najviše korištenih",
+      "warranty_repairs": "garancijske popravke",
+      "most_warranty": "najviše garancijskih",
+      "loading_most_used_parts": "Učitavanje najviše korištenih dijelova..."
     },
     "customer_detail": {
       "title": "Detalji Kupca",
