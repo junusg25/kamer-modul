@@ -597,7 +597,7 @@ export default function CustomerDetail() {
                   variant={customer.customer_type === 'company' ? 'default' : 'secondary'} 
                   className="text-sm"
                 >
-                  {customer.customer_type === 'company' ? 'Company' : 'Private'}
+                  {customer.customer_type === 'company' ? t('status.company') : t('status.private')}
                 </Badge>
               </div>
               <p className="text-muted-foreground">
