@@ -212,6 +212,7 @@
       "loading": "Loading customers...",
       "filter_by": "Filter by",
       "clear_filters": "Clear Filters",
+      "select_status": "Select status",
       "clear_status": "Clear Status",
       "clear_owner": "Clear Owner",
       "clear_type": "Clear Type",

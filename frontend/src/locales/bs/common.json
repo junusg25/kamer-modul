@@ -211,6 +211,7 @@
       "loading": "Učitavanje kupaca...",
       "filter_by": "Filtriraj po",
       "clear_filters": "Obriši Filtre",
+      "select_status": "Odaberite status",
       "clear_status": "Obriši Status",
       "clear_owner": "Obriši Vlasnika",
       "clear_type": "Obriši Tip",

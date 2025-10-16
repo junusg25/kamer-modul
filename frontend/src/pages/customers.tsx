@@ -557,7 +557,7 @@ export default function Customers() {
                     
                     {/* Status Filter */}
                     <div className="p-2">
-                      <Label className="text-xs font-medium text-muted-foreground">{t('status')}</Label>
+                      <Label className="text-xs font-medium text-muted-foreground">{t('tables.headers.status')}</Label>
                       <Select
                         value={filters.status}
                         onValueChange={(value) => {
@@ -570,9 +570,9 @@ export default function Customers() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="clear">{t('pages.customers.clear_status')}</SelectItem>
-                          <SelectItem value="active">{t('active')}</SelectItem>
-                          <SelectItem value="inactive">{t('inactive')}</SelectItem>
-                          <SelectItem value="pending">{t('pending')}</SelectItem>
+                          <SelectItem value="active">{t('status.active')}</SelectItem>
+                          <SelectItem value="inactive">{t('status.inactive')}</SelectItem>
+                          <SelectItem value="pending">{t('status.pending')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1055,18 +1055,18 @@ export default function Customers() {
 
               {/* Status */}
               <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status">{t('tables.headers.status')}</Label>
                 <Select 
                   value={editFormData.status || 'active'} 
                   onValueChange={(value: 'active' | 'inactive' | 'pending') => handleInputChange('status', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={t('pages.customers.select_status')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="active">{t('status.active')}</SelectItem>
+                    <SelectItem value="inactive">{t('status.inactive')}</SelectItem>
+                    <SelectItem value="pending">{t('status.pending')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
