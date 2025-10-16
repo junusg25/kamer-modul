@@ -379,7 +379,7 @@ export default function AdminDashboard() {
           <div>
             <h1 className="text-3xl font-bold">{t('common:navigation.admin_dashboard')}</h1>
             <p className="text-muted-foreground">
-              {t('common:system_overview')} and {t('common:administrative_controls').toLowerCase()}
+              {t('pages.admin.system_overview')} and {t('pages.admin.administrative_controls').toLowerCase()}
             </p>
           </div>
           <div className="flex items-center space-x-2">
