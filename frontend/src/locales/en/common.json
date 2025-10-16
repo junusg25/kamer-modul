@@ -270,7 +270,8 @@
       "most_used": "most used",
       "warranty_repairs": "warranty repairs",
       "most_warranty": "most warranty",
-      "loading_most_used_parts": "Loading most used parts..."
+      "loading_most_used_parts": "Loading most used parts...",
+      "customer_base": "Customer Base"
     },
     "customer_detail": {
       "title": "Customer Details",

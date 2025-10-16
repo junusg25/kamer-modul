@@ -269,7 +269,8 @@
       "most_used": "najviše korištenih",
       "warranty_repairs": "garancijske popravke",
       "most_warranty": "najviše garancijskih",
-      "loading_most_used_parts": "Učitavanje najviše korištenih dijelova..."
+      "loading_most_used_parts": "Učitavanje najviše korištenih dijelova...",
+      "customer_base": "Baza Kupaca"
     },
     "customer_detail": {
       "title": "Detalji Kupca",
