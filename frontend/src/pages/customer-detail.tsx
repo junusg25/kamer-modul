@@ -702,7 +702,7 @@ export default function CustomerDetail() {
                           <p className="text-sm">{customer.company_name || 'N/A'}</p>
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-muted-foreground">Contact Person</p>
+                          <p className="text-sm font-medium text-muted-foreground">{t('pages.customer_detail.contact_person')}</p>
                           <p className="text-sm">{customer.contact_person || 'N/A'}</p>
                         </div>
                       </>
@@ -756,7 +756,7 @@ export default function CustomerDetail() {
                   <div className="grid grid-cols-2 gap-4">
                     {customer.customer_type === 'company' && (
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">VAT Number</p>
+                        <p className="text-sm font-medium text-muted-foreground">{t('pages.customer_detail.vat_number')}</p>
                         <p className="text-sm">{customer.vat_number || 'N/A'}</p>
                       </div>
                     )}
@@ -953,11 +953,11 @@ export default function CustomerDetail() {
                         <TableHead>ID</TableHead>
                         <TableHead>{t('pages.customer_detail.status_label')}</TableHead>
                         <TableHead>{t('pages.customer_detail.priority')}</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Machine</TableHead>
+                        <TableHead>{t('pages.customer_detail.description')}</TableHead>
+                        <TableHead>{t('pages.customer_detail.machine')}</TableHead>
                         <TableHead>{t('pages.customer_detail.assigned_technician')}</TableHead>
                         <TableHead>{t('pages.customer_detail.created_date')}</TableHead>
-                        <TableHead>Total Cost</TableHead>
+                        <TableHead>{t('pages.customer_detail.total_cost')}</TableHead>
                         <TableHead className="text-right">{t('pages.customer_detail.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1041,11 +1041,11 @@ export default function CustomerDetail() {
                         <TableHead>ID</TableHead>
                         <TableHead>{t('pages.customer_detail.status_label')}</TableHead>
                         <TableHead>{t('pages.customer_detail.priority')}</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Machine</TableHead>
+                        <TableHead>{t('pages.customer_detail.description')}</TableHead>
+                        <TableHead>{t('pages.customer_detail.machine')}</TableHead>
                         <TableHead>{t('pages.customer_detail.assigned_technician')}</TableHead>
                         <TableHead>{t('pages.customer_detail.created_date')}</TableHead>
-                        <TableHead>Total Cost</TableHead>
+                        <TableHead>{t('pages.customer_detail.total_cost')}</TableHead>
                         <TableHead className="text-right">{t('pages.customer_detail.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1181,12 +1181,12 @@ export default function CustomerDetail() {
               {/* Contact Person (for company customers) */}
               {editFormData.customer_type === 'company' && (
                 <div className="space-y-2">
-                  <Label htmlFor="contact_person">Contact Person</Label>
+                  <Label htmlFor="contact_person">{t('pages.customer_detail.contact_person')}</Label>
                   <Input
                     id="contact_person"
                     value={editFormData.contact_person || ''}
                     onChange={(e) => handleInputChange('contact_person', e.target.value)}
-                    placeholder="Enter contact person name"
+                    placeholder={t('pages.customer_detail.enter_contact_person')}
                   />
                 </div>
               )}
@@ -1199,7 +1199,7 @@ export default function CustomerDetail() {
                     id="company_name"
                     value={editFormData.company_name || ''}
                     onChange={(e) => handleInputChange('company_name', e.target.value)}
-                    placeholder="Enter company name"
+                    placeholder={t('pages.customer_detail.enter_company_name')}
                   />
                 </div>
               )}
@@ -1207,12 +1207,12 @@ export default function CustomerDetail() {
               {/* VAT Number (for company customers) */}
               {editFormData.customer_type === 'company' && (
                 <div className="space-y-2">
-                  <Label htmlFor="vat_number">VAT Number</Label>
+                  <Label htmlFor="vat_number">{t('pages.customer_detail.vat_number')}</Label>
                   <Input
                     id="vat_number"
                     value={editFormData.vat_number || ''}
                     onChange={(e) => handleInputChange('vat_number', e.target.value)}
-                    placeholder="Enter VAT number"
+                    placeholder={t('pages.customer_detail.enter_vat_number')}
                   />
                 </div>
               )}
@@ -1247,7 +1247,7 @@ export default function CustomerDetail() {
                     id="phone2"
                     value={editFormData.phone2 || ''}
                     onChange={(e) => handleInputChange('phone2', e.target.value)}
-                    placeholder="Enter secondary phone"
+                    placeholder={t('pages.customer_detail.enter_secondary_phone')}
                   />
                 </div>
                 <div className="space-y-2">
@@ -1256,7 +1256,7 @@ export default function CustomerDetail() {
                     id="fax"
                     value={editFormData.fax || ''}
                     onChange={(e) => handleInputChange('fax', e.target.value)}
-                    placeholder="Enter fax number"
+                    placeholder={t('pages.customer_detail.enter_fax_number')}
                   />
                 </div>
               </div>
@@ -1295,7 +1295,7 @@ export default function CustomerDetail() {
 
               {/* Owner Assignment */}
               <div className="space-y-2">
-                <Label htmlFor="owner_id">Assigned Owner</Label>
+                <Label htmlFor="owner_id">{t('pages.customer_detail.owner')}</Label>
                 <Select 
                   value={editFormData.owner_id?.toString() || 'none'} 
                   onValueChange={(value) => handleInputChange('owner_id', value === 'none' ? undefined : parseInt(value))}

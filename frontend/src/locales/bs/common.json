@@ -305,7 +305,17 @@
       "actions": "Radnje",
       "new": "novo",
       "used": "korišteno",
-      "no_warranty": "Bez Garancije"
+      "no_warranty": "Bez Garancije",
+      "description": "Opis",
+      "machine": "Mašina",
+      "total_cost": "Ukupna Cijena",
+      "contact_person": "Kontakt Osoba",
+      "vat_number": "PDV Broj",
+      "enter_contact_person": "Unesite ime kontakt osobe",
+      "enter_company_name": "Unesite ime kompanije",
+      "enter_vat_number": "Unesite PDV broj",
+      "enter_secondary_phone": "Unesite sekundarni telefon",
+      "enter_fax_number": "Unesite fax broj"
     },
     "customers": {
       "title": "Kupci",

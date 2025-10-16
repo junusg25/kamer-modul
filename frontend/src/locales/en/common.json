@@ -306,7 +306,17 @@
       "actions": "Actions",
       "new": "new",
       "used": "used",
-      "no_warranty": "No Warranty"
+      "no_warranty": "No Warranty",
+      "description": "Description",
+      "machine": "Machine",
+      "total_cost": "Total Cost",
+      "contact_person": "Contact Person",
+      "vat_number": "VAT Number",
+      "enter_contact_person": "Enter contact person name",
+      "enter_company_name": "Enter company name",
+      "enter_vat_number": "Enter VAT number",
+      "enter_secondary_phone": "Enter secondary phone",
+      "enter_fax_number": "Enter fax number"
     },
     "customers": {
       "title": "Customers",
