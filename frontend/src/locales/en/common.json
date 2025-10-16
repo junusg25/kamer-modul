@@ -326,7 +326,8 @@
       "server_uptime": "Server Uptime",
       "system_alerts_notifications": "System Alerts Notifications",
       "monitor_system_alerts": "Monitor system alerts",
-      "resolve": "Resolve"
+      "resolve": "Resolve",
+      "last_updated": "Last Updated"
     },
     "customer_detail": {
       "title": "Customer Details",

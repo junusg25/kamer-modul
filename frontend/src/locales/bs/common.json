@@ -325,7 +325,8 @@
       "server_uptime": "Vrijeme Rada Servera",
       "system_alerts_notifications": "Obavještenja o Sistemskim Upozorenjima",
       "monitor_system_alerts": "Pratite sistemska upozorenja",
-      "resolve": "Riješi"
+      "resolve": "Riješi",
+      "last_updated": "Zadnje Ažurirano"
     },
     "customer_detail": {
       "title": "Detalji Kupca",

@@ -400,7 +400,7 @@ export default function AdminDashboard() {
               {t('refresh')}
             </Button>
             <div className="text-sm text-muted-foreground">
-              {t('last_updated')}: {formatDateTime(lastRefresh.toISOString())}
+              {t('pages.admin.last_updated')}: {formatDateTime(lastRefresh.toISOString())}
             </div>
           </div>
         </div>
@@ -409,7 +409,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('common:server_status')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.admin.server_status')}</CardTitle>
               <Server className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -427,7 +427,7 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('common:database')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.admin.database')}</CardTitle>
               <Database className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -445,7 +445,7 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('common:active_users')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.admin.active_users')}</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -460,7 +460,7 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('common:system_alerts')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.admin.system_alerts')}</CardTitle>
               <AlertCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
