@@ -271,7 +271,12 @@
       "warranty_repairs": "warranty repairs",
       "most_warranty": "most warranty",
       "loading_most_used_parts": "Loading most used parts...",
-      "customer_base": "Customer Base"
+      "customer_base": "Customer Base",
+      "chart_labels": {
+        "customers": "Customers",
+        "revenue": "Revenue",
+        "sales": "Sales"
+      }
     },
     "customer_detail": {
       "title": "Customer Details",

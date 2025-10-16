@@ -270,7 +270,12 @@
       "warranty_repairs": "garancijske popravke",
       "most_warranty": "najviše garancijskih",
       "loading_most_used_parts": "Učitavanje najviše korištenih dijelova...",
-      "customer_base": "Baza Kupaca"
+      "customer_base": "Baza Kupaca",
+      "chart_labels": {
+        "customers": "Kupci",
+        "revenue": "Prihod",
+        "sales": "Prodaja"
+      }
     },
     "customer_detail": {
       "title": "Detalji Kupca",
