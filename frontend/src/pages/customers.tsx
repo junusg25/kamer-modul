@@ -15,22 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from '../components/ui/table'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu'
 import { Loader2 } from 'lucide-react'
 import { apiService } from '../services/api'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
-import { Label } from '../components/ui/label'
-import { DeleteConfirmationDialog } from '../components/ui/delete-confirmation-dialog'
-import { GeneralAlertDialog } from '../components/ui/general-alert-dialog'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog'
-import { Textarea } from '../components/ui/textarea'
 import { formatStatus, formatStatusWithTranslation, getStatusBadgeVariant, getStatusBadgeColor } from '../lib/status'
 import { formatCurrency } from '../lib/currency'
 import { toast } from 'sonner'
@@ -38,19 +24,13 @@ import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '../hoo
 import { ColumnVisibilityDropdown } from '../components/ui/column-visibility-dropdown'
 import {
   Search,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Eye,
   Mail,
   Phone,
   MapPin,
   Plus,
   Filter,
   User,
-  Building2,
-  Save,
-  X
+  Building2
 } from 'lucide-react'
 
 interface Customer {
@@ -214,33 +194,6 @@ export default function Customers() {
     isSyncing
   } = useColumnVisibility('customers', getDefaultColumnKeys(CUSTOMER_COLUMNS))
   
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null)
-  const [machineAlertOpen, setMachineAlertOpen] = useState(false)
-  const [customerWithMachines, setCustomerWithMachines] = useState<Customer | null>(null)
-  
-  // Edit functionality state
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
-  const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null)
-  const [editFormData, setEditFormData] = useState<CustomerFormData>({
-    customer_type: 'private',
-    name: '',
-    contact_person: '',
-    email: '',
-    phone: '',
-    phone2: '',
-    fax: '',
-    street_address: '',
-    city: '',
-    postal_code: '',
-    company_name: '',
-    vat_number: '',
-    owner_id: undefined,
-    ownership_notes: '',
-    status: 'active'
-  })
-  const [users, setUsers] = useState<any[]>([])
-  const [isSaving, setIsSaving] = useState(false)
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
@@ -325,79 +278,10 @@ export default function Customers() {
     navigate(`/customers/${customerId}`)
   }
 
-  const handleDeleteCustomer = (customer: Customer) => {
-    // Check if customer has machines assigned
-    if (customer.total_machines && customer.total_machines > 0) {
-      setCustomerWithMachines(customer)
-      setMachineAlertOpen(true)
-      return
-    }
-    
-    setCustomerToDelete(customer)
-    setDeleteDialogOpen(true)
-  }
 
-  const confirmDeleteCustomer = async () => {
-    if (!customerToDelete) return
 
-    try {
-      await apiService.deleteCustomer(customerToDelete.id)
-      // Refresh the customers list
-      fetchCustomers()
-      // Show success message
-      
-    } catch (error) {
-      console.error('Error deleting customer:', error)
-      // Show error message
-      console.error('Failed to delete customer. Please try again.')
-    } finally {
-      setDeleteDialogOpen(false)
-      setCustomerToDelete(null)
-    }
-  }
 
-  const handleEditCustomer = async (customer: Customer) => {
-    setCustomerToEdit(customer)
-    
-    // Fetch users for owner assignment dropdown
-    await fetchUsers()
-    
-    // Populate form with current customer data
-    setEditFormData({
-      customer_type: customer.customer_type || 'private',
-      name: customer.name || '',
-      contact_person: customer.contact_person || '',
-      email: customer.email || '',
-      phone: customer.phone || '',
-      phone2: customer.phone2 || '',
-      fax: customer.fax || '',
-      street_address: customer.street_address || '',
-      city: customer.city || '',
-      postal_code: customer.postal_code || '',
-      company_name: customer.company_name || '',
-      vat_number: customer.vat_number || '',
-      owner_id: customer.owner_id || undefined,
-      ownership_notes: customer.ownership_notes || '',
-      status: customer.status || 'active'
-    })
-    setEditDialogOpen(true)
-  }
 
-  const fetchUsers = async () => {
-    try {
-      const response = await apiService.getUsers()
-      setUsers(response.data || [])
-    } catch (error) {
-      console.error('Error fetching users:', error)
-    }
-  }
-
-  const handleInputChange = (field: keyof CustomerFormData, value: string | number) => {
-    setEditFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
-  }
 
   const handleSaveCustomer = async () => {
     if (!customerToEdit) return
@@ -670,7 +554,6 @@ export default function Customers() {
                   {isColumnVisible('machines') && <TableHead>{t('tables.machines')}</TableHead>}
                   {isColumnVisible('total_spent') && <TableHead>{t('tables.headers.total_spent')}</TableHead>}
                   {isColumnVisible('owner') && <TableHead>{t('tables.headers.assigned_to')}</TableHead>}
-                  <TableHead className="text-right">{t('tables.headers.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -749,51 +632,6 @@ export default function Customers() {
                         {customer.owner_name || 'N/A'}
                       </TableCell>
                     )}
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            className="h-8 w-8 p-0"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>{t('tables.headers.actions')}</DropdownMenuLabel>
-                          <DropdownMenuItem 
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleViewCustomer(customer.id)
-                            }}
-                          >
-                            <Eye className="mr-2 h-4 w-4" />
-                            {t('view_details')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleEditCustomer(customer)
-                            }}
-                          >
-                            <Edit className="mr-2 h-4 w-4" />
-                            {t('edit')}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            className="text-red-600"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDeleteCustomer(customer)
-                            }}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            {t('delete')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
