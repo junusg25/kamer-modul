@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { debounce } from '@/utils/searchUtils';
+import { useTranslation } from 'react-i18next';
 
 interface SmartSearchProps {
   placeholder?: string;
@@ -28,6 +29,7 @@ export function SmartSearch({
   disabled = false,
   value = ''
 }: SmartSearchProps) {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState(value);
   const [isSearching, setIsSearching] = useState(false);
 
@@ -102,7 +104,7 @@ export function SmartSearch({
         {isSearching ? (
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
         ) : (
-          'Search'
+          t('search')
         )}
       </Button>
     </div>
@@ -121,6 +123,7 @@ export function SmartSearchWithButton({
   disabled = false,
   buttonText = "Search"
 }: SmartSearchProps & { buttonText?: string }) {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
@@ -208,7 +211,7 @@ export function SmartSearchWithButton({
         disabled={disabled || isSearching}
         className="shrink-0"
       >
-        {buttonText}
+        {buttonText === "Search" ? t('search') : buttonText}
       </Button>
     </div>
   );

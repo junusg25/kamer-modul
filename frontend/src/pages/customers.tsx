@@ -31,7 +31,7 @@ import { DeleteConfirmationDialog } from '../components/ui/delete-confirmation-d
 import { GeneralAlertDialog } from '../components/ui/general-alert-dialog'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog'
 import { Textarea } from '../components/ui/textarea'
-import { formatStatus, getStatusBadgeVariant, getStatusBadgeColor } from '../lib/status'
+import { formatStatus, formatStatusWithTranslation, getStatusBadgeVariant, getStatusBadgeColor } from '../lib/status'
 import { formatCurrency } from '../lib/currency'
 import { toast } from 'sonner'
 import { useColumnVisibility, defineColumns, getDefaultColumnKeys } from '../hooks/useColumnVisibility'
@@ -166,14 +166,15 @@ const sampleCustomers: Customer[] = [
 ]
 
 const getStatusBadge = (status: Customer['status']) => {
-  if (!status) return <Badge variant="outline">Unknown</Badge>
+  const { t } = useTranslation()
+  if (!status) return <Badge variant="outline">{t('status.unknown')}</Badge>
   
   return (
     <Badge 
       variant={getStatusBadgeVariant(status)} 
       className={getStatusBadgeVariant(status) === 'outline' ? getStatusBadgeColor(status) : undefined}
     >
-      {formatStatus(status)}
+      {formatStatusWithTranslation(status, t)}
     </Badge>
   )
 }
@@ -648,8 +649,8 @@ export default function Customers() {
                         <Search className="h-4 w-4" />
                         <span>
                           {totalCount > 0 
-                            ? t('pages.customers.search_results_found', { count: totalCount, term: appliedSearchTerm }) 
-                            : t('pages.customers.no_search_results', { term: appliedSearchTerm })
+                            ? t('pages.customers.search_results_found', { count: totalCount, query: appliedSearchTerm }) 
+                            : t('pages.customers.no_search_results', { query: appliedSearchTerm })
                           }
                         </span>
                       </>

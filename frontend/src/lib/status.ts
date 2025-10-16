@@ -3,8 +3,39 @@
  * Converts database status values to user-friendly display text
  */
 
+// Import translation function type
+type TranslationFunction = (key: string, options?: any) => string;
+
 /**
  * Formats a status string to user-friendly display text
+ * Removes underscores and capitalizes words
+ * @param status - The status string to format
+ * @returns Formatted status string (e.g., "in_progress" -> "In Progress")
+ */
+/**
+ * Formats a status string to user-friendly display text with translations
+ * @param status - The status string to format
+ * @param t - Translation function
+ * @returns Formatted status string
+ */
+export function formatStatusWithTranslation(status: string, t: TranslationFunction): string {
+  if (!status) return t('status.unknown')
+  
+  // Try to get translation first
+  const translationKey = `status.${status.toLowerCase()}`
+  const translated = t(translationKey)
+  
+  // If translation exists and is different from the key, use it
+  if (translated && translated !== translationKey) {
+    return translated
+  }
+  
+  // Fallback to original formatStatus for backwards compatibility
+  return formatStatus(status)
+}
+
+/**
+ * Formats a status string to user-friendly display text (non-translated version)
  * Removes underscores and capitalizes words
  * @param status - The status string to format
  * @returns Formatted status string (e.g., "in_progress" -> "In Progress")
@@ -20,7 +51,11 @@ export function formatStatus(status: string): string {
     'low_stock': 'Low Stock',
     'out_of_stock': 'Out of Stock',
     'warranty_expiring': 'Warranty Expiring',
-    'needs_improvement': 'Needs Improvement'
+    'needs_improvement': 'Needs Improvement',
+    'private': 'Private',
+    'company': 'Company',
+    'active': 'Active',
+    'inactive': 'Inactive'
   }
   
   // Check for special cases

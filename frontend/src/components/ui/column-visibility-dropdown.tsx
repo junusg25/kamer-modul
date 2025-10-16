@@ -13,6 +13,7 @@ import {
 } from './dropdown-menu'
 import { Columns3, RotateCcw, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { ScrollArea } from './scroll-area'
+import { useTranslation } from 'react-i18next'
 
 interface ColumnDefinition {
   key: string
@@ -38,6 +39,7 @@ export function ColumnVisibilityDropdown({
   onReset,
   isSyncing = false
 }: ColumnVisibilityDropdownProps) {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [isOpen, setIsOpen] = useState(false)
 
@@ -79,7 +81,7 @@ export function ColumnVisibilityDropdown({
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="h-9">
           <Columns3 className="h-4 w-4 mr-2" />
-          Columns
+          {t('columns')}
           {isSyncing && <Loader2 className="h-3 w-3 ml-2 animate-spin" />}
           {!isSyncing && (
             <span className="ml-2 text-xs text-muted-foreground">
@@ -90,9 +92,9 @@ export function ColumnVisibilityDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[280px]">
         <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Column Visibility</span>
+          <span>{t('column_visibility')}</span>
           <span className="text-xs font-normal text-muted-foreground">
-            {visibleCount} of {totalCount}
+            {visibleCount} {t('of')} {totalCount}
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -102,7 +104,7 @@ export function ColumnVisibilityDropdown({
           <>
             <div className="px-2 py-2">
               <Input
-                placeholder="Search columns..."
+                placeholder={t('search_columns')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-8"
@@ -122,7 +124,7 @@ export function ColumnVisibilityDropdown({
             onClick={handleShowAll}
           >
             <Eye className="h-3 w-3 mr-1" />
-            Show All
+            {t('show_all')}
           </Button>
           <Button
             variant="ghost"
@@ -131,7 +133,7 @@ export function ColumnVisibilityDropdown({
             onClick={handleHideAll}
           >
             <EyeOff className="h-3 w-3 mr-1" />
-            Hide All
+            {t('hide_all')}
           </Button>
         </div>
         <DropdownMenuSeparator />
@@ -141,7 +143,7 @@ export function ColumnVisibilityDropdown({
           <div className="px-2 py-1 space-y-1">
             {filteredColumns.length === 0 ? (
               <div className="text-sm text-muted-foreground text-center py-4">
-                No columns found
+                {t('no_columns_found')}
               </div>
             ) : (
               filteredColumns.map((column) => {
@@ -181,7 +183,7 @@ export function ColumnVisibilityDropdown({
             onClick={handleReset}
           >
             <RotateCcw className="h-3 w-3 mr-2" />
-            Reset to Default
+            {t('reset_to_default')}
           </Button>
         </div>
       </DropdownMenuContent>
