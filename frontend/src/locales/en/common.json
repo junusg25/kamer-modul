@@ -238,7 +238,19 @@
       "sales": "Sales",
       "customers": "Customers",
       "sales_label": "sales",
-      "loading_dashboard": "Loading comprehensive analytics dashboard..."
+      "loading_dashboard": "Loading comprehensive analytics dashboard...",
+      "sales_performance_trend": "Sales Performance Trend",
+      "chart_metrics": {
+        "total_revenue": "Total Revenue",
+        "total_customers": "Total Customers"
+      },
+      "repair_status": "Repair Status",
+      "team_performance": "Team Performance",
+      "recent_repair_tickets": "Recent Repair Tickets",
+      "active_work_orders": "Active Work Orders",
+      "most_repaired_machines": "Most Repaired Machines",
+      "most_used_parts": "Most Used Parts",
+      "most_warranty_machines": "Most Warranty Machines"
     },
     "customer_detail": {
       "title": "Customer Details",

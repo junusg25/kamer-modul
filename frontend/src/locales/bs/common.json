@@ -237,7 +237,19 @@
       "sales": "Prodaja",
       "customers": "Kupci",
       "sales_label": "prodaja",
-      "loading_dashboard": "Učitavanje sveobuhvatne analitičke kontrolne table..."
+      "loading_dashboard": "Učitavanje sveobuhvatne analitičke kontrolne table...",
+      "sales_performance_trend": "Trend Prodajnih Performansi",
+      "chart_metrics": {
+        "total_revenue": "Ukupni Prihod",
+        "total_customers": "Ukupno Kupaca"
+      },
+      "repair_status": "Status Popravki",
+      "team_performance": "Performanse Tima",
+      "recent_repair_tickets": "Nedavni Tiketi za Popravku",
+      "active_work_orders": "Aktivni Radni Nalozi",
+      "most_repaired_machines": "Najviše Popravljanih Mašina",
+      "most_used_parts": "Najviše Korištenih Dijelova",
+      "most_warranty_machines": "Najviše Garancijskih Mašina"
     },
     "customer_detail": {
       "title": "Detalji Kupca",
