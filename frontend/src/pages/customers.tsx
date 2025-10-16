@@ -188,8 +188,8 @@ export default function Customers() {
     { key: 'type', label: t('tables.headers.type') },
     { key: 'contact', label: t('tables.headers.address') },
     { key: 'status', label: t('tables.headers.status') },
-    { key: 'machines', label: t('machines') },
-    { key: 'total_spent', label: 'Total Spent' },
+    { key: 'machines', label: t('tables.machines') },
+    { key: 'total_spent', label: t('tables.headers.total_spent') },
     { key: 'owner', label: t('tables.headers.assigned_to') },
   ])
   
@@ -667,8 +667,8 @@ export default function Customers() {
                   {isColumnVisible('type') && <TableHead>{t('tables.headers.type')}</TableHead>}
                   {isColumnVisible('contact') && <TableHead>{t('tables.headers.address')}</TableHead>}
                   {isColumnVisible('status') && <TableHead>{t('tables.headers.status')}</TableHead>}
-                  {isColumnVisible('machines') && <TableHead>{t('machines')}</TableHead>}
-                  {isColumnVisible('total_spent') && <TableHead>Total Spent</TableHead>}
+                  {isColumnVisible('machines') && <TableHead>{t('tables.machines')}</TableHead>}
+                  {isColumnVisible('total_spent') && <TableHead>{t('tables.headers.total_spent')}</TableHead>}
                   {isColumnVisible('owner') && <TableHead>{t('tables.headers.assigned_to')}</TableHead>}
                   <TableHead className="text-right">{t('tables.headers.actions')}</TableHead>
                 </TableRow>
@@ -736,7 +736,7 @@ export default function Customers() {
                     )}
                     {isColumnVisible('machines') && (
                       <TableCell>
-                        <Badge variant="outline">{customer.total_machines || 0} {t('machines')}</Badge>
+                        <Badge variant="outline">{customer.total_machines || 0} {t('tables.machines')}</Badge>
                       </TableCell>
                     )}
                     {isColumnVisible('total_spent') && (
@@ -761,7 +761,7 @@ export default function Customers() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuLabel>{t('tables.headers.actions')}</DropdownMenuLabel>
                           <DropdownMenuItem 
                             onClick={(e) => {
                               e.stopPropagation()

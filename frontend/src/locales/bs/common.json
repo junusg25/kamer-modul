@@ -562,7 +562,6 @@
   "networks": "Mreže",
   "servers": "Serveri",
   "databases": "Baze Podataka",
-  "tables": "Tabele",
   "records": "Zapisi",
   "entries": "Unosi",
   "items": "Stavke",
@@ -1026,7 +1025,8 @@
       "quantity": "Količina",
       "location": "Lokacija",
       "warranty": "Garancija",
-      "condition": "Stanje"
+      "condition": "Stanje",
+      "total_spent": "Ukupno Potrošeno"
     },
     "pagination": {
       "showing": "Prikazano",
@@ -1060,7 +1060,21 @@
       "this_year": "Ova Godina",
       "last_year": "Prošla Godina",
       "custom_range": "Prilagođeni Raspon"
-    }
+    },
+    "customer": "Kupac",
+    "customers": "Kupci",
+    "machines": "Mašine",
+    "repair_tickets": "Servisni Tiketi",
+    "work_orders": "Radni Nalozi",
+    "warranty_repair_tickets": "Garancijski Servisni Tiketi",
+    "warranty_work_orders": "Garancijski Radni Nalozi",
+    "inventory": "Inventar",
+    "users": "Korisnici",
+    "reports": "Izvještaji",
+    "sales": "Prodaja",
+    "quotes": "Ponude",
+    "leads": "Potencijalni Klijenti",
+    "rentals": "Iznajmljivanja"
   },
   "modals": {
     "delete_confirmation": {
@@ -1116,22 +1130,6 @@
     "users": "Korisnici",
     "permissions": "Dozvole",
     "translations": "Prijevodi"
-  },
-  "tables": {
-    "customer": "Kupac",
-    "customers": "Kupci",
-    "machines": "Mašine",
-    "repair_tickets": "Servisni Tiketi",
-    "work_orders": "Radni Nalozi",
-    "warranty_repair_tickets": "Garancijski Servisni Tiketi",
-    "warranty_work_orders": "Garancijski Radni Nalozi",
-    "inventory": "Inventar",
-    "users": "Korisnici",
-    "reports": "Izvještaji",
-    "sales": "Prodaja",
-    "quotes": "Ponude",
-    "leads": "Potencijalni Klijenti",
-    "rentals": "Iznajmljivanja"
   },
   "permissions": {
     "categories": {

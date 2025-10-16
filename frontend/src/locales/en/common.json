@@ -562,7 +562,6 @@
   "networks": "Networks",
   "servers": "Servers",
   "databases": "Databases",
-  "tables": "Tables",
   "records": "Records",
   "entries": "Entries",
   "items": "Items",
@@ -1026,7 +1025,8 @@
       "quantity": "Quantity",
       "location": "Location",
       "warranty": "Warranty",
-      "condition": "Condition"
+      "condition": "Condition",
+      "total_spent": "Total Spent"
     },
     "pagination": {
       "showing": "Showing",
@@ -1060,7 +1060,21 @@
       "this_year": "This Year",
       "last_year": "Last Year",
       "custom_range": "Custom Range"
-    }
+    },
+    "customer": "Customer",
+    "customers": "Customers",
+    "machines": "Machines",
+    "repair_tickets": "Repair Tickets",
+    "work_orders": "Work Orders",
+    "warranty_repair_tickets": "Warranty Repair Tickets",
+    "warranty_work_orders": "Warranty Work Orders",
+    "inventory": "Inventory",
+    "users": "Users",
+    "reports": "Reports",
+    "sales": "Sales",
+    "quotes": "Quotes",
+    "leads": "Leads",
+    "rentals": "Rentals"
   },
   "modals": {
     "delete_confirmation": {
@@ -1116,22 +1130,6 @@
     "users": "Users",
     "permissions": "Permissions",
     "translations": "Translations"
-  },
-  "tables": {
-    "customer": "Customer",
-    "customers": "Customers",
-    "machines": "Machines",
-    "repair_tickets": "Repair Tickets",
-    "work_orders": "Work Orders",
-    "warranty_repair_tickets": "Warranty Repair Tickets",
-    "warranty_work_orders": "Warranty Work Orders",
-    "inventory": "Inventory",
-    "users": "Users",
-    "reports": "Reports",
-    "sales": "Sales",
-    "quotes": "Quotes",
-    "leads": "Leads",
-    "rentals": "Rentals"
   },
   "permissions": {
     "categories": {
