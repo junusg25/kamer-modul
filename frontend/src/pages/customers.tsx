@@ -16,6 +16,14 @@ import {
   TableRow,
 } from '../components/ui/table'
 import { Loader2 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu'
 import { apiService } from '../services/api'
 import { formatStatus, formatStatusWithTranslation, getStatusBadgeVariant, getStatusBadgeColor } from '../lib/status'
 import { formatCurrency } from '../lib/currency'
