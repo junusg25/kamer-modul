@@ -514,14 +514,14 @@ export default function CustomerDetail() {
       return (
         <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
           <ShoppingCart className="w-3 h-3 mr-1" />
-          Sold
+          {t('pages.customer_detail.sold')}
         </Badge>
       )
     } else {
       return (
         <Badge variant="default" className="bg-blue-100 text-blue-800 hover:bg-blue-200">
           <Settings className="w-3 h-3 mr-1" />
-          Repair
+          {t('pages.customer_detail.repair')}
         </Badge>
       )
     }
@@ -824,11 +824,11 @@ export default function CustomerDetail() {
                     <div className="flex items-center gap-2 ml-4 text-sm font-normal">
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                         <ShoppingCart className="w-3 h-3 mr-1" />
-                        {machines.filter(m => m.machine_type === 'sold').length} Sold
+                        {machines.filter(m => m.machine_type === 'sold').length} {t('pages.customer_detail.sold')}
                       </Badge>
                       <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                         <Settings className="w-3 h-3 mr-1" />
-                        {machines.filter(m => m.machine_type === 'repair').length} Repair
+                        {machines.filter(m => m.machine_type === 'repair').length} {t('pages.customer_detail.repair')}
                       </Badge>
                     </div>
                   )}
@@ -838,20 +838,20 @@ export default function CustomerDetail() {
                 {machines.length === 0 ? (
                   <div className="text-center py-8">
                     <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No machines found for this customer.</p>
+                    <p className="text-muted-foreground">{t('pages.customer_detail.no_machines')}</p>
                   </div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Serial Number</TableHead>
-                        <TableHead>Model</TableHead>
+                        <TableHead>{t('pages.customer_detail.machine_type')}</TableHead>
+                        <TableHead>{t('pages.customer_detail.serial_number')}</TableHead>
+                        <TableHead>{t('pages.customer_detail.model')}</TableHead>
                         <TableHead>Manufacturer</TableHead>
-                        <TableHead>Condition</TableHead>
+                        <TableHead>{t('pages.customer_detail.condition')}</TableHead>
                         <TableHead>Date</TableHead>
-                        <TableHead>Warranty Status</TableHead>
-                        <TableHead>Price</TableHead>
+                        <TableHead>{t('pages.customer_detail.warranty_active')}</TableHead>
+                        <TableHead>{t('pages.customer_detail.sale_price')}</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -944,19 +944,19 @@ export default function CustomerDetail() {
                 {workOrders.length === 0 ? (
                   <div className="text-center py-8">
                     <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No work orders found for this customer.</p>
+                    <p className="text-muted-foreground">{t('pages.customer_detail.no_work_orders')}</p>
                   </div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>ID</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Priority</TableHead>
+                        <TableHead>{t('pages.customer_detail.status_label')}</TableHead>
+                        <TableHead>{t('pages.customer_detail.priority')}</TableHead>
                         <TableHead>Description</TableHead>
                         <TableHead>Machine</TableHead>
-                        <TableHead>Technician</TableHead>
-                        <TableHead>Created</TableHead>
+                        <TableHead>{t('pages.customer_detail.assigned_technician')}</TableHead>
+                        <TableHead>{t('pages.customer_detail.created_date')}</TableHead>
                         <TableHead>Total Cost</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
@@ -1032,19 +1032,19 @@ export default function CustomerDetail() {
                 {warrantyWorkOrders.length === 0 ? (
                   <div className="text-center py-8">
                     <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No warranty work orders found for this customer.</p>
+                    <p className="text-muted-foreground">{t('pages.customer_detail.no_warranty_work_orders')}</p>
                   </div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>ID</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Priority</TableHead>
+                        <TableHead>{t('pages.customer_detail.status_label')}</TableHead>
+                        <TableHead>{t('pages.customer_detail.priority')}</TableHead>
                         <TableHead>Description</TableHead>
                         <TableHead>Machine</TableHead>
-                        <TableHead>Technician</TableHead>
-                        <TableHead>Created</TableHead>
+                        <TableHead>{t('pages.customer_detail.assigned_technician')}</TableHead>
+                        <TableHead>{t('pages.customer_detail.created_date')}</TableHead>
                         <TableHead>Total Cost</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
@@ -1151,29 +1151,29 @@ export default function CustomerDetail() {
             <div className="space-y-6">
               {/* Customer Type */}
               <div className="space-y-2">
-                <Label htmlFor="customer_type">Customer Type</Label>
+                <Label htmlFor="customer_type">{t('pages.customer_detail.customer_type')}</Label>
                 <Select 
                   value={editFormData.customer_type} 
                   onValueChange={(value: 'private' | 'company') => handleInputChange('customer_type', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select customer type" />
+                    <SelectValue placeholder={t('pages.customer_detail.select_status')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="private">Private</SelectItem>
-                    <SelectItem value="company">Company</SelectItem>
+                    <SelectItem value="private">{t('status.private')}</SelectItem>
+                    <SelectItem value="company">{t('status.company')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Name */}
               <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="name">{t('common.name')} *</Label>
                 <Input
                   id="name"
                   value={editFormData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="Enter customer name"
+                  placeholder={t('pages.customer_detail.enter_name')}
                   required
                 />
               </div>
@@ -1194,7 +1194,7 @@ export default function CustomerDetail() {
               {/* Company Name (for company customers) */}
               {editFormData.customer_type === 'company' && (
                 <div className="space-y-2">
-                  <Label htmlFor="company_name">Company Name</Label>
+                  <Label htmlFor="company_name">{t('common.company')} {t('common.name')}</Label>
                   <Input
                     id="company_name"
                     value={editFormData.company_name || ''}
@@ -1220,29 +1220,29 @@ export default function CustomerDetail() {
               {/* Contact Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t('pages.customer_detail.email')}</Label>
                   <Input
                     id="email"
                     type="email"
                     value={editFormData.email || ''}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="Enter email address"
+                    placeholder={t('pages.customer_detail.enter_email')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label htmlFor="phone">{t('pages.customer_detail.phone')}</Label>
                   <Input
                     id="phone"
                     value={editFormData.phone || ''}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
-                    placeholder="Enter phone number"
+                    placeholder={t('pages.customer_detail.enter_phone')}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="phone2">Phone 2</Label>
+                  <Label htmlFor="phone2">{t('pages.customer_detail.phone')} 2</Label>
                   <Input
                     id="phone2"
                     value={editFormData.phone2 || ''}
@@ -1263,7 +1263,7 @@ export default function CustomerDetail() {
 
               {/* Address Information */}
               <div className="space-y-2">
-                <Label htmlFor="street_address">Street Address</Label>
+                <Label htmlFor="street_address">{t('pages.customer_detail.street_address')}</Label>
                 <Input
                   id="street_address"
                   value={editFormData.street_address || ''}
@@ -1274,7 +1274,7 @@ export default function CustomerDetail() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
+                  <Label htmlFor="city">{t('pages.customer_detail.city')}</Label>
                   <Input
                     id="city"
                     value={editFormData.city || ''}
@@ -1348,18 +1348,18 @@ export default function CustomerDetail() {
             <DialogFooter className="flex justify-end space-x-2">
               <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
                 <X className="mr-2 h-4 w-4" />
-                Cancel
+                {t('pages.customer_detail.cancel')}
               </Button>
               <Button onClick={handleSaveCustomer} disabled={isSaving || !editFormData.name.trim()}>
                 {isSaving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
+                    {t('pages.customer_detail.saving')}
                   </>
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Save Changes
+                    {t('pages.customer_detail.save_changes')}
                   </>
                 )}
               </Button>
