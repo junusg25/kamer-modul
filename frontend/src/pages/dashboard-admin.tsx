@@ -91,12 +91,12 @@ interface RecentActivity {
 
 // Define columns for User Management table
 const USER_MANAGEMENT_COLUMNS = defineColumns([
-  { key: 'user', label: 'User' },
-  { key: 'role', label: 'Role' },
-  { key: 'status', label: 'Status' },
-  { key: 'session', label: 'Session' },
-  { key: 'actions', label: 'Actions' },
-  { key: 'last_login', label: 'Last Login' },
+  { key: 'user', label: 'pages.admin.user' },
+  { key: 'role', label: 'pages.admin.role' },
+  { key: 'status', label: 'pages.admin.status' },
+  { key: 'session', label: 'pages.admin.session' },
+  { key: 'actions', label: 'pages.admin.actions' },
+  { key: 'last_login', label: 'pages.admin.last_login' },
 ])
 
 export default function AdminDashboard() {
@@ -648,10 +648,10 @@ export default function AdminDashboard() {
                   <div>
                     <CardTitle className="flex items-center">
                       <Users className="h-5 w-5 mr-2" />
-                      User Activity & Management
+                      {t('pages.admin.user_activity_management')}
                     </CardTitle>
                     <CardDescription>
-                      Monitor user sessions and manage accounts
+                      {t('pages.admin.monitor_user_sessions')}
                     </CardDescription>
                   </div>
                   {/* Column Visibility */}
@@ -670,13 +670,13 @@ export default function AdminDashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      {isColumnVisible('user') && <TableHead>User</TableHead>}
-                      {isColumnVisible('role') && <TableHead>Role</TableHead>}
-                      {isColumnVisible('status') && <TableHead>Status</TableHead>}
-                      {isColumnVisible('session') && <TableHead>Session</TableHead>}
-                      {isColumnVisible('actions') && <TableHead>Actions</TableHead>}
-                      {isColumnVisible('last_login') && <TableHead>Last Login</TableHead>}
-                      <TableHead>Manage</TableHead>
+                      {isColumnVisible('user') && <TableHead>{t('pages.admin.user')}</TableHead>}
+                      {isColumnVisible('role') && <TableHead>{t('pages.admin.role')}</TableHead>}
+                      {isColumnVisible('status') && <TableHead>{t('pages.admin.status')}</TableHead>}
+                      {isColumnVisible('session') && <TableHead>{t('pages.admin.session')}</TableHead>}
+                      {isColumnVisible('actions') && <TableHead>{t('pages.admin.actions')}</TableHead>}
+                      {isColumnVisible('last_login') && <TableHead>{t('pages.admin.last_login')}</TableHead>}
+                      <TableHead>{t('pages.admin.manage')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -705,18 +705,18 @@ export default function AdminDashboard() {
                         )}
                         {isColumnVisible('role') && (
                           <TableCell>
-                            <Badge variant="outline">{user.role}</Badge>
+                            <Badge variant="outline">{t(`pages.admin.${user.role}`)}</Badge>
                           </TableCell>
                         )}
                         {isColumnVisible('status') && (
                           <TableCell>
                             <div className="flex flex-col gap-1">
                               <Badge variant={user.status === 'online' ? 'default' : 'secondary'}>
-                                {user.status}
+                                {t(`pages.admin.${user.status}`)}
                               </Badge>
                               {user.account_status && (
                                 <Badge variant={user.account_status === 'active' ? 'outline' : 'destructive'} className="text-xs">
-                                  {user.account_status}
+                                  {t(`pages.admin.${user.account_status}`)}
                                 </Badge>
                               )}
                             </div>
@@ -754,7 +754,7 @@ export default function AdminDashboard() {
                   </TableBody>
                 </Table>
                 <p className="text-sm text-muted-foreground mt-4">
-                  💡 Click on any user row to view their detailed activity history
+                  💡 {t('pages.admin.click_user_row_hint')}
                 </p>
               </CardContent>
             </Card>
