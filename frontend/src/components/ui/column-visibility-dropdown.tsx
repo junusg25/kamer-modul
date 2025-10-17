@@ -164,7 +164,7 @@ export function ColumnVisibilityDropdown({
                       htmlFor={`column-${column.key}`}
                       className="text-sm font-normal cursor-pointer flex-1"
                     >
-                      {column.label}
+                      {t(column.label)}
                     </Label>
                   </div>
                 )
