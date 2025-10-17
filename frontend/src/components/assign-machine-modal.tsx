@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -40,6 +41,7 @@ export function AssignMachineModal({
   modelName,
   warrantyMonths
 }: AssignMachineModalProps) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -92,7 +94,7 @@ export function AssignMachineModal({
       const customersData = customersResponse.data || customersResponse
       setCustomers(Array.isArray(customersData) ? customersData : [])
     } catch (err) {
-      setError('Failed to load customers')
+      setError(t('modals.assign_machine.failed_to_load_customers'))
       console.error('Error fetching customers:', err)
     } finally {
       setIsLoading(false)
@@ -128,7 +130,7 @@ export function AssignMachineModal({
     e.preventDefault()
     
     if (!selectedCustomer || !serialNumber.trim()) {
-      setError('Please select a customer and enter a serial number')
+      setError(t('modals.assign_machine.validation_error'))
       return
     }
 
@@ -159,7 +161,7 @@ export function AssignMachineModal({
       onClose()
       resetForm()
     } catch (err) {
-      setError('Failed to assign machine')
+      setError(t('modals.assign_machine.failed_to_assign'))
       console.error('Error assigning machine:', err)
     } finally {
       setIsSubmitting(false)
@@ -192,16 +194,16 @@ export function AssignMachineModal({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="assign-machine-description">
         <DialogHeader>
-          <DialogTitle>Assign Machine - {modelName}</DialogTitle>
+          <DialogTitle>{t('modals.assign_machine.title', { modelName })}</DialogTitle>
           <DialogDescription id="assign-machine-description">
-            Assign a serial number of this model to a customer.
+            {t('modals.assign_machine.description')}
           </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin" />
-            <span className="ml-2">Loading data...</span>
+            <span className="ml-2">{t('modals.assign_machine.loading_data')}</span>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -213,7 +215,7 @@ export function AssignMachineModal({
 
             {/* Customer Selection */}
             <div className="space-y-2">
-              <Label htmlFor="customer">Customer *</Label>
+              <Label htmlFor="customer">{t('modals.assign_machine.customer')} *</Label>
               <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -232,7 +234,7 @@ export function AssignMachineModal({
                         )}
                       </div>
                     ) : (
-                      "Select customer..."
+                      {t('modals.assign_machine.select_customer')}
                     )}
                     <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
@@ -242,7 +244,7 @@ export function AssignMachineModal({
                     <div className="relative">
                       <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Search customers..."
+                        placeholder={t('modals.assign_machine.search_customers')}
                         className="pl-10"
                         value={customerSearch}
                         onChange={(e) => setCustomerSearch(e.target.value)}
@@ -253,10 +255,10 @@ export function AssignMachineModal({
                     {isLoading ? (
                       <div className="flex items-center justify-center py-6">
                         <Loader2 className="h-6 w-6 animate-spin" />
-                        <span className="ml-2">Loading customers...</span>
+                        <span className="ml-2">{t('modals.assign_machine.loading_customers')}</span>
                       </div>
                     ) : filteredCustomers.length === 0 ? (
-                      <div className="p-4 text-center text-muted-foreground">No customers found.</div>
+                      <div className="p-4 text-center text-muted-foreground">{t('modals.assign_machine.no_customers_found')}</div>
                     ) : (
                       <div className="p-1">
                         {filteredCustomers.map((customer) => (
@@ -297,7 +299,7 @@ export function AssignMachineModal({
 
             {/* Serial Number Input */}
             <div className="space-y-2">
-              <Label htmlFor="serialNumber">Serial Number *</Label>
+              <Label htmlFor="serialNumber">{t('modals.assign_machine.serial_number')} *</Label>
               <div className="relative">
                 <Package className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -306,7 +308,7 @@ export function AssignMachineModal({
                   onChange={(e) => setSerialNumber(e.target.value)}
                   className="pl-10"
                   disabled={isSubmitting}
-                  placeholder="Enter serial number..."
+                  placeholder={t('modals.assign_machine.enter_serial_number')}
                   required
                 />
               </div>
@@ -314,33 +316,33 @@ export function AssignMachineModal({
 
             {/* Purchase Date */}
             <div className="space-y-2">
-              <Label htmlFor="purchaseDate">Purchase Date *</Label>
+              <Label htmlFor="purchaseDate">{t('modals.assign_machine.purchase_date')} *</Label>
               <DatePicker
                 value={purchaseDate}
                 onChange={(value) => setPurchaseDate(value)}
-                placeholder="Select purchase date"
+                placeholder={t('modals.assign_machine.select_purchase_date')}
                 disabled={isSubmitting}
               />
             </div>
 
             {/* Machine Condition */}
             <div className="space-y-2">
-              <Label htmlFor="condition">Machine Condition</Label>
+              <Label htmlFor="condition">{t('modals.assign_machine.machine_condition')}</Label>
               <Select value={machineCondition} onValueChange={setMachineCondition} disabled={isSubmitting}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="used">Used</SelectItem>
-                  <SelectItem value="refurbished">Refurbished</SelectItem>
+                  <SelectItem value="new">{t('modals.assign_machine.new')}</SelectItem>
+                  <SelectItem value="used">{t('modals.assign_machine.used')}</SelectItem>
+                  <SelectItem value="refurbished">{t('modals.assign_machine.refurbished')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Sale Price */}
             <div className="space-y-2">
-              <Label htmlFor="salePrice">Sale Price (KM)</Label>
+              <Label htmlFor="salePrice">{t('modals.assign_machine.sale_price')}</Label>
               <Input
                 id="salePrice"
                 type="number"
@@ -349,25 +351,25 @@ export function AssignMachineModal({
                 value={salePrice}
                 onChange={(e) => setSalePrice(e.target.value)}
                 disabled={isSubmitting}
-                placeholder="0.00 KM"
+                placeholder={t('modals.assign_machine.price_placeholder')}
               />
             </div>
 
             {/* Receipt Number */}
             <div className="space-y-2">
-              <Label htmlFor="receiptNumber">Receipt Number</Label>
+              <Label htmlFor="receiptNumber">{t('modals.assign_machine.receipt_number')}</Label>
               <Input
                 id="receiptNumber"
                 value={receiptNumber}
                 onChange={(e) => setReceiptNumber(e.target.value)}
                 disabled={isSubmitting}
-                placeholder="Enter receipt number..."
+                placeholder={t('modals.assign_machine.enter_receipt_number')}
               />
             </div>
 
             {/* Purchased At */}
             <div className="space-y-2">
-              <Label htmlFor="purchasedAt">Purchased At</Label>
+              <Label htmlFor="purchasedAt">{t('modals.assign_machine.purchased_at')}</Label>
               <Popover open={purchasedAtPopoverOpen} onOpenChange={setPurchasedAtPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -380,7 +382,7 @@ export function AssignMachineModal({
                     {purchasedAt ? (
                       <span>{purchasedAt}</span>
                     ) : (
-                      "Select where purchased..."
+                      {t('modals.assign_machine.select_where_purchased')}
                     )}
                     <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
@@ -390,7 +392,7 @@ export function AssignMachineModal({
                     <div className="relative">
                       <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Search or type new shop name..."
+                        placeholder={t('modals.assign_machine.search_shop')}
                         className="pl-10"
                         value={purchasedAtSearch}
                         onChange={(e) => setPurchasedAtSearch(e.target.value)}
@@ -412,8 +414,8 @@ export function AssignMachineModal({
                             <span className="text-green-600 text-sm font-bold">+</span>
                           </div>
                           <div className="flex-1">
-                            <p className="font-medium">Add "{purchasedAtSearch}"</p>
-                            <p className="text-sm text-muted-foreground">Create new shop</p>
+                                  <p className="font-medium">{t('modals.assign_machine.add_shop', { name: purchasedAtSearch })}</p>
+                                  <p className="text-sm text-muted-foreground">{t('modals.assign_machine.create_new_shop')}</p>
                           </div>
                         </div>
                       </div>
@@ -421,7 +423,7 @@ export function AssignMachineModal({
                     
                     {/* Existing options */}
                     {filteredPurchasedAtOptions.length === 0 ? (
-                      <div className="p-4 text-center text-muted-foreground">No options found.</div>
+                      <div className="p-4 text-center text-muted-foreground">{t('modals.assign_machine.no_options_found')}</div>
                     ) : (
                       <div className="p-1">
                         {filteredPurchasedAtOptions.map((option) => (
@@ -456,13 +458,13 @@ export function AssignMachineModal({
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t('modals.assign_machine.description')}</Label>
               <Input
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 disabled={isSubmitting}
-                placeholder="Enter description..."
+                placeholder={t('modals.assign_machine.enter_description')}
               />
             </div>
 
@@ -471,27 +473,27 @@ export function AssignMachineModal({
               <div className="bg-orange-50 border border-orange-200 rounded-md p-3">
                 <div className="flex items-center space-x-2">
                   <Check className="h-4 w-4 text-orange-600" />
-                  <span className="text-sm font-medium text-orange-800">Warranty Information</span>
+                  <span className="text-sm font-medium text-orange-800">{t('modals.assign_machine.warranty_information')}</span>
                 </div>
                 <div className="mt-1 text-sm text-orange-700">
-                  <div>Warranty Period: {warrantyMonths} months</div>
-                  <div>Warranty Expires: {formatDate(warrantyExpiryDate)}</div>
+                  <div>{t('modals.assign_machine.warranty_period')}: {warrantyMonths} {t('modals.assign_machine.months')}</div>
+                  <div>{t('modals.assign_machine.warranty_expires')}: {formatDate(warrantyExpiryDate)}</div>
                 </div>
               </div>
             )}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
-                Cancel
+                {t('modals.assign_machine.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting || !selectedCustomer || !serialNumber.trim()}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Assigning...
+                    {t('modals.assign_machine.assigning')}
                   </>
                 ) : (
-                  'Assign Machine'
+                  t('modals.assign_machine.assign_machine')
                 )}
               </Button>
             </DialogFooter>
