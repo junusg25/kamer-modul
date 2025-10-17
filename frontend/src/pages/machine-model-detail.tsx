@@ -52,6 +52,7 @@ import {
   Receipt,
   Euro,
   Check,
+  Search,
   ChevronDown
 } from 'lucide-react'
 import { apiService } from '@/services/api'
