@@ -685,7 +685,7 @@ export default function InventoryDetail() {
                               {workOrder.serial_number}
                             </Button>
                           </TableCell>
-                          <TableCell>{workOrder.technician_name || 'Unassigned'}</TableCell>
+                          <TableCell>{workOrder.technician_name || t('pages.inventory_detail.unassigned')}</TableCell>
                           <TableCell className="font-medium">{workOrder.quantity_used}</TableCell>
                           <TableCell>{formatDate(workOrder.created_at)}</TableCell>
                           <TableCell className="text-right">
@@ -696,15 +696,15 @@ export default function InventoryDetail() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuLabel>{t('pages.inventory_detail.actions')}</DropdownMenuLabel>
                                 <DropdownMenuItem onClick={() => navigate(`/work-orders/${workOrder.id}`)}>
-                                  <Eye className="mr-2 h-4 w-4" /> View Work Order
+                                  <Eye className="mr-2 h-4 w-4" /> {t('pages.inventory_detail.view_work_order')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => navigate(`/customers/${workOrder.customer_id}`)}>
-                                  <User className="mr-2 h-4 w-4" /> View Customer
+                                  <User className="mr-2 h-4 w-4" /> {t('pages.inventory_detail.view_customer')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => navigate(`/machines/${workOrder.machine_id}`)}>
-                                  <Wrench className="mr-2 h-4 w-4" /> View Machine
+                                  <Wrench className="mr-2 h-4 w-4" /> {t('pages.inventory_detail.view_machine')}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -724,14 +724,14 @@ export default function InventoryDetail() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Award className="h-5 w-5" />
-                  Warranty Work Orders Using This Item ({warrantyWorkOrders.length})
+                  {t('pages.inventory_detail.warranty_work_orders_using_item', { count: warrantyWorkOrders.length })}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {warrantyWorkOrders.length === 0 ? (
                   <div className="text-center py-8">
                     <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">This item has not been used in any warranty work orders.</p>
+                    <p className="text-muted-foreground">{t('pages.inventory_detail.no_warranty_work_orders')}</p>
                   </div>
                 ) : (
                   <Table>
@@ -780,7 +780,7 @@ export default function InventoryDetail() {
                               {workOrder.serial_number}
                             </Button>
                           </TableCell>
-                          <TableCell>{workOrder.technician_name || 'Unassigned'}</TableCell>
+                          <TableCell>{workOrder.technician_name || t('pages.inventory_detail.unassigned')}</TableCell>
                           <TableCell className="font-medium">{workOrder.quantity_used}</TableCell>
                           <TableCell>{formatDate(workOrder.created_at)}</TableCell>
                           <TableCell className="text-right">
@@ -820,25 +820,25 @@ export default function InventoryDetail() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5" />
-                    Usage Summary
+                    {t('pages.inventory_detail.usage_summary')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Units Used</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.total_units_used')}</p>
                       <p className="text-2xl font-bold">{totalQuantityUsed}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Value Used</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.total_value_used')}</p>
                       <p className="text-2xl font-bold">{totalValueUsed.toFixed(2)} KM</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Regular Work Orders</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.regular_work_orders')}</p>
                       <p className="text-2xl font-bold">{totalWorkOrders}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Warranty Work Orders</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.warranty_work_orders')}</p>
                       <p className="text-2xl font-bold">{totalWarrantyWorkOrders}</p>
                     </div>
                   </div>
@@ -849,34 +849,34 @@ export default function InventoryDetail() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="h-5 w-5" />
-                    Stock Analysis
+                    {t('pages.inventory_detail.stock_analysis')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Current Stock</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.current_stock')}</p>
                       <p className="text-2xl font-bold">{inventoryItem.quantity}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Stock Value</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.stock_value')}</p>
                       <p className="text-2xl font-bold">{currentStockValue.toFixed(2)} KM</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Min Stock Level</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.min_stock_level')}</p>
                       <p className="text-2xl font-bold">{inventoryItem.min_stock_level || 5}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Reorder Level</p>
-                      <p className="text-2xl font-bold">{inventoryItem.reorder_level || 'N/A'}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.reorder_level')}</p>
+                      <p className="text-2xl font-bold">{inventoryItem.reorder_level || t('pages.inventory_detail.not_available')}</p>
                     </div>
                   </div>
                   {inventoryItem.quantity <= (inventoryItem.min_stock_level || 5) && (
                     <Alert variant="destructive">
                       <AlertCircle className="h-4 w-4" />
-                      <AlertTitle>Reorder Required</AlertTitle>
+                      <AlertTitle>{t('pages.inventory_detail.reorder_required')}</AlertTitle>
                       <AlertDescription>
-                        Stock is below minimum level. Consider reordering.
+                        {t('pages.inventory_detail.reorder_description')}
                       </AlertDescription>
                     </Alert>
                   )}

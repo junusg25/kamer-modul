@@ -1044,7 +1044,20 @@
       "machine": "Machine",
       "technician": "Technician",
       "quantity_used": "Quantity Used",
-      "actions": "Actions"
+      "actions": "Actions",
+      "unassigned": "Unassigned",
+      "view_work_order": "View Work Order",
+      "view_customer": "View Customer",
+      "view_machine": "View Machine",
+      "warranty_work_orders_using_item": "Warranty Work Orders Using This Item ({{count}})",
+      "no_warranty_work_orders": "This item has not been used in any warranty work orders.",
+      "usage_summary": "Usage Summary",
+      "total_units_used": "Total Units Used",
+      "total_value_used": "Total Value Used",
+      "regular_work_orders": "Regular Work Orders",
+      "stock_analysis": "Stock Analysis",
+      "reorder_required": "Reorder Required",
+      "reorder_description": "Stock is below minimum level. Consider reordering."
     }
   }
 }

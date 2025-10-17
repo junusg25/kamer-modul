@@ -1043,7 +1043,20 @@
       "machine": "Mašina",
       "technician": "Tehničar",
       "quantity_used": "Korištena Količina",
-      "actions": "Akcije"
+      "actions": "Akcije",
+      "unassigned": "Nedodijeljeno",
+      "view_work_order": "Pogledaj Radni Nalog",
+      "view_customer": "Pogledaj Kupca",
+      "view_machine": "Pogledaj Mašinu",
+      "warranty_work_orders_using_item": "Garancijski Radni Nalozi Koristeći Ovu Stavku ({{count}})",
+      "no_warranty_work_orders": "Ova stavka nije korištena u bilo kojem garancijskom radnom nalogu.",
+      "usage_summary": "Sažetak Korištenja",
+      "total_units_used": "Ukupno Korištenih Jedinica",
+      "total_value_used": "Ukupna Korištena Vrijednost",
+      "regular_work_orders": "Redovni Radni Nalozi",
+      "stock_analysis": "Analiza Zaliha",
+      "reorder_required": "Potrebno Ponovno Naručivanje",
+      "reorder_description": "Zalihe su ispod minimalnog nivoa. Razmotrite ponovno naručivanje."
     }
   }
 }
