@@ -677,7 +677,6 @@
     "machines": {
       "title": "Modeli Mašina",
       "subtitle": "Upravljajte modelima mašina i pratite dodeljene mašine",
-      "add_machine_model": "Dodaj Model Mašine",
       "total_models": "Ukupno Modela",
       "machine_models": "Modeli mašina",
       "assigned_machines": "Dodeljene Mašine",

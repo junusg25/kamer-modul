@@ -678,7 +678,6 @@
     "machines": {
       "title": "Machine Models",
       "subtitle": "Manage machine models and track assigned machines",
-      "add_machine_model": "Add Machine Model",
       "total_models": "Total Models",
       "machine_models": "Machine models",
       "assigned_machines": "Assigned Machines",
