@@ -788,15 +788,15 @@ export default function MachineDetail() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Edit Machine</DialogTitle>
+            <DialogTitle>{t('pages.machine_detail.edit_machine')}</DialogTitle>
             <DialogDescription>
-              Update the machine information below.
+              {t('pages.machine_detail.update_machine_info')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="machine_condition">Condition</Label>
+                <Label htmlFor="machine_condition">{t('pages.machine_detail.condition')}</Label>
                 <Select
                   value={editFormData.machine_condition}
                   onValueChange={(value: 'new' | 'used') => setEditFormData(prev => ({ ...prev, machine_condition: value }))}

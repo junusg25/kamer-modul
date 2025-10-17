@@ -712,6 +712,7 @@
       "machine_not_found": "Machine not found.",
       "serial": "Serial",
       "edit_machine": "Edit Machine",
+      "update_machine_info": "Update the machine information below.",
       "delete_machine": "Delete Machine",
       "warranty_status": "Warranty Status",
       "expires": "Expires",

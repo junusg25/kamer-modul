@@ -711,6 +711,7 @@
       "machine_not_found": "Mašina nije pronađena.",
       "serial": "Serijski",
       "edit_machine": "Uredi Mašinu",
+      "update_machine_info": "Ažurirajte informacije o mašini ispod.",
       "delete_machine": "Obriši Mašinu",
       "warranty_status": "Status Garancije",
       "expires": "Ističe",
