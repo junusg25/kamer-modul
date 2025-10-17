@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -173,6 +174,7 @@ interface WarrantyWorkOrder {
 }
 
 export default function MachineDetail() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [machine, setMachine] = useState<Machine | null>(null)
@@ -221,7 +223,7 @@ export default function MachineDetail() {
       const warrantyWorkOrdersResponse = await apiService.getMachineWarrantyWorkOrders(id!)
       setWarrantyWorkOrders(warrantyWorkOrdersResponse.data || [])
     } catch (err) {
-      setError('Failed to load machine details.')
+      setError(t('pages.machine_detail.failed_to_load'))
       console.error('Error fetching machine details:', err)
     } finally {
       setIsLoading(false)
@@ -403,8 +405,8 @@ export default function MachineDetail() {
       <MainLayout>
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Not Found</AlertTitle>
-          <AlertDescription>Machine not found.</AlertDescription>
+          <AlertTitle>{t('pages.machine_detail.not_found')}</AlertTitle>
+          <AlertDescription>{t('pages.machine_detail.machine_not_found')}</AlertDescription>
         </Alert>
       </MainLayout>
     )
@@ -424,18 +426,18 @@ export default function MachineDetail() {
             <div>
               <h1 className="text-3xl font-bold tracking-tight">{machine.model_name}</h1>
               <p className="text-muted-foreground">
-                Serial: {machine.serial_number} • {machine.manufacturer}
+                {t('pages.machine_detail.serial')}: {machine.serial_number} • {machine.manufacturer}
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
             <Button variant="outline" onClick={handleEditClick}>
               <Edit className="mr-2 h-4 w-4" />
-              Edit Machine
+              {t('pages.machine_detail.edit_machine')}
             </Button>
             <Button variant="destructive" onClick={handleDeleteClick}>
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete Machine
+              {t('pages.machine_detail.delete_machine')}
             </Button>
           </div>
         </div>
@@ -444,7 +446,7 @@ export default function MachineDetail() {
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Warranty Status</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.machine_detail.warranty_status')}</CardTitle>
               <Shield className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -453,34 +455,34 @@ export default function MachineDetail() {
               </Badge>
               {machine.warranty_expiry_date && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Expires: {formatDate(machine.warranty_expiry_date)}
+                  {t('pages.machine_detail.expires')}: {formatDate(machine.warranty_expiry_date)}
                 </p>
               )}
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Work Orders</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.machine_detail.work_orders')}</CardTitle>
               <Wrench className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{workOrders.length}</div>
-              <p className="text-xs text-muted-foreground">Total work orders</p>
+              <p className="text-xs text-muted-foreground">{t('pages.machine_detail.total_work_orders')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Warranty Work Orders</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.machine_detail.warranty_work_orders')}</CardTitle>
               <Award className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{warrantyWorkOrders.length}</div>
-              <p className="text-xs text-muted-foreground">Warranty repairs</p>
+              <p className="text-xs text-muted-foreground">{t('pages.machine_detail.warranty_repairs')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Customer</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.machine_detail.customer')}</CardTitle>
               <User className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -490,7 +492,7 @@ export default function MachineDetail() {
                 className="p-0 h-auto text-xs"
                 onClick={() => navigate(`/customers/${machine.customer_id}`)}
               >
-                View Customer
+                {t('pages.machine_detail.view_customer')}
               </Button>
             </CardContent>
           </Card>
@@ -499,9 +501,9 @@ export default function MachineDetail() {
         {/* Main Content */}
         <Tabs defaultValue="details" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="details">Machine Details</TabsTrigger>
-            <TabsTrigger value="work-orders">Work Orders ({workOrders.length})</TabsTrigger>
-            <TabsTrigger value="warranty-work-orders">Warranty Work Orders ({warrantyWorkOrders.length})</TabsTrigger>
+            <TabsTrigger value="details">{t('pages.machine_detail.machine_details')}</TabsTrigger>
+            <TabsTrigger value="work-orders">{t('pages.machine_detail.work_orders')} ({workOrders.length})</TabsTrigger>
+            <TabsTrigger value="warranty-work-orders">{t('pages.machine_detail.warranty_work_orders')} ({warrantyWorkOrders.length})</TabsTrigger>
           </TabsList>
 
           {/* Machine Details Tab */}
@@ -512,35 +514,35 @@ export default function MachineDetail() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Wrench className="h-5 w-5" />
-                    Machine Information
+                    {t('pages.machine_detail.machine_information')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Model</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.machine_detail.model')}</p>
                       <p className="text-sm">{machine.model_name}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Serial Number</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.machine_detail.serial_number')}</p>
                       <p className="text-sm font-mono">{machine.serial_number}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Manufacturer</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.machine_detail.manufacturer')}</p>
                       <p className="text-sm">{machine.manufacturer}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Catalogue Number</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.machine_detail.catalogue_number')}</p>
                       <p className="text-sm">{machine.catalogue_number || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Category</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.machine_detail.category')}</p>
                       <p className="text-sm">{machine.category_name || 'N/A'}</p>
                     </div>
                   </div>
                   {machine.description && (
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Description</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.machine_detail.description')}</p>
                       <p className="text-sm">{machine.description}</p>
                     </div>
                   )}
@@ -552,49 +554,49 @@ export default function MachineDetail() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <DollarSign className="h-5 w-5" />
-                    Sales & Assignment Information
+                    {t('pages.machine_detail.sales_assignment_info')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Transaction Type</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.machine_detail.transaction_type')}</p>
                       <Badge variant={machine.is_sale ? 'default' : 'outline'}>
-                        {machine.is_sale ? 'Sale' : 'Assignment'}
+                        {machine.is_sale ? t('pages.machine_detail.sale') : t('pages.machine_detail.assignment')}
                       </Badge>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Condition</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.machine_detail.condition')}</p>
                       <Badge variant={machine.machine_condition === 'new' ? 'default' : 'outline'}>
                         {machine.machine_condition || 'N/A'}
                       </Badge>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Purchase Date</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.machine_detail.purchase_date')}</p>
                       <p className="text-sm">{machine.purchase_date ? formatDate(machine.purchase_date) : 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Sale Price</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.machine_detail.sale_price')}</p>
                       <p className="text-sm">
                         {machine.sale_price ? formatCurrency(machine.sale_price) : 'N/A'}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Receipt Number</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.machine_detail.receipt_number')}</p>
                       <p className="text-sm">{machine.receipt_number || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Purchased At</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.machine_detail.purchased_at')}</p>
                       <p className="text-sm">{machine.purchased_at || 'N/A'}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Sold By</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.machine_detail.sold_by')}</p>
                       <p className="text-sm">{machine.sold_by_name || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Added By</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.machine_detail.added_by')}</p>
                       <p className="text-sm">
                         {machine.machine_type === 'sold' 
                           ? (machine.added_by_name || 'N/A')
@@ -614,27 +616,27 @@ export default function MachineDetail() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Wrench className="h-5 w-5" />
-                  Work Orders ({workOrders.length})
+                  {t('pages.machine_detail.work_orders')} ({workOrders.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {workOrders.length === 0 ? (
                   <div className="text-center py-8">
                     <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No work orders found for this machine.</p>
+                    <p className="text-muted-foreground">{t('pages.machine_detail.no_work_orders')}</p>
                   </div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Priority</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Technician</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead>Total Cost</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t('pages.machine_detail.id')}</TableHead>
+                        <TableHead>{t('pages.machine_detail.status')}</TableHead>
+                        <TableHead>{t('pages.machine_detail.priority')}</TableHead>
+                        <TableHead>{t('pages.machine_detail.description')}</TableHead>
+                        <TableHead>{t('pages.machine_detail.technician')}</TableHead>
+                        <TableHead>{t('pages.machine_detail.created')}</TableHead>
+                        <TableHead>{t('pages.machine_detail.total_cost')}</TableHead>
+                        <TableHead className="text-right">{t('pages.machine_detail.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -712,26 +714,26 @@ export default function MachineDetail() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Award className="h-5 w-5" />
-                  Warranty Work Orders ({warrantyWorkOrders.length})
+                  {t('pages.machine_detail.warranty_work_orders')} ({warrantyWorkOrders.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {warrantyWorkOrders.length === 0 ? (
                   <div className="text-center py-8">
                     <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No warranty work orders found for this machine.</p>
+                    <p className="text-muted-foreground">{t('pages.machine_detail.no_warranty_work_orders')}</p>
                   </div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Priority</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Technician</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t('pages.machine_detail.id')}</TableHead>
+                        <TableHead>{t('pages.machine_detail.status')}</TableHead>
+                        <TableHead>{t('pages.machine_detail.priority')}</TableHead>
+                        <TableHead>{t('pages.machine_detail.description')}</TableHead>
+                        <TableHead>{t('pages.machine_detail.technician')}</TableHead>
+                        <TableHead>{t('pages.machine_detail.created')}</TableHead>
+                        <TableHead className="text-right">{t('pages.machine_detail.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -800,36 +802,36 @@ export default function MachineDetail() {
                   onValueChange={(value: 'new' | 'used') => setEditFormData(prev => ({ ...prev, machine_condition: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select condition" />
+                    <SelectValue placeholder={t('pages.machine_detail.select_condition')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="new">New</SelectItem>
-                    <SelectItem value="used">Used</SelectItem>
+                    <SelectItem value="new">{t('pages.machine_detail.new')}</SelectItem>
+                    <SelectItem value="used">{t('pages.machine_detail.used')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t('pages.machine_detail.description')}</Label>
               <Textarea
                 id="description"
                 value={editFormData.description}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Enter machine description"
+                placeholder={t('pages.machine_detail.enter_description')}
                 rows={3}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="warranty_expiry_date">Warranty Expiry Date</Label>
+                <Label htmlFor="warranty_expiry_date">{t('pages.machine_detail.warranty_expiry_date')}</Label>
                 <DatePicker
                   value={editFormData.warranty_expiry_date}
                   onChange={(value) => setEditFormData(prev => ({ ...prev, warranty_expiry_date: value }))}
-                  placeholder="Select warranty expiry date"
+                  placeholder={t('pages.machine_detail.select_warranty_expiry')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="sale_price">Sale Price (KM)</Label>
+                <Label htmlFor="sale_price">{t('pages.machine_detail.sale_price')}</Label>
                 <Input
                   id="sale_price"
                   type="number"
@@ -842,21 +844,21 @@ export default function MachineDetail() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="receipt_number">Receipt Number</Label>
+                <Label htmlFor="receipt_number">{t('pages.machine_detail.receipt_number')}</Label>
                 <Input
                   id="receipt_number"
                   value={editFormData.receipt_number}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, receipt_number: e.target.value }))}
-                  placeholder="Enter receipt number"
+                  placeholder={t('pages.machine_detail.enter_receipt_number')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="purchased_at">Purchased At</Label>
+                <Label htmlFor="purchased_at">{t('pages.machine_detail.purchased_at')}</Label>
                 <Input
                   id="purchased_at"
                   value={editFormData.purchased_at}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, purchased_at: e.target.value }))}
-                  placeholder="e.g., AMS, Kamer.ba"
+                  placeholder={t('pages.machine_detail.purchased_at_placeholder')}
                 />
               </div>
             </div>
@@ -868,16 +870,16 @@ export default function MachineDetail() {
                 onChange={(e) => setEditFormData(prev => ({ ...prev, warranty_active: e.target.checked }))}
                 className="rounded"
               />
-              <Label htmlFor="warranty_active">Warranty Active</Label>
+              <Label htmlFor="warranty_active">{t('pages.machine_detail.warranty_active')}</Label>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
+              {t('pages.machine_detail.cancel')}
             </Button>
             <Button onClick={handleEditSubmit} disabled={isEditing}>
               {isEditing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isEditing ? 'Updating...' : 'Update Machine'}
+              {isEditing ? t('pages.machine_detail.updating') : t('pages.machine_detail.update_machine')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -887,34 +889,34 @@ export default function MachineDetail() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Permanently Delete Machine</DialogTitle>
+            <DialogTitle>{t('pages.machine_detail.delete_machine_title')}</DialogTitle>
             <DialogDescription>
               <div className="space-y-2">
-                <p>Are you sure you want to permanently delete this machine? This action cannot be undone and will:</p>
+                <p>{t('pages.machine_detail.delete_confirmation')}</p>
                 <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                  <li>Remove the machine assignment</li>
-                  <li>Delete the machine serial permanently</li>
+                  <li>{t('pages.machine_detail.remove_assignment')}</li>
+                  <li>{t('pages.machine_detail.delete_serial')}</li>
                 </ul>
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                   <p className="text-sm text-yellow-800">
-                    <strong>Note:</strong> This machine cannot be deleted if it has associated repair tickets, work orders, or warranty records. Please delete or reassign those records first.
+                    <strong>{t('pages.machine_detail.note')}:</strong> {t('pages.machine_detail.delete_note')}
                   </p>
                 </div>
                 <div className="mt-4 space-y-1">
-                  <p><strong>Model:</strong> {machine?.model_name}</p>
-                  <p><strong>Serial:</strong> {machine?.serial_number}</p>
-                  <p><strong>Customer:</strong> {machine?.customer_name}</p>
+                  <p><strong>{t('pages.machine_detail.model')}:</strong> {machine?.model_name}</p>
+                  <p><strong>{t('pages.machine_detail.serial')}:</strong> {machine?.serial_number}</p>
+                  <p><strong>{t('pages.machine_detail.customer')}:</strong> {machine?.customer_name}</p>
                 </div>
               </div>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Cancel
+              {t('pages.machine_detail.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleDeleteConfirm} disabled={isDeleting}>
               {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isDeleting ? 'Deleting...' : 'Permanently Delete'}
+              {isDeleting ? t('pages.machine_detail.deleting') : t('pages.machine_detail.permanently_delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
