@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MainLayout } from '../components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
@@ -146,6 +147,7 @@ interface WarrantyWorkOrder {
 }
 
 export default function InventoryDetail() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [inventoryItem, setInventoryItem] = useState<InventoryItem | null>(null)
@@ -428,15 +430,15 @@ export default function InventoryDetail() {
           <div className="flex items-center space-x-2">
             <Button variant="outline" onClick={handleAdjustStock}>
               <Package className="mr-2 h-4 w-4" />
-              Adjust Stock
+              {t('pages.inventory_detail.adjust_stock')}
             </Button>
             <Button variant="outline" onClick={handleEditItem}>
               <Edit className="mr-2 h-4 w-4" />
-              Edit Item
+              {t('pages.inventory_detail.edit_item')}
             </Button>
             <Button variant="destructive" onClick={handleDeleteItem}>
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete Item
+              {t('pages.inventory_detail.delete_item')}
             </Button>
           </div>
         </div>
@@ -445,52 +447,52 @@ export default function InventoryDetail() {
         <div className="grid gap-4 md:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Current Stock</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.inventory_detail.current_stock')}</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{inventoryItem.quantity}</div>
-              <p className="text-xs text-muted-foreground">Units available</p>
+              <p className="text-xs text-muted-foreground">{t('pages.inventory_detail.units_available')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Stock Value</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.inventory_detail.stock_value')}</CardTitle>
               <Euro className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{currentStockValue.toFixed(2)} KM</div>
-              <p className="text-xs text-muted-foreground">Current value</p>
+              <p className="text-xs text-muted-foreground">{t('pages.inventory_detail.current_value')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Used</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.inventory_detail.total_used')}</CardTitle>
               <TrendingDown className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalQuantityUsed}</div>
-              <p className="text-xs text-muted-foreground">Units consumed</p>
+              <p className="text-xs text-muted-foreground">{t('pages.inventory_detail.units_consumed')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Work Orders</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.inventory_detail.work_orders')}</CardTitle>
               <Wrench className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalWorkOrders}</div>
-              <p className="text-xs text-muted-foreground">Regular repairs</p>
+              <p className="text-xs text-muted-foreground">{t('pages.inventory_detail.regular_repairs')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Warranty Repairs</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pages.inventory_detail.warranty_repairs')}</CardTitle>
               <Award className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalWarrantyWorkOrders}</div>
-              <p className="text-xs text-muted-foreground">Warranty repairs</p>
+              <p className="text-xs text-muted-foreground">{t('pages.inventory_detail.warranty_repairs')}</p>
             </CardContent>
           </Card>
         </div>
@@ -499,10 +501,12 @@ export default function InventoryDetail() {
         {inventoryItem.quantity <= (inventoryItem.min_stock_level || 5) && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Low Stock Alert</AlertTitle>
+            <AlertTitle>{t('pages.inventory_detail.low_stock_alert')}</AlertTitle>
             <AlertDescription>
-              This item is running low on stock. Current quantity: {inventoryItem.quantity}, 
-              Minimum level: {inventoryItem.min_stock_level || 5}
+              {t('pages.inventory_detail.low_stock_description', { 
+                current: inventoryItem.quantity, 
+                minimum: inventoryItem.min_stock_level || 5 
+              })}
             </AlertDescription>
           </Alert>
         )}
@@ -510,10 +514,10 @@ export default function InventoryDetail() {
         {/* Main Content */}
         <Tabs defaultValue="details" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="details">Item Details</TabsTrigger>
-            <TabsTrigger value="work-orders">Work Orders ({workOrders.length})</TabsTrigger>
-            <TabsTrigger value="warranty-work-orders">Warranty Work Orders ({warrantyWorkOrders.length})</TabsTrigger>
-            <TabsTrigger value="usage-stats">Usage Statistics</TabsTrigger>
+            <TabsTrigger value="details">{t('pages.inventory_detail.item_details')}</TabsTrigger>
+            <TabsTrigger value="work-orders">{t('pages.inventory_detail.work_orders')} ({workOrders.length})</TabsTrigger>
+            <TabsTrigger value="warranty-work-orders">{t('pages.inventory_detail.warranty_work_orders')} ({warrantyWorkOrders.length})</TabsTrigger>
+            <TabsTrigger value="usage-stats">{t('pages.inventory_detail.usage_statistics')}</TabsTrigger>
           </TabsList>
 
           {/* Item Details Tab */}
@@ -524,47 +528,47 @@ export default function InventoryDetail() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Package className="h-5 w-5" />
-                    Basic Information
+                    {t('pages.inventory_detail.basic_information')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Name</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.name')}</p>
                       <p className="text-sm">{inventoryItem.name}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">SKU</p>
-                      <p className="text-sm">{inventoryItem.sku || 'N/A'}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.sku')}</p>
+                      <p className="text-sm">{inventoryItem.sku || t('pages.inventory_detail.not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Part Number</p>
-                      <p className="text-sm">{inventoryItem.part_number || 'N/A'}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.part_number')}</p>
+                      <p className="text-sm">{inventoryItem.part_number || t('pages.inventory_detail.not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Barcode</p>
-                      <p className="text-sm">{inventoryItem.barcode || 'N/A'}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.barcode')}</p>
+                      <p className="text-sm">{inventoryItem.barcode || t('pages.inventory_detail.not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Category</p>
-                      <p className="text-sm">{inventoryItem.category || 'N/A'}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.category')}</p>
+                      <p className="text-sm">{inventoryItem.category || t('pages.inventory_detail.not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Location</p>
-                      <p className="text-sm">{inventoryItem.location || 'N/A'}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.location')}</p>
+                      <p className="text-sm">{inventoryItem.location || t('pages.inventory_detail.not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Created</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.created')}</p>
                       <p className="text-sm">{formatDate(inventoryItem.created_at)}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.last_updated')}</p>
                       <p className="text-sm">{formatDate(inventoryItem.updated_at)}</p>
                     </div>
                   </div>
                   {inventoryItem.description && (
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Description</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.description')}</p>
                       <p className="text-sm">{inventoryItem.description}</p>
                     </div>
                   )}
@@ -576,41 +580,41 @@ export default function InventoryDetail() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5" />
-                    Stock & Pricing
+                    {t('pages.inventory_detail.stock_pricing')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Current Quantity</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.current_quantity')}</p>
                       <p className="text-sm font-bold">{inventoryItem.quantity}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Unit Price</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.unit_price')}</p>
                       <p className="text-sm font-bold">{parseFloat(inventoryItem.unit_price.toString()).toFixed(2)} KM</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Min Stock Level</p>
-                      <p className="text-sm">{inventoryItem.min_stock_level || 'N/A'}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.min_stock_level')}</p>
+                      <p className="text-sm">{inventoryItem.min_stock_level || t('pages.inventory_detail.not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Reorder Level</p>
-                      <p className="text-sm">{inventoryItem.reorder_level || 'N/A'}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.reorder_level')}</p>
+                      <p className="text-sm">{inventoryItem.reorder_level || t('pages.inventory_detail.not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Min Order Qty</p>
-                      <p className="text-sm">{inventoryItem.min_order_quantity || 'N/A'}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.min_order_qty')}</p>
+                      <p className="text-sm">{inventoryItem.min_order_quantity || t('pages.inventory_detail.not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Lead Time</p>
-                      <p className="text-sm">{inventoryItem.lead_time_days ? `${inventoryItem.lead_time_days} days` : 'N/A'}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.lead_time')}</p>
+                      <p className="text-sm">{inventoryItem.lead_time_days ? `${inventoryItem.lead_time_days} ${t('pages.inventory_detail.days')}` : t('pages.inventory_detail.not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Supplier</p>
-                      <p className="text-sm">{inventoryItem.supplier || 'N/A'}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.supplier')}</p>
+                      <p className="text-sm">{inventoryItem.supplier || t('pages.inventory_detail.not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Value</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.total_value')}</p>
                       <p className="text-sm font-bold">{currentStockValue.toFixed(2)} KM</p>
                     </div>
                   </div>
@@ -625,14 +629,14 @@ export default function InventoryDetail() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Wrench className="h-5 w-5" />
-                  Work Orders Using This Item ({workOrders.length})
+                  {t('pages.inventory_detail.work_orders_using_item', { count: workOrders.length })}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {workOrders.length === 0 ? (
                   <div className="text-center py-8">
                     <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">This item has not been used in any work orders.</p>
+                    <p className="text-muted-foreground">{t('pages.inventory_detail.no_work_orders')}</p>
                   </div>
                 ) : (
                   <Table>
