@@ -26,7 +26,7 @@ router.get('/:language/:namespace.json', async (req, res) => {
     }
 
     // Construct file path
-    const filePath = path.join(__dirname, '../../frontend/src/locales', language, `${namespace}.json`)
+    const filePath = path.join(__dirname, '../../frontend/public/locales', language, `${namespace}.json`)
     
     // Check if file exists
     if (!fs.existsSync(filePath)) {
@@ -60,7 +60,7 @@ router.get('/:language/:namespace.json', async (req, res) => {
 // Get all translations (Admin only)
 router.get('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
-    const translationsDir = path.join(__dirname, '../../frontend/src/locales')
+    const translationsDir = path.join(__dirname, '../../frontend/public/locales')
     const translations = {}
 
     // Read all language directories
@@ -140,7 +140,7 @@ router.put('/:language/:namespace/:key', authenticateToken, authorizeRoles('admi
     }
 
     // Construct file path
-    const filePath = path.join(__dirname, '../../frontend/src/locales', language, `${namespace}.json`)
+    const filePath = path.join(__dirname, '../../frontend/public/locales', language, `${namespace}.json`)
     console.log('File path:', filePath)
     
     // Check if file exists
