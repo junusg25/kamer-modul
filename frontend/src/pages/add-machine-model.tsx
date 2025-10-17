@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { MainLayout } from '../components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
@@ -51,6 +52,7 @@ interface Supplier {
 
 export default function AddMachineModelPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [categories, setCategories] = useState<MachineCategory[]>([])
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loadingCategories, setLoadingCategories] = useState(false)
@@ -95,7 +97,7 @@ export default function AddMachineModelPage() {
       setCategories(response.data || [])
     } catch (error) {
       console.error('Error fetching categories:', error)
-      toast.error('Failed to load machine categories')
+      toast.error(t('pages.add_machine_model.failed_to_load_categories'))
     } finally {
       setLoadingCategories(false)
     }
@@ -126,7 +128,7 @@ export default function AddMachineModelPage() {
       setManufacturerOptions(allManufacturers.sort())
     } catch (error) {
       console.error('Error fetching suppliers:', error)
-      toast.error('Failed to load suppliers')
+      toast.error(t('pages.add_machine_model.failed_to_load_suppliers'))
       // Fallback to empty array
       setManufacturerOptions([])
     } finally {
@@ -178,7 +180,7 @@ export default function AddMachineModelPage() {
         handleInputChange('category_id', existingCategory.id)
         setCategoryPopoverOpen(false)
         setCategorySearch('')
-        toast.info(`Category "${trimmedName}" is similar to existing "${existingCategory.name}" and has been selected`)
+        toast.info(t('pages.add_machine_model.category_similar_selected', { newName: trimmedName, existingName: existingCategory.name }))
         return
       }
       
@@ -196,7 +198,7 @@ export default function AddMachineModelPage() {
       setCategoryPopoverOpen(false)
       setCategorySearch('')
       
-      toast.success(`Category "${trimmedName}" created successfully`)
+      toast.success(t('pages.add_machine_model.category_created_success', { name: trimmedName }))
     } catch (error) {
       console.error('Error creating category:', error)
       console.error('Full error object:', error)
@@ -210,12 +212,12 @@ export default function AddMachineModelPage() {
         })
         
         if (similarCategory) {
-          toast.error(`Category "${categoryName.trim()}" is too similar to existing "${similarCategory.name}". Please select the existing category or use a different name.`)
+          toast.error(t('pages.add_machine_model.category_too_similar', { newName: categoryName.trim(), existingName: similarCategory.name }))
         } else {
-          toast.error(`Category "${categoryName.trim()}" already exists. Please select it from the list.`)
+          toast.error(t('pages.add_machine_model.category_already_exists', { name: categoryName.trim() }))
         }
       } else {
-        toast.error('Failed to create category. Please try again.')
+        toast.error(t('pages.add_machine_model.failed_to_create_category'))
       }
     } finally {
       setIsCreatingCategory(false)
@@ -226,23 +228,23 @@ export default function AddMachineModelPage() {
     e.preventDefault()
     
     if (!formData.name.trim()) {
-      toast.error('Machine model name is required')
+      toast.error(t('pages.add_machine_model.machine_model_name_required'))
       return
     }
     
     if (!formData.manufacturer.trim()) {
-      toast.error('Manufacturer is required')
+      toast.error(t('pages.add_machine_model.manufacturer_required'))
       return
     }
 
     try {
       setIsSubmitting(true)
       await apiService.createMachineModel(formData)
-      toast.success('Machine model created successfully')
+      toast.success(t('pages.add_machine_model.machine_model_created_success'))
       navigate('/machines')
     } catch (error) {
       console.error('Error creating machine model:', error)
-      toast.error('Failed to create machine model. Please try again.')
+      toast.error(t('pages.add_machine_model.failed_to_create_machine_model'))
     } finally {
       setIsSubmitting(false)
     }
@@ -267,16 +269,16 @@ export default function AddMachineModelPage() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Add New Machine Model</h1>
+              <h1 className="text-3xl font-bold tracking-tight">{t('pages.add_machine_model.title')}</h1>
               <p className="text-muted-foreground">
-                Create a new machine model with specifications and warranty information
+                {t('pages.add_machine_model.subtitle')}
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
             <Button variant="outline" onClick={handleCancel}>
               <X className="mr-2 h-4 w-4" />
-              Cancel
+              {t('common:cancel')}
             </Button>
             <Button 
               type="submit" 
@@ -284,7 +286,7 @@ export default function AddMachineModelPage() {
               disabled={isSubmitting}
             >
               <Save className="mr-2 h-4 w-4" />
-              {isSubmitting ? 'Creating...' : 'Create Machine Model'}
+              {isSubmitting ? t('pages.add_machine_model.creating') : t('pages.add_machine_model.create_button')}
             </Button>
           </div>
         </div>
@@ -297,19 +299,19 @@ export default function AddMachineModelPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Package className="h-5 w-5" />
-                  <span>Basic Information</span>
+                  <span>{t('pages.add_machine_model.basic_information')}</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Machine Model Name *</Label>
+                  <Label htmlFor="name">{t('pages.add_machine_model.machine_model_name')} *</Label>
                   <div className="relative">
                     <Package className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
-                      placeholder="Enter machine model name"
+                      placeholder={t('pages.add_machine_model.enter_machine_model_name')}
                       className="pl-10"
                       required
                     />
@@ -317,21 +319,21 @@ export default function AddMachineModelPage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="catalogue_number">Catalogue Number</Label>
+                  <Label htmlFor="catalogue_number">{t('pages.add_machine_model.catalogue_number')}</Label>
                   <div className="relative">
                     <Hash className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="catalogue_number"
                       value={formData.catalogue_number || ''}
                       onChange={(e) => handleInputChange('catalogue_number', e.target.value)}
-                      placeholder="Enter catalogue number"
+                      placeholder={t('pages.add_machine_model.enter_catalogue_number')}
                       className="pl-10"
                     />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="manufacturer">Manufacturer *</Label>
+                  <Label htmlFor="manufacturer">{t('pages.add_machine_model.manufacturer')} *</Label>
                   <Popover open={manufacturerPopoverOpen} onOpenChange={setManufacturerPopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -340,7 +342,7 @@ export default function AddMachineModelPage() {
                         aria-expanded={manufacturerPopoverOpen}
                         className="w-full justify-between h-10"
                       >
-                        {formData.manufacturer || "Select manufacturer..."}
+                        {formData.manufacturer || t('pages.add_machine_model.select_manufacturer')}
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -349,7 +351,7 @@ export default function AddMachineModelPage() {
                         <div className="relative">
                           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                           <Input
-                            placeholder="Search or type new manufacturer..."
+                            placeholder={t('pages.add_machine_model.search_manufacturer')}
                             className="pl-10"
                             value={manufacturerSearch}
                             onChange={(e) => setManufacturerSearch(e.target.value)}
@@ -371,8 +373,8 @@ export default function AddMachineModelPage() {
                                 <span className="text-green-600 text-sm font-bold">+</span>
                               </div>
                               <div className="flex-1">
-                                <p className="font-medium">Add "{manufacturerSearch}"</p>
-                                <p className="text-sm text-muted-foreground">Create new manufacturer</p>
+                                <p className="font-medium">{t('pages.add_machine_model.add_manufacturer', { name: manufacturerSearch })}</p>
+                                <p className="text-sm text-muted-foreground">{t('pages.add_machine_model.create_new_manufacturer')}</p>
                               </div>
                             </div>
                           </div>
@@ -380,7 +382,7 @@ export default function AddMachineModelPage() {
                         
                         {/* Existing options */}
                         {filteredManufacturerOptions.length === 0 ? (
-                          <div className="p-4 text-center text-muted-foreground">No manufacturers found.</div>
+                          <div className="p-4 text-center text-muted-foreground">{t('pages.add_machine_model.no_manufacturers_found')}</div>
                         ) : (
                           <div className="p-1">
                             {filteredManufacturerOptions.map((option) => (
@@ -397,7 +399,7 @@ export default function AddMachineModelPage() {
                                 </div>
                                 <div className="flex-1">
                                   <p className="font-medium">{option}</p>
-                                  <p className="text-sm text-muted-foreground">Select manufacturer</p>
+                                  <p className="text-sm text-muted-foreground">{t('pages.add_machine_model.select_manufacturer_option')}</p>
                                 </div>
                               </div>
                             ))}
@@ -415,12 +417,12 @@ export default function AddMachineModelPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Shield className="h-5 w-5" />
-                  <span>Category & Warranty</span>
+                  <span>{t('pages.add_machine_model.category_warranty')}</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="category_id">Category</Label>
+                  <Label htmlFor='category_id'>{t('pages.add_machine_model.category')}</Label>
                   <Popover open={categoryPopoverOpen} onOpenChange={setCategoryPopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -431,7 +433,7 @@ export default function AddMachineModelPage() {
                       >
                         {formData.category_id 
                           ? categories.find(cat => cat.id === formData.category_id)?.name 
-                          : "Select category..."}
+                          : t('pages.add_machine_model.select_category')}
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -440,7 +442,7 @@ export default function AddMachineModelPage() {
                         <div className="relative">
                           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                           <Input
-                            placeholder="Search categories or type new..."
+                            placeholder={t('pages.add_machine_model.search_categories')}
                             className="pl-10"
                             value={categorySearch}
                             onChange={(e) => setCategorySearch(e.target.value)}
@@ -461,8 +463,8 @@ export default function AddMachineModelPage() {
                               <span className="text-gray-600 text-sm font-bold">-</span>
                             </div>
                             <div className="flex-1">
-                              <p className="font-medium">No category</p>
-                              <p className="text-sm text-muted-foreground">Leave category empty</p>
+                              <p className="font-medium">{t('pages.add_machine_model.no_category')}</p>
+                              <p className="text-sm text-muted-foreground">{t('pages.add_machine_model.leave_category_empty')}</p>
                             </div>
                           </div>
                         </div>
@@ -488,9 +490,9 @@ export default function AddMachineModelPage() {
                                 )}
                               </div>
                               <div className="flex-1">
-                                <p className="font-medium">Create "{categorySearch}"</p>
+                                <p className="font-medium">{t('pages.add_machine_model.create_category', { name: categorySearch })}</p>
                                 <p className="text-sm text-muted-foreground">
-                                  {isCreatingCategory ? 'Creating category...' : 'Add new category'}
+                                  {isCreatingCategory ? t('pages.add_machine_model.creating_category') : t('pages.add_machine_model.add_new_category')}
                                 </p>
                               </div>
                             </div>
@@ -499,7 +501,7 @@ export default function AddMachineModelPage() {
                         
                         {/* Existing options */}
                         {filteredCategories.length === 0 ? (
-                          <div className="p-4 text-center text-muted-foreground">No categories found.</div>
+                          <div className="p-4 text-center text-muted-foreground">{t('pages.add_machine_model.no_categories_found')}</div>
                         ) : (
                           <div className="p-1">
                             {filteredCategories.map((category) => (
@@ -516,7 +518,7 @@ export default function AddMachineModelPage() {
                                 </div>
                                 <div className="flex-1">
                                   <p className="font-medium">{category.name}</p>
-                                  <p className="text-sm text-muted-foreground">Select category</p>
+                                  <p className="text-sm text-muted-foreground">{t('pages.add_machine_model.select_category_option')}</p>
                                 </div>
                               </div>
                             ))}
@@ -528,7 +530,7 @@ export default function AddMachineModelPage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="warranty_months">Warranty Period (Months)</Label>
+                  <Label htmlFor="warranty_months">{t('pages.add_machine_model.warranty_period')}</Label>
                   <div className="relative">
                     <Shield className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -538,7 +540,7 @@ export default function AddMachineModelPage() {
                       max="120"
                       value={formData.warranty_months}
                       onChange={(e) => handleInputChange('warranty_months', parseInt(e.target.value) || 0)}
-                      placeholder="Enter warranty period in months"
+                      placeholder={t('pages.add_machine_model.enter_warranty_period')}
                       className="pl-10"
                     />
                   </div>
@@ -552,17 +554,17 @@ export default function AddMachineModelPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <FileText className="h-5 w-5" />
-                <span>Description</span>
+                <span>{t('pages.add_machine_model.description')}</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Label htmlFor="description">Machine Model Description</Label>
+                <Label htmlFor="description">{t('pages.add_machine_model.machine_model_description')}</Label>
                 <Textarea
                   id="description"
                   value={formData.description || ''}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Enter detailed description of the machine model, specifications, features, etc."
+                  placeholder={t('pages.add_machine_model.enter_description')}
                   rows={4}
                 />
               </div>
