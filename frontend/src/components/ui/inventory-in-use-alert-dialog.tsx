@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,23 +24,28 @@ export function InventoryInUseAlertDialog({
   onOpenChange,
   itemName,
   workOrderCount = 0,
-  title = 'Cannot Delete Inventory Item',
+  title,
   description
 }: InventoryInUseAlertDialogProps) {
-  const defaultDescription = `${itemName ? `"${itemName}"` : 'This inventory item'} is currently used in ${workOrderCount} work order${workOrderCount > 1 ? 's' : ''} and cannot be deleted. Please remove it from all work orders before deleting.`
+  const { t } = useTranslation()
+  const defaultTitle = t('inventory_cannot_delete_item')
+  const defaultDescription = t('inventory_cannot_delete_description', { 
+    itemName: itemName || t('inventory_this_item'),
+    count: workOrderCount 
+  })
   
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogTitle>{title || defaultTitle}</AlertDialogTitle>
           <AlertDialogDescription>
             {description || defaultDescription}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogAction onClick={() => onOpenChange(false)}>
-            OK
+            {t('ok')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

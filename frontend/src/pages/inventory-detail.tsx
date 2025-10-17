@@ -202,7 +202,7 @@ export default function InventoryDetail() {
       const warrantyWorkOrdersResponse = await apiService.getInventoryWarrantyWorkOrders(id!) as any
       setWarrantyWorkOrders(warrantyWorkOrdersResponse.data || [])
     } catch (err) {
-      setError('Failed to load inventory item details.')
+      setError(t('inventory_detail_failed_to_load'))
       console.error('Error fetching inventory details:', err)
     } finally {
       setIsLoading(false)
@@ -212,11 +212,11 @@ export default function InventoryDetail() {
   const getStockStatus = (quantity: number, minStockLevel?: number) => {
     const minLevel = minStockLevel || 5
     if (quantity === 0) {
-      return <Badge variant="destructive">Out of Stock</Badge>
+      return <Badge variant="destructive">{t('inventory_out_of_stock')}</Badge>
     } else if (quantity <= minLevel) {
-      return <Badge variant="outline" className="border-orange-300 text-orange-700">Low Stock</Badge>
+      return <Badge variant="outline" className="border-orange-300 text-orange-700">{t('inventory_low_stock')}</Badge>
     } else {
-      return <Badge variant="outline" className="border-green-300 text-green-700">In Stock</Badge>
+      return <Badge variant="outline" className="border-green-300 text-green-700">{t('inventory_in_stock')}</Badge>
     }
   }
 
@@ -890,14 +890,14 @@ export default function InventoryDetail() {
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Edit Inventory Item</DialogTitle>
+              <DialogTitle>{t('inventory_edit_inventory_item')}</DialogTitle>
               <DialogDescription>
-                Update the details for {inventoryItem?.name}
+                {t('inventory_update_details_for', { name: inventoryItem?.name })}
               </DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-name">Item Name *</Label>
+                <Label htmlFor="edit-name">{t('inventory_item_name')} *</Label>
                 <Input
                   id="edit-name"
                   value={editFormData.name}
@@ -906,7 +906,7 @@ export default function InventoryDetail() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-sku">SKU</Label>
+                <Label htmlFor="edit-sku">{t('inventory_detail_sku')}</Label>
                 <Input
                   id="edit-sku"
                   value={editFormData.sku}
@@ -914,7 +914,7 @@ export default function InventoryDetail() {
                 />
               </div>
               <div className="space-y-2 col-span-2">
-                <Label htmlFor="edit-description">Description</Label>
+                <Label htmlFor="edit-description">{t('inventory_detail_description')}</Label>
                 <Input
                   id="edit-description"
                   value={editFormData.description}
@@ -922,7 +922,7 @@ export default function InventoryDetail() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-quantity">Quantity *</Label>
+                <Label htmlFor="edit-quantity">{t('inventory_quantity')} *</Label>
                 <Input
                   id="edit-quantity"
                   type="number"
@@ -932,7 +932,7 @@ export default function InventoryDetail() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-unit-price">Unit Price (KM) *</Label>
+                <Label htmlFor="edit-unit-price">{t('inventory_unit_price_km')} *</Label>
                 <Input
                   id="edit-unit-price"
                   type="number"
@@ -943,7 +943,7 @@ export default function InventoryDetail() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-category">Category</Label>
+                <Label htmlFor="edit-category">{t('inventory_detail_category')}</Label>
                 <Input
                   id="edit-category"
                   value={editFormData.category}
@@ -951,7 +951,7 @@ export default function InventoryDetail() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-supplier">Supplier</Label>
+                <Label htmlFor="edit-supplier">{t('inventory_detail_supplier')}</Label>
                 <Input
                   id="edit-supplier"
                   value={editFormData.supplier}
@@ -959,7 +959,7 @@ export default function InventoryDetail() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-location">Location</Label>
+                <Label htmlFor="edit-location">{t('inventory_detail_location')}</Label>
                 <Input
                   id="edit-location"
                   value={editFormData.location}
@@ -967,7 +967,7 @@ export default function InventoryDetail() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-min-stock">Minimum Stock Level</Label>
+                <Label htmlFor="edit-min-stock">{t('inventory_minimum_stock_level')}</Label>
                 <Input
                   id="edit-min-stock"
                   type="number"
@@ -978,16 +978,16 @@ export default function InventoryDetail() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-                Cancel
+                {t('cancel')}
               </Button>
               <Button onClick={handleSaveEdit} disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
+                    {t('inventory_saving')}
                   </>
                 ) : (
-                  'Save Changes'
+                  t('inventory_save_changes')
                 )}
               </Button>
             </DialogFooter>
@@ -998,14 +998,14 @@ export default function InventoryDetail() {
         <Dialog open={adjustStockDialogOpen} onOpenChange={setAdjustStockDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Adjust Stock</DialogTitle>
+              <DialogTitle>{t('inventory_detail_adjust_stock')}</DialogTitle>
               <DialogDescription>
-                Update stock level for {inventoryItem?.name}
+                {t('inventory_detail_update_stock_level_for', { name: inventoryItem?.name })}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="current-stock">Current Stock</Label>
+                <Label htmlFor="current-stock">{t('inventory_detail_current_stock')}</Label>
                 <Input
                   id="current-stock"
                   value={inventoryItem?.quantity || 0}
@@ -1014,7 +1014,7 @@ export default function InventoryDetail() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="new-quantity">New Quantity *</Label>
+                <Label htmlFor="new-quantity">{t('inventory_detail_new_quantity')} *</Label>
                 <Input
                   id="new-quantity"
                   type="number"
@@ -1024,7 +1024,7 @@ export default function InventoryDetail() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="adjustment-reason">Reason</Label>
+                <Label htmlFor="adjustment-reason">{t('inventory_detail_reason')}</Label>
                 <Select 
                   value={stockAdjustment.reason} 
                   onValueChange={(value) => setStockAdjustment({ ...stockAdjustment, reason: value })}
@@ -1033,27 +1033,27 @@ export default function InventoryDetail() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="adjustment">Stock Adjustment</SelectItem>
-                    <SelectItem value="restock">Restocking</SelectItem>
-                    <SelectItem value="damage">Damaged Items</SelectItem>
-                    <SelectItem value="lost">Lost Items</SelectItem>
-                    <SelectItem value="correction">Inventory Correction</SelectItem>
+                    <SelectItem value="adjustment">{t('inventory_stock_adjustment')}</SelectItem>
+                    <SelectItem value="restock">{t('inventory_restocking')}</SelectItem>
+                    <SelectItem value="damage">{t('inventory_damaged_items')}</SelectItem>
+                    <SelectItem value="lost">{t('inventory_lost_items')}</SelectItem>
+                    <SelectItem value="correction">{t('inventory_inventory_correction')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setAdjustStockDialogOpen(false)}>
-                Cancel
+                {t('cancel')}
               </Button>
               <Button onClick={handleSaveStockAdjustment} disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Adjusting...
+                    {t('inventory_adjusting')}
                   </>
                 ) : (
-                  'Adjust Stock'
+                  t('inventory_detail_adjust_stock')
                 )}
               </Button>
             </DialogFooter>
@@ -1065,8 +1065,8 @@ export default function InventoryDetail() {
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
           onConfirm={confirmDeleteItem}
-          title="Delete Inventory Item"
-          description={`Are you sure you want to delete ${inventoryItem?.name}? This action cannot be undone.`}
+          title={t('inventory_delete_inventory_item')}
+          description={t('inventory_delete_confirmation', { name: inventoryItem?.name })}
           isLoading={isSubmitting}
         />
 
@@ -1076,7 +1076,7 @@ export default function InventoryDetail() {
           onOpenChange={setInUseAlertOpen}
           itemName={inventoryItem?.name}
           workOrderCount={workOrderCount}
-          title="Cannot Delete Inventory Item"
+          title={t('inventory_cannot_delete_item')}
         />
       </div>
     </MainLayout>
