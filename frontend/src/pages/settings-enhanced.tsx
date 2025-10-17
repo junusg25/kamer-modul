@@ -402,8 +402,8 @@ export default function Settings() {
       
       // Load both English and Bosnian translation files directly from server
       const [englishResponse, bosnianResponse] = await Promise.all([
-        fetch('/api/translations/en/common.json'),
-        fetch('/api/translations/bs/common.json')
+        fetch('/locales/en/common.json'),
+        fetch('/locales/bs/common.json')
       ])
       
       if (!englishResponse.ok || !bosnianResponse.ok) {
