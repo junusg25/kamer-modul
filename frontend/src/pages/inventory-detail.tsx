@@ -430,15 +430,15 @@ export default function InventoryDetail() {
           <div className="flex items-center space-x-2">
             <Button variant="outline" onClick={handleAdjustStock}>
               <Package className="mr-2 h-4 w-4" />
-              {t('pages.inventory_detail.adjust_stock')}
+              {t('inventory_detail_adjust_stock')}
             </Button>
             <Button variant="outline" onClick={handleEditItem}>
               <Edit className="mr-2 h-4 w-4" />
-              {t('pages.inventory_detail.edit_item')}
+              {t('inventory_detail_edit_item')}
             </Button>
             <Button variant="destructive" onClick={handleDeleteItem}>
               <Trash2 className="mr-2 h-4 w-4" />
-              {t('pages.inventory_detail.delete_item')}
+              {t('inventory_detail_delete_item')}
             </Button>
           </div>
         </div>
@@ -447,52 +447,52 @@ export default function InventoryDetail() {
         <div className="grid gap-4 md:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('pages.inventory_detail.current_stock')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('inventory_detail_current_stock')}</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{inventoryItem.quantity}</div>
-              <p className="text-xs text-muted-foreground">{t('pages.inventory_detail.units_available')}</p>
+              <p className="text-xs text-muted-foreground">{t('inventory_detail_units_available')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('pages.inventory_detail.stock_value')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('inventory_detail_stock_value')}</CardTitle>
               <Euro className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{currentStockValue.toFixed(2)} KM</div>
-              <p className="text-xs text-muted-foreground">{t('pages.inventory_detail.current_value')}</p>
+              <p className="text-xs text-muted-foreground">{t('inventory_detail_current_value')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('pages.inventory_detail.total_used')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('inventory_detail_total_used')}</CardTitle>
               <TrendingDown className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalQuantityUsed}</div>
-              <p className="text-xs text-muted-foreground">{t('pages.inventory_detail.units_consumed')}</p>
+              <p className="text-xs text-muted-foreground">{t('inventory_detail_units_consumed')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('pages.inventory_detail.work_orders')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('inventory_detail_work_orders')}</CardTitle>
               <Wrench className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalWorkOrders}</div>
-              <p className="text-xs text-muted-foreground">{t('pages.inventory_detail.regular_repairs')}</p>
+              <p className="text-xs text-muted-foreground">{t('inventory_detail_regular_repairs')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('pages.inventory_detail.warranty_repairs')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('inventory_detail_warranty_repairs')}</CardTitle>
               <Award className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalWarrantyWorkOrders}</div>
-              <p className="text-xs text-muted-foreground">{t('pages.inventory_detail.warranty_repairs')}</p>
+              <p className="text-xs text-muted-foreground">{t('inventory_detail_warranty_repairs')}</p>
             </CardContent>
           </Card>
         </div>
@@ -501,9 +501,9 @@ export default function InventoryDetail() {
         {inventoryItem.quantity <= (inventoryItem.min_stock_level || 5) && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>{t('pages.inventory_detail.low_stock_alert')}</AlertTitle>
+            <AlertTitle>{t('inventory_detail_low_stock_alert')}</AlertTitle>
             <AlertDescription>
-              {t('pages.inventory_detail.low_stock_description', { 
+              {t('inventory_detail_low_stock_description', { 
                 current: inventoryItem.quantity, 
                 minimum: inventoryItem.min_stock_level || 5 
               })}
@@ -514,10 +514,10 @@ export default function InventoryDetail() {
         {/* Main Content */}
         <Tabs defaultValue="details" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="details">{t('pages.inventory_detail.item_details')}</TabsTrigger>
-            <TabsTrigger value="work-orders">{t('pages.inventory_detail.work_orders')} ({workOrders.length})</TabsTrigger>
-            <TabsTrigger value="warranty-work-orders">{t('pages.inventory_detail.warranty_work_orders')} ({warrantyWorkOrders.length})</TabsTrigger>
-            <TabsTrigger value="usage-stats">{t('pages.inventory_detail.usage_statistics')}</TabsTrigger>
+            <TabsTrigger value="details">{t('inventory_detail_item_details')}</TabsTrigger>
+            <TabsTrigger value="work-orders">{t('inventory_detail_work_orders')} ({workOrders.length})</TabsTrigger>
+            <TabsTrigger value="warranty-work-orders">{t('inventory_detail_warranty_work_orders')} ({warrantyWorkOrders.length})</TabsTrigger>
+            <TabsTrigger value="usage-stats">{t('inventory_detail_usage_statistics')}</TabsTrigger>
           </TabsList>
 
           {/* Item Details Tab */}
@@ -528,47 +528,47 @@ export default function InventoryDetail() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Package className="h-5 w-5" />
-                    {t('pages.inventory_detail.basic_information')}
+                    {t('inventory_detail_basic_information')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.name')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_name')}</p>
                       <p className="text-sm">{inventoryItem.name}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.sku')}</p>
-                      <p className="text-sm">{inventoryItem.sku || t('pages.inventory_detail.not_available')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_sku')}</p>
+                      <p className="text-sm">{inventoryItem.sku || t('inventory_detail_not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.part_number')}</p>
-                      <p className="text-sm">{inventoryItem.part_number || t('pages.inventory_detail.not_available')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_part_number')}</p>
+                      <p className="text-sm">{inventoryItem.part_number || t('inventory_detail_not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.barcode')}</p>
-                      <p className="text-sm">{inventoryItem.barcode || t('pages.inventory_detail.not_available')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_barcode')}</p>
+                      <p className="text-sm">{inventoryItem.barcode || t('inventory_detail_not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.category')}</p>
-                      <p className="text-sm">{inventoryItem.category || t('pages.inventory_detail.not_available')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_category')}</p>
+                      <p className="text-sm">{inventoryItem.category || t('inventory_detail_not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.location')}</p>
-                      <p className="text-sm">{inventoryItem.location || t('pages.inventory_detail.not_available')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_location')}</p>
+                      <p className="text-sm">{inventoryItem.location || t('inventory_detail_not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.created')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_created')}</p>
                       <p className="text-sm">{formatDate(inventoryItem.created_at)}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.last_updated')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_last_updated')}</p>
                       <p className="text-sm">{formatDate(inventoryItem.updated_at)}</p>
                     </div>
                   </div>
                   {inventoryItem.description && (
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.description')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_description')}</p>
                       <p className="text-sm">{inventoryItem.description}</p>
                     </div>
                   )}
@@ -580,41 +580,41 @@ export default function InventoryDetail() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5" />
-                    {t('pages.inventory_detail.stock_pricing')}
+                    {t('inventory_detail_stock_pricing')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.current_quantity')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_current_quantity')}</p>
                       <p className="text-sm font-bold">{inventoryItem.quantity}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.unit_price')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_unit_price')}</p>
                       <p className="text-sm font-bold">{parseFloat(inventoryItem.unit_price.toString()).toFixed(2)} KM</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.min_stock_level')}</p>
-                      <p className="text-sm">{inventoryItem.min_stock_level || t('pages.inventory_detail.not_available')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_min_stock_level')}</p>
+                      <p className="text-sm">{inventoryItem.min_stock_level || t('inventory_detail_not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.reorder_level')}</p>
-                      <p className="text-sm">{inventoryItem.reorder_level || t('pages.inventory_detail.not_available')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_reorder_level')}</p>
+                      <p className="text-sm">{inventoryItem.reorder_level || t('inventory_detail_not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.min_order_qty')}</p>
-                      <p className="text-sm">{inventoryItem.min_order_quantity || t('pages.inventory_detail.not_available')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_min_order_qty')}</p>
+                      <p className="text-sm">{inventoryItem.min_order_quantity || t('inventory_detail_not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.lead_time')}</p>
-                      <p className="text-sm">{inventoryItem.lead_time_days ? `${inventoryItem.lead_time_days} ${t('pages.inventory_detail.days')}` : t('pages.inventory_detail.not_available')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_lead_time')}</p>
+                      <p className="text-sm">{inventoryItem.lead_time_days ? `${inventoryItem.lead_time_days} ${t('inventory_detail_days')}` : t('inventory_detail_not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.supplier')}</p>
-                      <p className="text-sm">{inventoryItem.supplier || t('pages.inventory_detail.not_available')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_supplier')}</p>
+                      <p className="text-sm">{inventoryItem.supplier || t('inventory_detail_not_available')}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.total_value')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_total_value')}</p>
                       <p className="text-sm font-bold">{currentStockValue.toFixed(2)} KM</p>
                     </div>
                   </div>
@@ -629,28 +629,28 @@ export default function InventoryDetail() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Wrench className="h-5 w-5" />
-                  {t('pages.inventory_detail.work_orders_using_item', { count: workOrders.length })}
+                  {t('inventory_detail_work_orders_using_item', { count: workOrders.length })}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {workOrders.length === 0 ? (
                   <div className="text-center py-8">
                     <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">{t('pages.inventory_detail.no_work_orders')}</p>
+                    <p className="text-muted-foreground">{t('inventory_detail_no_work_orders')}</p>
                   </div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{t('pages.inventory_detail.work_order')}</TableHead>
-                        <TableHead>{t('pages.inventory_detail.status')}</TableHead>
-                        <TableHead>{t('pages.inventory_detail.priority')}</TableHead>
-                        <TableHead>{t('pages.inventory_detail.customer')}</TableHead>
-                        <TableHead>{t('pages.inventory_detail.machine')}</TableHead>
-                        <TableHead>{t('pages.inventory_detail.technician')}</TableHead>
-                        <TableHead>{t('pages.inventory_detail.quantity_used')}</TableHead>
-                        <TableHead>{t('pages.inventory_detail.created')}</TableHead>
-                        <TableHead className="text-right">{t('pages.inventory_detail.actions')}</TableHead>
+                        <TableHead>{t('inventory_detail_work_order')}</TableHead>
+                        <TableHead>{t('inventory_detail_status')}</TableHead>
+                        <TableHead>{t('inventory_detail_priority')}</TableHead>
+                        <TableHead>{t('inventory_detail_customer')}</TableHead>
+                        <TableHead>{t('inventory_detail_machine')}</TableHead>
+                        <TableHead>{t('inventory_detail_technician')}</TableHead>
+                        <TableHead>{t('inventory_detail_quantity_used')}</TableHead>
+                        <TableHead>{t('inventory_detail_created')}</TableHead>
+                        <TableHead className="text-right">{t('inventory_detail_actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -685,7 +685,7 @@ export default function InventoryDetail() {
                               {workOrder.serial_number}
                             </Button>
                           </TableCell>
-                          <TableCell>{workOrder.technician_name || t('pages.inventory_detail.unassigned')}</TableCell>
+                          <TableCell>{workOrder.technician_name || t('inventory_detail_unassigned')}</TableCell>
                           <TableCell className="font-medium">{workOrder.quantity_used}</TableCell>
                           <TableCell>{formatDate(workOrder.created_at)}</TableCell>
                           <TableCell className="text-right">
@@ -696,15 +696,15 @@ export default function InventoryDetail() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>{t('pages.inventory_detail.actions')}</DropdownMenuLabel>
+                                <DropdownMenuLabel>{t('inventory_detail_actions')}</DropdownMenuLabel>
                                 <DropdownMenuItem onClick={() => navigate(`/work-orders/${workOrder.id}`)}>
-                                  <Eye className="mr-2 h-4 w-4" /> {t('pages.inventory_detail.view_work_order')}
+                                  <Eye className="mr-2 h-4 w-4" /> {t('inventory_detail_view_work_order')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => navigate(`/customers/${workOrder.customer_id}`)}>
-                                  <User className="mr-2 h-4 w-4" /> {t('pages.inventory_detail.view_customer')}
+                                  <User className="mr-2 h-4 w-4" /> {t('inventory_detail_view_customer')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => navigate(`/machines/${workOrder.machine_id}`)}>
-                                  <Wrench className="mr-2 h-4 w-4" /> {t('pages.inventory_detail.view_machine')}
+                                  <Wrench className="mr-2 h-4 w-4" /> {t('inventory_detail_view_machine')}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -724,28 +724,28 @@ export default function InventoryDetail() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Award className="h-5 w-5" />
-                  {t('pages.inventory_detail.warranty_work_orders_using_item', { count: warrantyWorkOrders.length })}
+                  {t('inventory_detail_warranty_work_orders_using_item', { count: warrantyWorkOrders.length })}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {warrantyWorkOrders.length === 0 ? (
                   <div className="text-center py-8">
                     <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">{t('pages.inventory_detail.no_warranty_work_orders')}</p>
+                    <p className="text-muted-foreground">{t('inventory_detail_no_warranty_work_orders')}</p>
                   </div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{t('pages.inventory_detail.work_order')}</TableHead>
-                        <TableHead>{t('pages.inventory_detail.status')}</TableHead>
-                        <TableHead>{t('pages.inventory_detail.priority')}</TableHead>
-                        <TableHead>{t('pages.inventory_detail.customer')}</TableHead>
-                        <TableHead>{t('pages.inventory_detail.machine')}</TableHead>
-                        <TableHead>{t('pages.inventory_detail.technician')}</TableHead>
-                        <TableHead>{t('pages.inventory_detail.quantity_used')}</TableHead>
-                        <TableHead>{t('pages.inventory_detail.created')}</TableHead>
-                        <TableHead className="text-right">{t('pages.inventory_detail.actions')}</TableHead>
+                        <TableHead>{t('inventory_detail_work_order')}</TableHead>
+                        <TableHead>{t('inventory_detail_status')}</TableHead>
+                        <TableHead>{t('inventory_detail_priority')}</TableHead>
+                        <TableHead>{t('inventory_detail_customer')}</TableHead>
+                        <TableHead>{t('inventory_detail_machine')}</TableHead>
+                        <TableHead>{t('inventory_detail_technician')}</TableHead>
+                        <TableHead>{t('inventory_detail_quantity_used')}</TableHead>
+                        <TableHead>{t('inventory_detail_created')}</TableHead>
+                        <TableHead className="text-right">{t('inventory_detail_actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -780,7 +780,7 @@ export default function InventoryDetail() {
                               {workOrder.serial_number}
                             </Button>
                           </TableCell>
-                          <TableCell>{workOrder.technician_name || t('pages.inventory_detail.unassigned')}</TableCell>
+                          <TableCell>{workOrder.technician_name || t('inventory_detail_unassigned')}</TableCell>
                           <TableCell className="font-medium">{workOrder.quantity_used}</TableCell>
                           <TableCell>{formatDate(workOrder.created_at)}</TableCell>
                           <TableCell className="text-right">
@@ -791,15 +791,15 @@ export default function InventoryDetail() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>{t('pages.inventory_detail.actions')}</DropdownMenuLabel>
+                                <DropdownMenuLabel>{t('inventory_detail_actions')}</DropdownMenuLabel>
                                 <DropdownMenuItem onClick={() => navigate(`/warranty-work-orders/${workOrder.id}`)}>
-                                  <Eye className="mr-2 h-4 w-4" /> {t('pages.inventory_detail.view_work_order')}
+                                  <Eye className="mr-2 h-4 w-4" /> {t('inventory_detail_view_work_order')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => navigate(`/customers/${workOrder.customer_id}`)}>
-                                  <User className="mr-2 h-4 w-4" /> {t('pages.inventory_detail.view_customer')}
+                                  <User className="mr-2 h-4 w-4" /> {t('inventory_detail_view_customer')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => navigate(`/machines/${workOrder.machine_id}`)}>
-                                  <Wrench className="mr-2 h-4 w-4" /> {t('pages.inventory_detail.view_machine')}
+                                  <Wrench className="mr-2 h-4 w-4" /> {t('inventory_detail_view_machine')}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -820,25 +820,25 @@ export default function InventoryDetail() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5" />
-                    {t('pages.inventory_detail.usage_summary')}
+                    {t('inventory_detail_usage_summary')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.total_units_used')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_total_units_used')}</p>
                       <p className="text-2xl font-bold">{totalQuantityUsed}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.total_value_used')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_total_value_used')}</p>
                       <p className="text-2xl font-bold">{totalValueUsed.toFixed(2)} KM</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.regular_work_orders')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_regular_work_orders')}</p>
                       <p className="text-2xl font-bold">{totalWorkOrders}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.warranty_work_orders')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_warranty_work_orders')}</p>
                       <p className="text-2xl font-bold">{totalWarrantyWorkOrders}</p>
                     </div>
                   </div>
@@ -849,34 +849,34 @@ export default function InventoryDetail() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="h-5 w-5" />
-                    {t('pages.inventory_detail.stock_analysis')}
+                    {t('inventory_detail_stock_analysis')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.current_stock')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_current_stock')}</p>
                       <p className="text-2xl font-bold">{inventoryItem.quantity}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.stock_value')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_stock_value')}</p>
                       <p className="text-2xl font-bold">{currentStockValue.toFixed(2)} KM</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.min_stock_level')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_min_stock_level')}</p>
                       <p className="text-2xl font-bold">{inventoryItem.min_stock_level || 5}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{t('pages.inventory_detail.reorder_level')}</p>
-                      <p className="text-2xl font-bold">{inventoryItem.reorder_level || t('pages.inventory_detail.not_available')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('inventory_detail_reorder_level')}</p>
+                      <p className="text-2xl font-bold">{inventoryItem.reorder_level || t('inventory_detail_not_available')}</p>
                     </div>
                   </div>
                   {inventoryItem.quantity <= (inventoryItem.min_stock_level || 5) && (
                     <Alert variant="destructive">
                       <AlertCircle className="h-4 w-4" />
-                      <AlertTitle>{t('pages.inventory_detail.reorder_required')}</AlertTitle>
+                      <AlertTitle>{t('inventory_detail_reorder_required')}</AlertTitle>
                       <AlertDescription>
-                        {t('pages.inventory_detail.reorder_description')}
+                        {t('inventory_detail_reorder_description')}
                       </AlertDescription>
                     </Alert>
                   )}

@@ -58,14 +58,14 @@ import { toast } from 'sonner'
 
 // Define columns for the inventory table
 const INVENTORY_COLUMNS = defineColumns([
-  { key: 'name', label: 'pages.inventory.item' },
-  { key: 'description', label: 'pages.inventory.description' },
-  { key: 'quantity', label: 'pages.inventory.quantity' },
-  { key: 'price', label: 'pages.inventory.unit_price' },
-  { key: 'category', label: 'pages.inventory.category' },
-  { key: 'supplier', label: 'pages.inventory.supplier' },
-  { key: 'sku', label: 'pages.inventory.sku' },
-  { key: 'location', label: 'pages.inventory.location' },
+  { key: 'name', label: 'inventory_item' },
+  { key: 'description', label: 'inventory_description' },
+  { key: 'quantity', label: 'inventory_quantity' },
+  { key: 'price', label: 'inventory_unit_price' },
+  { key: 'category', label: 'inventory_category' },
+  { key: 'supplier', label: 'inventory_supplier' },
+  { key: 'sku', label: 'inventory_sku' },
+  { key: 'location', label: 'inventory_location' },
 ])
 
 interface InventoryItem {
@@ -85,15 +85,15 @@ interface InventoryItem {
 
 const getStockStatus = (quantity: number, minStock?: number, t: any) => {
   if (!minStock) {
-    return <Badge variant="outline">{t('pages.inventory.no_min_level')}</Badge>
+    return <Badge variant="outline">{t('inventory_no_min_level')}</Badge>
   }
   
   if (quantity <= 0) {
-    return <Badge variant="destructive">{t('pages.inventory.out_of_stock')}</Badge>
+    return <Badge variant="destructive">{t('inventory_out_of_stock')}</Badge>
   } else if (quantity <= minStock) {
-    return <Badge variant="outline" className="border-orange-300 text-orange-700">{t('pages.inventory.low_stock')}</Badge>
+    return <Badge variant="outline" className="border-orange-300 text-orange-700">{t('inventory_low_stock')}</Badge>
   } else {
-    return <Badge variant="outline" className="border-green-300 text-green-700">{t('pages.inventory.in_stock')}</Badge>
+    return <Badge variant="outline" className="border-green-300 text-green-700">{t('inventory_in_stock')}</Badge>
   }
 }
 
@@ -398,7 +398,7 @@ export default function Inventory() {
           </div>
           <Button onClick={() => navigate('/add-inventory-item')}>
             <Plus className="mr-2 h-4 w-4" />
-            {t('pages.inventory.add_item')}
+            {t('inventory_add_item')}
           </Button>
         </div>
 
@@ -406,42 +406,42 @@ export default function Inventory() {
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('pages.inventory.total_items')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('inventory_total_items')}</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalCount}</div>
-              <p className="text-xs text-muted-foreground">{t('pages.inventory.inventory_items')}</p>
+              <p className="text-xs text-muted-foreground">{t('inventory_inventory_items')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('pages.inventory.low_stock')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('inventory_low_stock')}</CardTitle>
               <AlertTriangle className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{lowStockItems.length}</div>
-              <p className="text-xs text-muted-foreground">{t('pages.inventory.below_minimum_level')}</p>
+              <p className="text-xs text-muted-foreground">{t('inventory_below_minimum_level')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('pages.inventory.out_of_stock')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('inventory_out_of_stock')}</CardTitle>
               <TrendingDown className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{outOfStockItems.length}</div>
-              <p className="text-xs text-muted-foreground">{t('pages.inventory.need_restocking')}</p>
+              <p className="text-xs text-muted-foreground">{t('inventory_need_restocking')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('pages.inventory.total_value')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('inventory_total_value')}</CardTitle>
               <TrendingUp className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{formatCurrency(totalValue)}</div>
-              <p className="text-xs text-muted-foreground">{t('pages.inventory.inventory_value')}</p>
+              <p className="text-xs text-muted-foreground">{t('inventory_inventory_value')}</p>
             </CardContent>
           </Card>
         </div>
@@ -452,7 +452,7 @@ export default function Inventory() {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
         <SmartSearch
-          placeholder={t('pages.inventory.search_inventory')}
+          placeholder={t('inventory_search_inventory')}
           value={appliedSearchTerm}
           onSearch={(term) => {
             setAppliedSearchTerm(term)
@@ -482,7 +482,7 @@ export default function Inventory() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="relative">
                       <Filter className="mr-2 h-4 w-4" />
-                      {t('pages.inventory.filters')}
+                      {t('inventory_filters')}
                       {getActiveFiltersCount() > 0 && (
                         <Badge variant="secondary" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
                           {getActiveFiltersCount()}
@@ -491,17 +491,17 @@ export default function Inventory() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>{t('pages.inventory.filter_by')}</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t('inventory_filter_by')}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     
                     <div className="p-2">
-                      <label className="text-sm font-medium mb-2 block">{t('pages.inventory.category')}</label>
+                      <label className="text-sm font-medium mb-2 block">{t('inventory_category')}</label>
                       <Select value={filters.category || "all"} onValueChange={(value) => handleFilterChange('category', value === "all" ? "" : value)}>
                         <SelectTrigger>
-                          <SelectValue placeholder={t('pages.inventory.all_categories')} />
+                          <SelectValue placeholder={t('inventory_all_categories')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">{t('pages.inventory.all_categories')}</SelectItem>
+                          <SelectItem value="all">{t('inventory_all_categories')}</SelectItem>
                           {getUniqueCategories().map((category) => (
                             <SelectItem key={category} value={category}>
                               {category}
@@ -512,13 +512,13 @@ export default function Inventory() {
                     </div>
                     
                     <div className="p-2">
-                      <label className="text-sm font-medium mb-2 block">{t('pages.inventory.supplier')}</label>
+                      <label className="text-sm font-medium mb-2 block">{t('inventory_supplier')}</label>
                       <Select value={filters.supplier || "all"} onValueChange={(value) => handleFilterChange('supplier', value === "all" ? "" : value)}>
                         <SelectTrigger>
-                          <SelectValue placeholder={t('pages.inventory.all_suppliers')} />
+                          <SelectValue placeholder={t('inventory_all_suppliers')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">{t('pages.inventory.all_suppliers')}</SelectItem>
+                          <SelectItem value="all">{t('inventory_all_suppliers')}</SelectItem>
                           {getUniqueSuppliers().map((supplier) => (
                             <SelectItem key={supplier} value={supplier}>
                               {supplier}
@@ -529,16 +529,16 @@ export default function Inventory() {
                     </div>
                     
                     <div className="p-2">
-                      <label className="text-sm font-medium mb-2 block">{t('pages.inventory.stock_status')}</label>
+                      <label className="text-sm font-medium mb-2 block">{t('inventory_stock_status')}</label>
                       <Select value={filters.stock_status || "all"} onValueChange={(value) => handleFilterChange('stock_status', value === "all" ? "" : value)}>
                         <SelectTrigger>
-                          <SelectValue placeholder={t('pages.inventory.all_statuses')} />
+                          <SelectValue placeholder={t('inventory_all_statuses')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">{t('pages.inventory.all_statuses')}</SelectItem>
-                          <SelectItem value="in_stock">{t('pages.inventory.in_stock')}</SelectItem>
-                          <SelectItem value="low_stock">{t('pages.inventory.low_stock')}</SelectItem>
-                          <SelectItem value="out_of_stock">{t('pages.inventory.out_of_stock')}</SelectItem>
+                          <SelectItem value="all">{t('inventory_all_statuses')}</SelectItem>
+                          <SelectItem value="in_stock">{t('inventory_in_stock')}</SelectItem>
+                          <SelectItem value="low_stock">{t('inventory_low_stock')}</SelectItem>
+                          <SelectItem value="out_of_stock">{t('inventory_out_of_stock')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -546,7 +546,7 @@ export default function Inventory() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleClearFilters}>
                       <X className="mr-2 h-4 w-4" />
-                      {t('pages.inventory.clear_filters')}
+                      {t('inventory_clear_filters')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -557,14 +557,14 @@ export default function Inventory() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  {isColumnVisible('name') && <TableHead>{t('pages.inventory.item')}</TableHead>}
-                  {isColumnVisible('sku') && <TableHead>{t('pages.inventory.sku')}</TableHead>}
-                  {isColumnVisible('category') && <TableHead>{t('pages.inventory.category')}</TableHead>}
-                  {isColumnVisible('quantity') && <TableHead>{t('pages.inventory.quantity')}</TableHead>}
-                  {isColumnVisible('price') && <TableHead>{t('pages.inventory.unit_price')}</TableHead>}
-                  {isColumnVisible('supplier') && <TableHead>{t('pages.inventory.supplier')}</TableHead>}
-                  {isColumnVisible('location') && <TableHead>{t('pages.inventory.location')}</TableHead>}
-                  <TableHead className="text-right">{t('pages.inventory.actions')}</TableHead>
+                  {isColumnVisible('name') && <TableHead>{t('inventory_item')}</TableHead>}
+                  {isColumnVisible('sku') && <TableHead>{t('inventory_sku')}</TableHead>}
+                  {isColumnVisible('category') && <TableHead>{t('inventory_category')}</TableHead>}
+                  {isColumnVisible('quantity') && <TableHead>{t('inventory_quantity')}</TableHead>}
+                  {isColumnVisible('price') && <TableHead>{t('inventory_unit_price')}</TableHead>}
+                  {isColumnVisible('supplier') && <TableHead>{t('inventory_supplier')}</TableHead>}
+                  {isColumnVisible('location') && <TableHead>{t('inventory_location')}</TableHead>}
+                  <TableHead className="text-right">{t('inventory_actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -588,12 +588,12 @@ export default function Inventory() {
                     )}
                     {isColumnVisible('sku') && (
                       <TableCell className="text-sm text-muted-foreground">
-                        {item.sku || t('pages.inventory.na')}
+                        {item.sku || t('inventory_na')}
                       </TableCell>
                     )}
                     {isColumnVisible('category') && (
                       <TableCell>
-                        <Badge variant="outline">{item.category || t('pages.inventory.uncategorized')}</Badge>
+                        <Badge variant="outline">{item.category || t('inventory_uncategorized')}</Badge>
                       </TableCell>
                     )}
                     {isColumnVisible('quantity') && (
@@ -606,12 +606,12 @@ export default function Inventory() {
                     )}
                     {isColumnVisible('supplier') && (
                       <TableCell className="text-sm text-muted-foreground">
-                        {item.supplier || t('pages.inventory.na')}
+                        {item.supplier || t('inventory_na')}
                       </TableCell>
                     )}
                     {isColumnVisible('location') && (
                       <TableCell className="text-sm text-muted-foreground">
-                        {item.location || t('pages.inventory.na')}
+                        {item.location || t('inventory_na')}
                       </TableCell>
                     )}
                     <TableCell className="text-right">
@@ -626,18 +626,18 @@ export default function Inventory() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                          <DropdownMenuLabel>{t('pages.inventory.actions')}</DropdownMenuLabel>
+                          <DropdownMenuLabel>{t('inventory_actions')}</DropdownMenuLabel>
                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewItem(item.id); }}>
                             <Eye className="mr-2 h-4 w-4" />
-                            {t('pages.inventory.view_details')}
+                            {t('inventory_view_details')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditItem(item); }}>
                             <Edit className="mr-2 h-4 w-4" />
-                            {t('pages.inventory.edit_item')}
+                            {t('inventory_edit_item')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAdjustStock(item); }}>
                             <Package className="mr-2 h-4 w-4" />
-                            {t('pages.inventory.adjust_stock')}
+                            {t('inventory_adjust_stock')}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
@@ -645,7 +645,7 @@ export default function Inventory() {
                             onClick={(e) => { e.stopPropagation(); handleDeleteItem(item); }}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            {t('pages.inventory.delete')}
+                            {t('inventory_delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -708,14 +708,14 @@ export default function Inventory() {
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>{t('pages.inventory.edit_inventory_item')}</DialogTitle>
+              <DialogTitle>{t('inventory_edit_inventory_item')}</DialogTitle>
               <DialogDescription>
-                {t('pages.inventory.update_details_for', { name: selectedItem?.name })}
+                {t('inventory_update_details_for', { name: selectedItem?.name })}
               </DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-name">{t('pages.inventory.item_name')} *</Label>
+                <Label htmlFor="edit-name">{t('inventory_item_name')} *</Label>
                 <Input
                   id="edit-name"
                   value={editFormData.name}
@@ -724,7 +724,7 @@ export default function Inventory() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-sku">{t('pages.inventory.sku')}</Label>
+                <Label htmlFor="edit-sku">{t('inventory_sku')}</Label>
                 <Input
                   id="edit-sku"
                   value={editFormData.sku}
@@ -732,7 +732,7 @@ export default function Inventory() {
                 />
               </div>
               <div className="space-y-2 col-span-2">
-                <Label htmlFor="edit-description">{t('pages.inventory.description')}</Label>
+                <Label htmlFor="edit-description">{t('inventory_description')}</Label>
                 <Input
                   id="edit-description"
                   value={editFormData.description}
@@ -740,7 +740,7 @@ export default function Inventory() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-quantity">{t('pages.inventory.quantity')} *</Label>
+                <Label htmlFor="edit-quantity">{t('inventory_quantity')} *</Label>
                 <Input
                   id="edit-quantity"
                   type="number"
@@ -750,7 +750,7 @@ export default function Inventory() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-unit-price">{t('pages.inventory.unit_price_km')} *</Label>
+                <Label htmlFor="edit-unit-price">{t('inventory_unit_price_km')} *</Label>
                 <Input
                   id="edit-unit-price"
                   type="number"
@@ -761,7 +761,7 @@ export default function Inventory() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-category">{t('pages.inventory.category')}</Label>
+                <Label htmlFor="edit-category">{t('inventory_category')}</Label>
                 <Input
                   id="edit-category"
                   value={editFormData.category}
@@ -769,7 +769,7 @@ export default function Inventory() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-supplier">{t('pages.inventory.supplier')}</Label>
+                <Label htmlFor="edit-supplier">{t('inventory_supplier')}</Label>
                 <Input
                   id="edit-supplier"
                   value={editFormData.supplier}
@@ -777,7 +777,7 @@ export default function Inventory() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-location">{t('pages.inventory.location')}</Label>
+                <Label htmlFor="edit-location">{t('inventory_location')}</Label>
                 <Input
                   id="edit-location"
                   value={editFormData.location}
@@ -785,7 +785,7 @@ export default function Inventory() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-min-stock">{t('pages.inventory.minimum_stock_level')}</Label>
+                <Label htmlFor="edit-min-stock">{t('inventory_minimum_stock_level')}</Label>
                 <Input
                   id="edit-min-stock"
                   type="number"
@@ -796,16 +796,16 @@ export default function Inventory() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-                {t('pages.inventory.cancel')}
+                {t('inventory_cancel')}
               </Button>
               <Button onClick={handleSaveEdit} disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t('pages.inventory.saving')}
+                    {t('inventory_saving')}
                   </>
                 ) : (
-                  t('pages.inventory.save_changes')
+                  t('inventory_save_changes')
                 )}
               </Button>
             </DialogFooter>
@@ -816,14 +816,14 @@ export default function Inventory() {
         <Dialog open={adjustStockDialogOpen} onOpenChange={setAdjustStockDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{t('pages.inventory.adjust_stock')}</DialogTitle>
+              <DialogTitle>{t('inventory_adjust_stock')}</DialogTitle>
               <DialogDescription>
-                {t('pages.inventory.update_stock_level_for', { name: selectedItem?.name })}
+                {t('inventory_update_stock_level_for', { name: selectedItem?.name })}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="current-stock">{t('pages.inventory.current_stock')}</Label>
+                <Label htmlFor="current-stock">{t('inventory_current_stock')}</Label>
                 <Input
                   id="current-stock"
                   value={selectedItem?.quantity || 0}
@@ -832,7 +832,7 @@ export default function Inventory() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="new-quantity">{t('pages.inventory.new_quantity')} *</Label>
+                <Label htmlFor="new-quantity">{t('inventory_new_quantity')} *</Label>
                 <Input
                   id="new-quantity"
                   type="number"
@@ -842,7 +842,7 @@ export default function Inventory() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="adjustment-reason">{t('pages.inventory.reason')}</Label>
+                <Label htmlFor="adjustment-reason">{t('inventory_reason')}</Label>
                 <Select 
                   value={stockAdjustment.reason} 
                   onValueChange={(value) => setStockAdjustment({ ...stockAdjustment, reason: value })}
@@ -851,27 +851,27 @@ export default function Inventory() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="adjustment">{t('pages.inventory.stock_adjustment')}</SelectItem>
-                    <SelectItem value="restock">{t('pages.inventory.restocking')}</SelectItem>
-                    <SelectItem value="damage">{t('pages.inventory.damaged_items')}</SelectItem>
-                    <SelectItem value="lost">{t('pages.inventory.lost_items')}</SelectItem>
-                    <SelectItem value="correction">{t('pages.inventory.inventory_correction')}</SelectItem>
+                    <SelectItem value="adjustment">{t('inventory_stock_adjustment')}</SelectItem>
+                    <SelectItem value="restock">{t('inventory_restocking')}</SelectItem>
+                    <SelectItem value="damage">{t('inventory_damaged_items')}</SelectItem>
+                    <SelectItem value="lost">{t('inventory_lost_items')}</SelectItem>
+                    <SelectItem value="correction">{t('inventory_inventory_correction')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setAdjustStockDialogOpen(false)}>
-                {t('pages.inventory.cancel')}
+                {t('inventory_cancel')}
               </Button>
               <Button onClick={handleSaveStockAdjustment} disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t('pages.inventory.adjusting')}
+                    {t('inventory_adjusting')}
                   </>
                 ) : (
-                  t('pages.inventory.adjust_stock')
+                  t('inventory_adjust_stock')
                 )}
               </Button>
             </DialogFooter>
@@ -883,8 +883,8 @@ export default function Inventory() {
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
           onConfirm={confirmDeleteItem}
-          title={t('pages.inventory.delete_inventory_item')}
-          description={t('pages.inventory.delete_confirmation', { name: selectedItem?.name })}
+          title={t('inventory_delete_inventory_item')}
+          description={t('inventory_delete_confirmation', { name: selectedItem?.name })}
           isLoading={isSubmitting}
         />
 
@@ -894,7 +894,7 @@ export default function Inventory() {
           onOpenChange={setInUseAlertOpen}
           itemName={itemInUse.item?.name}
           workOrderCount={itemInUse.workOrderCount}
-          title={t('pages.inventory.cannot_delete_item')}
+          title={t('inventory_cannot_delete_item')}
         />
       </div>
     </MainLayout>
