@@ -987,7 +987,14 @@
       "cannot_delete_item": "Cannot Delete Inventory Item",
       "no_min_level": "No Min Level",
       "low_stock": "Low Stock",
-      "in_stock": "In Stock"
+      "in_stock": "In Stock",
+      "item": "Item",
+      "sku": "SKU",
+      "category": "Category",
+      "quantity": "Quantity",
+      "unit_price": "Unit Price",
+      "supplier": "Supplier",
+      "location": "Location"
     }
   }
 }

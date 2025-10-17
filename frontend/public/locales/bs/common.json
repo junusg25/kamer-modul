@@ -986,7 +986,14 @@
       "cannot_delete_item": "Ne Može Se Obrisati Stavka Inventara",
       "no_min_level": "Nema Min Nivo",
       "low_stock": "Niska Zalihe",
-      "in_stock": "Na Stanju"
+      "in_stock": "Na Stanju",
+      "item": "Stavka",
+      "sku": "SKU",
+      "category": "Kategorija",
+      "quantity": "Količina",
+      "unit_price": "Jedinična Cena",
+      "supplier": "Dobavljač",
+      "location": "Lokacija"
     }
   }
 }

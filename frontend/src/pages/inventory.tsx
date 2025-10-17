@@ -58,14 +58,14 @@ import { toast } from 'sonner'
 
 // Define columns for the inventory table
 const INVENTORY_COLUMNS = defineColumns([
-  { key: 'name', label: 'tabs.inventory.item_name' },
-  { key: 'description', label: 'tabs.inventory.description' },
-  { key: 'quantity', label: 'tabs.inventory.quantity' },
-  { key: 'price', label: 'tabs.inventory.unit_price' },
-  { key: 'category', label: 'tabs.inventory.category' },
-  { key: 'supplier', label: 'tabs.inventory.supplier' },
-  { key: 'sku', label: 'tabs.inventory.sku' },
-  { key: 'location', label: 'tabs.inventory.location' },
+  { key: 'name', label: 'pages.inventory.item' },
+  { key: 'description', label: 'pages.inventory.description' },
+  { key: 'quantity', label: 'pages.inventory.quantity' },
+  { key: 'price', label: 'pages.inventory.unit_price' },
+  { key: 'category', label: 'pages.inventory.category' },
+  { key: 'supplier', label: 'pages.inventory.supplier' },
+  { key: 'sku', label: 'pages.inventory.sku' },
+  { key: 'location', label: 'pages.inventory.location' },
 ])
 
 interface InventoryItem {
