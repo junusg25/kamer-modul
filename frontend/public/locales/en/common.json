@@ -88,7 +88,6 @@
     "user_feedback": "User Feedback",
     "settings": "Settings"
   },
-  "name": "Name",
   "email": "Email",
   "phone": "Phone",
   "address": "Address",
@@ -929,11 +928,7 @@
       "item_name": "Item Name",
       "description": "Description",
       "quantity": "Quantity",
-      "unit_price": "Unit Price",
-      "category": "Category",
-      "supplier": "Supplier",
-      "sku": "SKU",
-      "location": "Location"
+      "unit_price": "Unit Price"
     }
   },
   "pages": {

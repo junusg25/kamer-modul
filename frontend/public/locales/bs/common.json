@@ -88,7 +88,6 @@
     "user_feedback": "Povratne Informacije Korisnika",
     "settings": "Postavke"
   },
-  "name": "Ime",
   "email": "Email",
   "phone": "Telefon",
   "address": "Adresa",
@@ -928,11 +927,7 @@
       "item_name": "Naziv Stavke",
       "description": "Opis",
       "quantity": "Količina",
-      "unit_price": "Jedinična Cena",
-      "category": "Kategorija",
-      "supplier": "Dobavljač",
-      "sku": "SKU",
-      "location": "Lokacija"
+      "unit_price": "Jedinična Cena"
     }
   },
   "pages": {
