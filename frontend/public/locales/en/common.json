@@ -157,9 +157,6 @@
     "negotiation": "Negotiation",
     "closed_won": "Closed Won",
     "closed_lost": "Closed Lost",
-    "low_stock": "Low Stock",
-    "out_of_stock": "Out of Stock",
-    "in_stock": "In Stock",
     "excellent": "Excellent",
     "good": "Good",
     "average": "Average",
@@ -1046,16 +1043,7 @@
       "delete_inventory_item": "Delete Inventory Item",
       "delete_confirmation": "Are you sure you want to delete {{name}}? This action cannot be undone.",
       "cannot_delete_item": "Cannot Delete Inventory Item",
-      "no_min_level": "No Min Level",
-      "low_stock": "Low Stock",
-      "in_stock": "In Stock",
-      "item": "Item",
-      "sku": "SKU",
-      "category": "Category",
-      "quantity": "Quantity",
-      "unit_price": "Unit Price",
-      "supplier": "Supplier",
-      "location": "Location"
+      "no_min_level": "No Min Level"
     },
     "inventory_detail": {
       "adjust_stock": "Adjust Stock",

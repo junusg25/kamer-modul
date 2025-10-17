@@ -156,9 +156,6 @@
     "negotiation": "Pregovori",
     "closed_won": "Zatvoreno - Pobijedio",
     "closed_lost": "Zatvoreno - Izgubio",
-    "low_stock": "Nizak nivo",
-    "out_of_stock": "Nema na zalihama",
-    "in_stock": "Na zalihama",
     "excellent": "Odličan",
     "good": "Dobar",
     "average": "Prosječan",
@@ -1045,16 +1042,7 @@
       "delete_inventory_item": "Obriši Stavku Inventara",
       "delete_confirmation": "Jeste li sigurni da želite obrisati {{name}}? Ova radnja se ne može poništiti.",
       "cannot_delete_item": "Ne Može Se Obrisati Stavka Inventara",
-      "no_min_level": "Nema Min Nivo",
-      "low_stock": "Niska Zalihe",
-      "in_stock": "Na Stanju",
-      "item": "Stavka",
-      "sku": "SKU",
-      "category": "Kategorija",
-      "quantity": "Količina",
-      "unit_price": "Jedinična Cena",
-      "supplier": "Dobavljač",
-      "location": "Lokacija"
+      "no_min_level": "Nema Min Nivo"
     },
     "inventory_detail": {
       "adjust_stock": "Prilagodi Zalihe",
