@@ -234,7 +234,7 @@ export function AssignMachineModal({
                         )}
                       </div>
                     ) : (
-                      {t('modals.assign_machine.select_customer')}
+                      <span>{t('modals.assign_machine.select_customer')}</span>
                     )}
                     <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
