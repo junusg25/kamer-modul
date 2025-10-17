@@ -404,7 +404,7 @@
       "previous": "Previous",
       "next": "Next",
       "failed_to_load_action_logs": "Failed to load action logs",
-      "activity_log_exported_successfully": "Activity log exported successfully",
+      "activity_log_exported_successfully": "Activity log exported successfully"
     },
     "pages": {
       "machines": {
