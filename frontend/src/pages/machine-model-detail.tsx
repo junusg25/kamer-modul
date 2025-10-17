@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -121,6 +122,7 @@ interface AssignedMachine {
 }
 
 export default function MachineModelDetail() {
+  const { t } = useTranslation()
   const { modelId } = useParams<{ modelId: string }>()
   const navigate = useNavigate()
   const { hasPermission } = useAuth()
@@ -374,7 +376,7 @@ export default function MachineModelDetail() {
       <MainLayout>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin" />
-          <span className="ml-2">Loading machine model details...</span>
+          <span className="ml-2">{t('pages.machine_model_detail.loading')}</span>
         </div>
       </MainLayout>
     )
@@ -386,7 +388,7 @@ export default function MachineModelDetail() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={fetchModelDetails}>Try Again</Button>
+            <Button onClick={fetchModelDetails}>{t('pages.machine_model_detail.try_again')}</Button>
           </div>
         </div>
       </MainLayout>
@@ -398,8 +400,8 @@ export default function MachineModelDetail() {
       <MainLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <p className="text-red-600 mb-4">Machine model not found</p>
-            <Button onClick={() => navigate('/machines')}>Back to Machines</Button>
+            <p className="text-red-600 mb-4">{t('pages.machine_model_detail.not_found')}</p>
+            <Button onClick={() => navigate('/machines')}>{t('pages.machine_model_detail.back_to_machines')}</Button>
           </div>
         </div>
       </MainLayout>
@@ -418,12 +420,12 @@ export default function MachineModelDetail() {
               className="flex items-center space-x-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span>Back</span>
+              <span>{t('pages.machine_model_detail.back')}</span>
             </Button>
             <div>
               <h1 className="text-3xl font-bold tracking-tight">{model.name}</h1>
               <p className="text-muted-foreground">
-                {model.manufacturer} • {model.catalogue_number || 'No catalogue number'}
+                {model.manufacturer} • {model.catalogue_number || t('pages.machine_model_detail.no_catalogue_number')}
               </p>
             </div>
           </div>
@@ -435,12 +437,12 @@ export default function MachineModelDetail() {
               setShowEditDialog(true)
             }}>
               <Edit className="mr-2 h-4 w-4" />
-              Edit Model
+              {t('pages.machine_model_detail.edit_model')}
             </Button>
             {hasPermission('machines:assign') && (
               <Button onClick={() => setIsAssignModalOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                Assign Machine
+                {t('pages.machine_model_detail.assign_machine')}
               </Button>
             )}
             <Button 
@@ -448,7 +450,7 @@ export default function MachineModelDetail() {
               onClick={() => setShowDeleteModelDialog(true)}
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete Model
+              {t('pages.machine_model_detail.delete_model')}
             </Button>
           </div>
         </div>
@@ -456,35 +458,35 @@ export default function MachineModelDetail() {
         {/* Model Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Model Information</CardTitle>
+            <CardTitle>{t('pages.machine_model_detail.model_information')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Package className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Manufacturer</span>
+                  <span className="text-sm font-medium">{t('pages.machine_model_detail.manufacturer')}</span>
                 </div>
                 <p className="text-lg font-semibold">{model.manufacturer}</p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Shield className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Warranty Period</span>
+                  <span className="text-sm font-medium">{t('pages.machine_model_detail.warranty_period')}</span>
                 </div>
-                <p className="text-lg font-semibold">{model.warranty_months} months</p>
+                <p className="text-lg font-semibold">{model.warranty_months} {t('pages.machine_model_detail.months')}</p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Building className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Category</span>
+                  <span className="text-sm font-medium">{t('pages.machine_model_detail.category')}</span>
                 </div>
-                <p className="text-lg font-semibold">{model.category_name || 'Uncategorized'}</p>
+                <p className="text-lg font-semibold">{model.category_name || t('pages.machine_model_detail.uncategorized')}</p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Total Assigned</span>
+                  <span className="text-sm font-medium">{t('pages.machine_model_detail.total_assigned')}</span>
                 </div>
                 <p className="text-lg font-semibold">{model.total_assigned}</p>
               </div>
@@ -493,7 +495,7 @@ export default function MachineModelDetail() {
               <div className="mt-6 pt-6 border-t">
                 <div className="flex items-center space-x-2 mb-2">
                   <Package className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Description</span>
+                  <span className="text-sm font-medium">{t('pages.machine_model_detail.description')}</span>
                 </div>
                 <p className="text-muted-foreground">{model.description}</p>
               </div>
@@ -504,14 +506,14 @@ export default function MachineModelDetail() {
         {/* Sales Metrics */}
         <Card>
           <CardHeader>
-            <CardTitle>Sales Metrics</CardTitle>
+            <CardTitle>{t('pages.machine_model_detail.sales_metrics')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm font-medium">Total Sales</span>
+                  <span className="text-sm font-medium">{t('pages.machine_model_detail.total_sales')}</span>
                 </div>
                 <p className="text-2xl font-bold">
                   {assignedMachines.filter(m => m.is_sale).length}
@@ -520,14 +522,14 @@ export default function MachineModelDetail() {
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Euro className="h-4 w-4 text-green-500" />
-                  <span className="text-sm font-medium">Total Revenue</span>
+                  <span className="text-sm font-medium">{t('pages.machine_model_detail.total_revenue')}</span>
                 </div>
                 <p className="text-2xl font-bold">{formatCurrency(totalRevenue)}</p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Package className="h-4 w-4 text-purple-500" />
-                  <span className="text-sm font-medium">Avg Sale Price</span>
+                  <span className="text-sm font-medium">{t('pages.machine_model_detail.avg_sale_price')}</span>
                 </div>
                 <p className="text-2xl font-bold">{formatCurrency(avgSalePrice)}</p>
               </div>
@@ -539,10 +541,10 @@ export default function MachineModelDetail() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Assigned Machines</CardTitle>
+              <CardTitle>{t('pages.machine_model_detail.assigned_machines')}</CardTitle>
               <div className="flex items-center space-x-2">
                 <SmartSearch
-                  placeholder="Search by serial number, customer name, or receipt number..."
+                  placeholder={t('pages.machine_model_detail.search_placeholder')}
                   value={appliedSearchTerm}
                   onSearch={(term) => {
                     setAppliedSearchTerm(term)
@@ -563,15 +565,15 @@ export default function MachineModelDetail() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Serial Number</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Condition</TableHead>
-                  <TableHead>Purchase Date</TableHead>
-                  <TableHead>Warranty Status</TableHead>
-                  <TableHead>Sale Price</TableHead>
-                  <TableHead>Receipt</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t('pages.machine_model_detail.serial_number')}</TableHead>
+                  <TableHead>{t('pages.machine_model_detail.customer')}</TableHead>
+                  <TableHead>{t('pages.machine_model_detail.type')}</TableHead>
+                  <TableHead>{t('pages.machine_model_detail.condition')}</TableHead>
+                  <TableHead>{t('pages.machine_model_detail.purchase_date')}</TableHead>
+                  <TableHead>{t('pages.machine_model_detail.warranty_status')}</TableHead>
+                  <TableHead>{t('pages.machine_model_detail.sale_price')}</TableHead>
+                  <TableHead>{t('pages.machine_model_detail.receipt')}</TableHead>
+                  <TableHead className="text-right">{t('pages.machine_model_detail.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -580,7 +582,7 @@ export default function MachineModelDetail() {
                     <TableCell colSpan={9} className="text-center py-8">
                       <div className="flex flex-col items-center space-y-2">
                         <Package className="h-8 w-8 text-muted-foreground" />
-                        <p className="text-muted-foreground">No assigned machines found</p>
+                        <p className="text-muted-foreground">{t('pages.machine_model_detail.no_assigned_machines')}</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -614,7 +616,7 @@ export default function MachineModelDetail() {
                           variant={machine.is_sale ? "default" : "outline"}
                           className={machine.is_sale ? "bg-green-100 text-green-800" : ""}
                         >
-                          {machine.is_sale ? 'Sale' : 'Assignment'}
+                          {machine.is_sale ? t('pages.machine_model_detail.sale') : t('pages.machine_model_detail.assignment')}
                         </Badge>
                       </TableCell>
                       <TableCell>{getConditionBadge(machine.machine_condition)}</TableCell>
@@ -625,10 +627,10 @@ export default function MachineModelDetail() {
                         {getWarrantyStatus(machine.warranty_active, machine.warranty_expiry_date, machine.machine_type)}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {machine.sale_price ? formatCurrency(machine.sale_price) : 'N/A'}
+                        {machine.sale_price ? formatCurrency(machine.sale_price) : t('pages.machine_model_detail.na')}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {machine.receipt_number || 'N/A'}
+                        {machine.receipt_number || t('pages.machine_model_detail.na')}
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
@@ -638,24 +640,24 @@ export default function MachineModelDetail() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuLabel>{t('pages.machine_model_detail.actions')}</DropdownMenuLabel>
                             <DropdownMenuItem onClick={(e) => {
                               e.stopPropagation()
                               navigate(`/machines/${machine.assigned_machine_id}`)
                             }}>
                               <Eye className="mr-2 h-4 w-4" />
-                              View Details
+                              {t('pages.machine_model_detail.view_details')}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => {
                               e.stopPropagation()
                               navigate(`/machines/${machine.assigned_machine_id}`)
                             }}>
                               <Edit className="mr-2 h-4 w-4" />
-                              Edit Machine
+                              {t('pages.machine_model_detail.edit_machine')}
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                               <Wrench className="mr-2 h-4 w-4" />
-                              Create Service Ticket
+                              {t('pages.machine_model_detail.create_service_ticket')}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
@@ -666,7 +668,7 @@ export default function MachineModelDetail() {
                               }}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              Delete Machine
+                              {t('pages.machine_model_detail.delete_machine')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -681,7 +683,11 @@ export default function MachineModelDetail() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-6 py-4">
                 <div className="text-sm text-muted-foreground">
-                  Showing {startIndex + 1} to {Math.min(endIndex, filteredMachines.length)} of {filteredMachines.length} machines
+                  {t('pages.machine_model_detail.showing_results', { 
+                    start: startIndex + 1, 
+                    end: Math.min(endIndex, filteredMachines.length), 
+                    total: filteredMachines.length 
+                  })}
                 </div>
                 <Pagination
                   currentPage={currentPage}
@@ -709,25 +715,25 @@ export default function MachineModelDetail() {
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Edit Machine Model</DialogTitle>
+              <DialogTitle>{t('pages.machine_model_detail.edit_machine_model')}</DialogTitle>
               <DialogDescription>
-                Update the machine model information below.
+                {t('pages.machine_model_detail.edit_description')}
               </DialogDescription>
             </DialogHeader>
             {editingModel && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="edit-name">Model Name *</Label>
+                    <Label htmlFor="edit-name">{t('pages.machine_model_detail.model_name')} *</Label>
                     <Input
                       id="edit-name"
                       value={editingModel.name}
                       onChange={(e) => setEditingModel({ ...editingModel, name: e.target.value })}
-                      placeholder="Enter model name"
+                      placeholder={t('pages.machine_model_detail.enter_model_name')}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-manufacturer">Manufacturer *</Label>
+                    <Label htmlFor="edit-manufacturer">{t('pages.machine_model_detail.manufacturer')} *</Label>
                     <Popover open={manufacturerPopoverOpen} onOpenChange={setManufacturerPopoverOpen}>
                       <PopoverTrigger asChild>
                         <Button
@@ -736,7 +742,7 @@ export default function MachineModelDetail() {
                           aria-expanded={manufacturerPopoverOpen}
                           className="w-full justify-between h-11"
                         >
-                          {editingModel.manufacturer || "Select manufacturer..."}
+                          {editingModel.manufacturer || t('pages.machine_model_detail.select_manufacturer')}
                           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
@@ -745,7 +751,7 @@ export default function MachineModelDetail() {
                           <div className="relative">
                             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
-                              placeholder="Search or type new manufacturer..."
+                              placeholder={t('pages.machine_model_detail.search_manufacturer')}
                               className="pl-10"
                               value={manufacturerSearch}
                               onChange={(e) => setManufacturerSearch(e.target.value)}
@@ -768,8 +774,8 @@ export default function MachineModelDetail() {
                                   <span className="text-green-600 text-sm font-bold">+</span>
                                 </div>
                                 <div className="flex-1">
-                                  <p className="font-medium">Add "{manufacturerSearch}"</p>
-                                  <p className="text-sm text-muted-foreground">Create new manufacturer</p>
+                                  <p className="font-medium">{t('pages.machine_model_detail.add_manufacturer', { name: manufacturerSearch })}</p>
+                                  <p className="text-sm text-muted-foreground">{t('pages.machine_model_detail.create_new_manufacturer')}</p>
                                 </div>
                               </div>
                             </div>
@@ -780,7 +786,7 @@ export default function MachineModelDetail() {
                             manufacturerSearch === '' || 
                             opt.toLowerCase().includes(manufacturerSearch.toLowerCase())
                           ).length === 0 ? (
-                            <div className="p-4 text-center text-muted-foreground">No manufacturers found.</div>
+                            <div className="p-4 text-center text-muted-foreground">{t('pages.machine_model_detail.no_manufacturers_found')}</div>
                           ) : (
                             <div className="p-1">
                               {manufacturerOptions
@@ -822,16 +828,16 @@ export default function MachineModelDetail() {
                     </Popover>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-catalogue">Catalogue Number</Label>
+                    <Label htmlFor="edit-catalogue">{t('pages.machine_model_detail.catalogue_number')}</Label>
                     <Input
                       id="edit-catalogue"
                       value={editingModel.catalogue_number || ''}
                       onChange={(e) => setEditingModel({ ...editingModel, catalogue_number: e.target.value })}
-                      placeholder="Enter catalogue number"
+                      placeholder={t('pages.machine_model_detail.enter_catalogue_number')}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-warranty">Warranty (months)</Label>
+                    <Label htmlFor="edit-warranty">{t('pages.machine_model_detail.warranty_months')}</Label>
                     <Input
                       id="edit-warranty"
                       type="number"
@@ -839,13 +845,13 @@ export default function MachineModelDetail() {
                       max="120"
                       value={editingModel.warranty_months}
                       onChange={(e) => setEditingModel({ ...editingModel, warranty_months: parseInt(e.target.value) || 0 })}
-                      placeholder="12"
+                      placeholder={t('pages.machine_model_detail.warranty_placeholder')}
                     />
                   </div>
                   
                   {/* Category Selection */}
                   <div className="space-y-2 col-span-2">
-                    <Label htmlFor="edit-category">Category</Label>
+                    <Label htmlFor="edit-category">{t('pages.machine_model_detail.category')}</Label>
                     <Popover open={categoryPopoverOpen} onOpenChange={setCategoryPopoverOpen}>
                       <PopoverTrigger asChild>
                         <Button
@@ -856,7 +862,7 @@ export default function MachineModelDetail() {
                         >
                           {editingModel.category_id 
                             ? machineCategories.find(cat => cat.id === editingModel.category_id)?.name 
-                            : editingModel.category_name || "Select category (optional)"}
+                            : editingModel.category_name || t('pages.machine_model_detail.select_category_optional')}
                           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
@@ -865,7 +871,7 @@ export default function MachineModelDetail() {
                           <div className="relative">
                             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
-                              placeholder="Search categories..."
+                              placeholder={t('pages.machine_model_detail.search_categories')}
                               className="pl-10"
                               value={categorySearch}
                               onChange={(e) => setCategorySearch(e.target.value)}
@@ -885,7 +891,7 @@ export default function MachineModelDetail() {
                               <span className="text-gray-600 text-sm">-</span>
                             </div>
                             <div className="flex-1">
-                              <p className="font-medium">No category</p>
+                              <p className="font-medium">{t('pages.machine_model_detail.no_category')}</p>
                             </div>
                           </div>
                           {/* Existing categories */}
@@ -927,12 +933,12 @@ export default function MachineModelDetail() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-description">Description</Label>
+                  <Label htmlFor="edit-description">{t('pages.machine_model_detail.description')}</Label>
                   <Textarea
                     id="edit-description"
                     value={editingModel.description || ''}
                     onChange={(e) => setEditingModel({ ...editingModel, description: e.target.value })}
-                    placeholder="Enter machine model description..."
+                    placeholder={t('pages.machine_model_detail.enter_description')}
                     rows={3}
                     className="resize-none"
                   />
@@ -941,10 +947,10 @@ export default function MachineModelDetail() {
             )}
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-                Cancel
+                {t('pages.machine_model_detail.cancel')}
               </Button>
               <Button onClick={handleSaveEdit} disabled={!editingModel?.name || !editingModel?.manufacturer}>
-                Save Changes
+                {t('pages.machine_model_detail.save_changes')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -954,34 +960,34 @@ export default function MachineModelDetail() {
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Permanently Delete Machine</DialogTitle>
+              <DialogTitle>{t('pages.machine_model_detail.delete_machine_title')}</DialogTitle>
               <DialogDescription>
                 <div className="space-y-2">
-                  <p>Are you sure you want to permanently delete this machine? This action cannot be undone and will:</p>
+                  <p>{t('pages.machine_model_detail.delete_machine_description')}</p>
                   <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                    <li>Remove the machine assignment</li>
-                    <li>Delete the machine serial permanently</li>
+                    <li>{t('pages.machine_model_detail.remove_assignment')}</li>
+                    <li>{t('pages.machine_model_detail.delete_serial')}</li>
                   </ul>
                   <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                     <p className="text-sm text-yellow-800">
-                      <strong>Note:</strong> This machine cannot be deleted if it has associated repair tickets, work orders, or warranty records. Please delete or reassign those records first.
+                      <strong>{t('pages.machine_model_detail.note')}:</strong> {t('pages.machine_model_detail.delete_warning')}
                     </p>
                   </div>
                   <div className="mt-4 space-y-1">
-                    <p><strong>Machine:</strong> {machineToDelete?.model_name}</p>
-                    <p><strong>Serial:</strong> {machineToDelete?.serial_number}</p>
-                    <p><strong>Customer:</strong> {machineToDelete?.customer_name}</p>
+                    <p><strong>{t('pages.machine_model_detail.machine')}:</strong> {machineToDelete?.model_name}</p>
+                    <p><strong>{t('pages.machine_model_detail.serial')}:</strong> {machineToDelete?.serial_number}</p>
+                    <p><strong>{t('pages.machine_model_detail.customer')}:</strong> {machineToDelete?.customer_name}</p>
                   </div>
                 </div>
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-                Cancel
+                {t('pages.machine_model_detail.cancel')}
               </Button>
               <Button variant="destructive" onClick={handleDeleteConfirm} disabled={isDeleting}>
                 {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isDeleting ? 'Deleting...' : 'Permanently Delete'}
+                {isDeleting ? t('pages.machine_model_detail.deleting') : t('pages.machine_model_detail.permanently_delete')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -991,22 +997,22 @@ export default function MachineModelDetail() {
         <Dialog open={showDeleteModelDialog} onOpenChange={setShowDeleteModelDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Delete Machine Model</DialogTitle>
+              <DialogTitle>{t('pages.machine_model_detail.delete_model_title')}</DialogTitle>
               <DialogDescription>
                 <div className="space-y-2">
-                  <p>Are you sure you want to delete this machine model? This action cannot be undone.</p>
+                  <p>{t('pages.machine_model_detail.delete_model_description')}</p>
                   <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
                     <p className="text-sm text-red-800">
-                      <strong>Warning:</strong> This will delete the entire model including all associated machines, serials, and related records. Make sure to verify there are no active repair tickets or work orders.
+                      <strong>{t('pages.machine_model_detail.warning')}:</strong> {t('pages.machine_model_detail.delete_model_warning')}
                     </p>
                   </div>
                   {model && (
                     <div className="mt-4 space-y-1">
-                      <p><strong>Model:</strong> {model.name}</p>
-                      <p><strong>Manufacturer:</strong> {model.manufacturer}</p>
-                      <p><strong>Total Serials:</strong> {model.total_serials}</p>
-                      <p><strong>Assigned Machines:</strong> {model.total_assigned}</p>
-                      <p><strong>Active Warranties:</strong> {model.active_warranty}</p>
+                      <p><strong>{t('pages.machine_model_detail.model')}:</strong> {model.name}</p>
+                      <p><strong>{t('pages.machine_model_detail.manufacturer')}:</strong> {model.manufacturer}</p>
+                      <p><strong>{t('pages.machine_model_detail.total_serials')}:</strong> {model.total_serials}</p>
+                      <p><strong>{t('pages.machine_model_detail.assigned_machines')}:</strong> {model.total_assigned}</p>
+                      <p><strong>{t('pages.machine_model_detail.active_warranties')}:</strong> {model.active_warranty}</p>
                     </div>
                   )}
                 </div>
@@ -1014,11 +1020,11 @@ export default function MachineModelDetail() {
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDeleteModelDialog(false)} disabled={isDeletingModel}>
-                Cancel
+                {t('pages.machine_model_detail.cancel')}
               </Button>
               <Button variant="destructive" onClick={handleDeleteModelConfirm} disabled={isDeletingModel}>
                 {isDeletingModel && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isDeletingModel ? 'Deleting...' : 'Delete Model'}
+                {isDeletingModel ? t('pages.machine_model_detail.deleting') : t('pages.machine_model_detail.delete_model')}
               </Button>
             </DialogFooter>
           </DialogContent>
