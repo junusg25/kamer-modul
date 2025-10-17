@@ -97,13 +97,13 @@ interface MachineCategory {
 
 // Define columns for the machines table
 const MACHINE_COLUMNS = defineColumns([
-  { key: 'name', label: 'machines_model_name' },
-  { key: 'manufacturer', label: 'machines_manufacturer' },
-  { key: 'catalogue', label: 'machines_catalogue_number' },
-  { key: 'category', label: 'machines_category' },
-  { key: 'warranty', label: 'machines_warranty_period' },
-  { key: 'serials', label: 'machines_total_serials' },
-  { key: 'assigned', label: 'machines_assigned' },
+  { key: 'name', label: 'common:machines_model_name' },
+  { key: 'manufacturer', label: 'common:machines_manufacturer' },
+  { key: 'catalogue', label: 'common:machines_catalogue_number' },
+  { key: 'category', label: 'common:machines_category' },
+  { key: 'warranty', label: 'common:machines_warranty_period' },
+  { key: 'serials', label: 'common:machines_total_serials' },
+  { key: 'assigned', label: 'common:machines_assigned' },
 ])
 
 export default function Machines() {
@@ -325,7 +325,7 @@ export default function Machines() {
       <MainLayout>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin" />
-          <span className="ml-2">{t('machines_loading_machine_models')}</span>
+          <span className="ml-2">{t('common:machines_loading_machine_models')}</span>
         </div>
       </MainLayout>
     )
@@ -337,7 +337,7 @@ export default function Machines() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={fetchMachineModels}>{t('machines_try_again')}</Button>
+            <Button onClick={fetchMachineModels}>{t('common:machines_try_again')}</Button>
           </div>
         </div>
       </MainLayout>
@@ -350,14 +350,14 @@ export default function Machines() {
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{t('machines_title')}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('common:machines_title')}</h1>
             <p className="text-muted-foreground">
-              {t('machines_subtitle')}
+              {t('common:machines_subtitle')}
             </p>
           </div>
           <Button onClick={() => navigate('/add-machine-model')}>
             <Plus className="mr-2 h-4 w-4" />
-{t('machines_add_machine_model')}
+{t('common:machines_add_machine_model')}
           </Button>
         </div>
 
@@ -365,42 +365,42 @@ export default function Machines() {
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('machines_total_models')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('common:machines_total_models')}</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalModels}</div>
-              <p className="text-xs text-muted-foreground">{t('machines_machine_models')}</p>
+              <p className="text-xs text-muted-foreground">{t('common:machines_machine_models')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('machines_assigned_machines')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('common:machines_assigned_machines')}</CardTitle>
               <User className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalAssigned}</div>
-              <p className="text-xs text-muted-foreground">{t('machines_with_customers')}</p>
+              <p className="text-xs text-muted-foreground">{t('common:machines_with_customers')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('machines_unassigned')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('common:machines_unassigned')}</CardTitle>
               <AlertTriangle className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalUnassigned}</div>
-              <p className="text-xs text-muted-foreground">{t('machines_available_for_assignment')}</p>
+              <p className="text-xs text-muted-foreground">{t('common:machines_available_for_assignment')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('machines_active_warranty')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('common:machines_active_warranty')}</CardTitle>
               <Shield className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalActiveWarranty}</div>
-              <p className="text-xs text-muted-foreground">{t('machines_under_warranty')}</p>
+              <p className="text-xs text-muted-foreground">{t('common:machines_under_warranty')}</p>
             </CardContent>
           </Card>
         </div>
@@ -411,7 +411,7 @@ export default function Machines() {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
         <SmartSearch
-          placeholder={t('machines_search_machine_models')}
+          placeholder={t('common:machines_search_machine_models')}
           value={appliedSearchTerm}
           onSearch={(term) => {
             setAppliedSearchTerm(term)
@@ -441,7 +441,7 @@ export default function Machines() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="h-9">
                       <Filter className="mr-2 h-4 w-4" />
-{t('machines_filters')}
+{t('common:machines_filters')}
                       {(filters.category || filters.manufacturer) && (
                         <Badge variant="secondary" className="ml-2 h-5 w-5 rounded-full p-0 text-xs">
                           {[filters.category, filters.manufacturer].filter(Boolean).length}
@@ -450,12 +450,12 @@ export default function Machines() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>{t('machines_filter_by')}</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t('common:machines_filter_by')}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     
                     {/* Category Filter */}
                     <div className="p-2">
-                      <Label className="text-xs font-medium text-muted-foreground">{t('machines_category')}</Label>
+                      <Label className="text-xs font-medium text-muted-foreground">{t('common:machines_category')}</Label>
                       <Select
                         value={filters.category}
                         onValueChange={(value) => {
@@ -464,10 +464,10 @@ export default function Machines() {
                         }}
                       >
                         <SelectTrigger className="h-8">
-                          <SelectValue placeholder={t('machines_all_categories')} />
+                          <SelectValue placeholder={t('common:machines_all_categories')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="clear">{t('machines_clear_category')}</SelectItem>
+                          <SelectItem value="clear">{t('common:machines_clear_category')}</SelectItem>
                           {getUniqueCategories().map(category => (
                             <SelectItem key={category} value={category || ''}>{category}</SelectItem>
                           ))}
@@ -477,7 +477,7 @@ export default function Machines() {
 
                     {/* Manufacturer Filter */}
                     <div className="p-2">
-                      <Label className="text-xs font-medium text-muted-foreground">{t('machines_manufacturer')}</Label>
+                      <Label className="text-xs font-medium text-muted-foreground">{t('common:machines_manufacturer')}</Label>
                       <Select
                         value={filters.manufacturer}
                         onValueChange={(value) => {
@@ -486,10 +486,10 @@ export default function Machines() {
                         }}
                       >
                         <SelectTrigger className="h-8">
-                          <SelectValue placeholder={t('machines_all_manufacturers')} />
+                          <SelectValue placeholder={t('common:machines_all_manufacturers')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="clear">{t('machines_clear_manufacturer')}</SelectItem>
+                          <SelectItem value="clear">{t('common:machines_clear_manufacturer')}</SelectItem>
                           {getUniqueManufacturers().map(manufacturer => (
                             <SelectItem key={manufacturer} value={manufacturer || ''}>{manufacturer}</SelectItem>
                           ))}
@@ -505,7 +505,7 @@ export default function Machines() {
                       }}
                       className="text-center"
                     >
-{t('machines_clear_filters')}
+{t('common:machines_clear_filters')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -516,14 +516,14 @@ export default function Machines() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  {isColumnVisible('name') && <TableHead>{t('machines_model_name')}</TableHead>}
-                  {isColumnVisible('manufacturer') && <TableHead>{t('machines_manufacturer')}</TableHead>}
-                  {isColumnVisible('catalogue') && <TableHead>{t('machines_catalogue_number')}</TableHead>}
-                  {isColumnVisible('category') && <TableHead>{t('machines_category')}</TableHead>}
-                  {isColumnVisible('warranty') && <TableHead>{t('machines_warranty_period')}</TableHead>}
-                  {isColumnVisible('serials') && <TableHead>{t('machines_total_serials')}</TableHead>}
-                  {isColumnVisible('assigned') && <TableHead>{t('machines_assigned')}</TableHead>}
-                  <TableHead className="text-right">{t('machines_actions')}</TableHead>
+                  {isColumnVisible('name') && <TableHead>{t('common:machines_model_name')}</TableHead>}
+                  {isColumnVisible('manufacturer') && <TableHead>{t('common:machines_manufacturer')}</TableHead>}
+                  {isColumnVisible('catalogue') && <TableHead>{t('common:machines_catalogue_number')}</TableHead>}
+                  {isColumnVisible('category') && <TableHead>{t('common:machines_category')}</TableHead>}
+                  {isColumnVisible('warranty') && <TableHead>{t('common:machines_warranty_period')}</TableHead>}
+                  {isColumnVisible('serials') && <TableHead>{t('common:machines_total_serials')}</TableHead>}
+                  {isColumnVisible('assigned') && <TableHead>{t('common:machines_assigned')}</TableHead>}
+                  <TableHead className="text-right">{t('common:machines_actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -554,7 +554,7 @@ export default function Machines() {
                     {isColumnVisible('warranty') && (
                       <TableCell>
                         <Badge variant="outline" className="border-orange-300 text-orange-700">
-{model.warranty_months} {t('machines_months')}
+{model.warranty_months} {t('common:machines_months')}
                         </Badge>
                       </TableCell>
                     )}
@@ -569,7 +569,7 @@ export default function Machines() {
                           </Badge>
                           {model.unassigned_serials > 0 && (
                             <Badge variant="outline" className="border-orange-300 text-orange-700 dark:border-orange-700 dark:text-orange-400">
-{model.unassigned_serials} {t('machines_unassigned')}
+{model.unassigned_serials} {t('common:machines_unassigned')}
                             </Badge>
                           )}
                         </div>
@@ -583,17 +583,17 @@ export default function Machines() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>{t('machines_actions')}</DropdownMenuLabel>
+                          <DropdownMenuLabel>{t('common:machines_actions')}</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => handleViewModel(model.id)}>
                             <Eye className="mr-2 h-4 w-4" />
-{t('machines_view_details')}
+{t('common:machines_view_details')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={(e) => {
                             e.stopPropagation()
                             handleEditModel(model)
                           }}>
                             <Edit className="mr-2 h-4 w-4" />
-{t('machines_edit_model')}
+{t('common:machines_edit_model')}
                           </DropdownMenuItem>
                           {hasPermission('machines:assign') && (
                             <DropdownMenuItem onClick={(e) => {
@@ -601,7 +601,7 @@ export default function Machines() {
                               navigate(`/machines/model/${model.id}`)
                             }}>
                               <Wrench className="mr-2 h-4 w-4" />
-{t('machines_assign_machine')}
+{t('common:machines_assign_machine')}
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
@@ -613,7 +613,7 @@ export default function Machines() {
                             }}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
-{t('machines_delete_model')}
+{t('common:machines_delete_model')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -627,7 +627,7 @@ export default function Machines() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-4">
                 <div className="text-sm text-muted-foreground">
-{t('machines_showing')} {((currentPage - 1) * pageSize) + 1} {t('machines_to')} {Math.min(currentPage * pageSize, totalCount)} {t('machines_of')} {totalCount} {t('machines_machine_models_count')}
+{t('common:machines_showing')} {((currentPage - 1) * pageSize) + 1} {t('common:machines_to')} {Math.min(currentPage * pageSize, totalCount)} {t('common:machines_of')} {totalCount} {t('common:machines_machine_models_count')}
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button
@@ -636,7 +636,7 @@ export default function Machines() {
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
                   >
-{t('machines_previous')}
+{t('common:machines_previous')}
                   </Button>
                   
                   {/* Page numbers */}
@@ -671,7 +671,7 @@ export default function Machines() {
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
                   >
-{t('machines_next')}
+{t('common:machines_next')}
                   </Button>
                 </div>
               </div>
@@ -683,25 +683,25 @@ export default function Machines() {
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{t('machines_edit_machine_model')}</DialogTitle>
+              <DialogTitle>{t('common:machines_edit_machine_model')}</DialogTitle>
               <DialogDescription>
-                {t('machines_update_machine_model_info')}
+                {t('common:machines_update_machine_model_info')}
               </DialogDescription>
             </DialogHeader>
             {editingModel && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="edit-name">{t('machines_model_name_required')}</Label>
+                    <Label htmlFor="edit-name">{t('common:machines_model_name_required')}</Label>
                     <Input
                       id="edit-name"
                       value={editingModel.name}
                       onChange={(e) => setEditingModel({ ...editingModel, name: e.target.value })}
-                      placeholder={t('machines_enter_model_name')}
+                      placeholder={t('common:machines_enter_model_name')}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-manufacturer">{t('machines_manufacturer_required')}</Label>
+                    <Label htmlFor="edit-manufacturer">{t('common:machines_manufacturer_required')}</Label>
                     <Popover open={manufacturerPopoverOpen} onOpenChange={setManufacturerPopoverOpen}>
                       <PopoverTrigger asChild>
                         <Button
@@ -719,7 +719,7 @@ export default function Machines() {
                           <div className="relative">
                             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
-                              placeholder={t('machines_search_or_type_new_manufacturer')}
+                              placeholder={t('common:machines_search_or_type_new_manufacturer')}
                               className="pl-10"
                               value={manufacturerSearch}
                               onChange={(e) => setManufacturerSearch(e.target.value)}
@@ -742,8 +742,8 @@ export default function Machines() {
                                   <span className="text-green-600 text-sm font-bold">+</span>
                                 </div>
                                 <div className="flex-1">
-                                  <p className="font-medium">{t('machines_add')} "{manufacturerSearch}"</p>
-                                  <p className="text-sm text-muted-foreground">{t('machines_create_new_manufacturer')}</p>
+                                  <p className="font-medium">{t('common:machines_add')} "{manufacturerSearch}"</p>
+                                  <p className="text-sm text-muted-foreground">{t('common:machines_create_new_manufacturer')}</p>
                                 </div>
                               </div>
                             </div>
@@ -754,7 +754,7 @@ export default function Machines() {
                             manufacturerSearch === '' || 
                             opt.toLowerCase().includes(manufacturerSearch.toLowerCase())
                           ).length === 0 ? (
-                            <div className="p-4 text-center text-muted-foreground">{t('machines_no_manufacturers_found')}</div>
+                            <div className="p-4 text-center text-muted-foreground">{t('common:machines_no_manufacturers_found')}</div>
                           ) : (
                             <div className="p-1">
                               {manufacturerOptions
@@ -796,16 +796,16 @@ export default function Machines() {
                     </Popover>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-catalogue">{t('machines_catalogue_number')}</Label>
+                    <Label htmlFor="edit-catalogue">{t('common:machines_catalogue_number')}</Label>
                     <Input
                       id="edit-catalogue"
                       value={editingModel.catalogue_number || ''}
                       onChange={(e) => setEditingModel({ ...editingModel, catalogue_number: e.target.value })}
-                      placeholder={t('machines_enter_catalogue_number')}
+                      placeholder={t('common:machines_enter_catalogue_number')}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-warranty">{t('machines_warranty_months')}</Label>
+                    <Label htmlFor="edit-warranty">{t('common:machines_warranty_months')}</Label>
                     <Input
                       id="edit-warranty"
                       type="number"
@@ -819,7 +819,7 @@ export default function Machines() {
                   
                   {/* Category Selection */}
                   <div className="space-y-2 col-span-2">
-                    <Label htmlFor="edit-category">{t('machines_category')}</Label>
+                    <Label htmlFor="edit-category">{t('common:machines_category')}</Label>
                     <Popover open={categoryPopoverOpen} onOpenChange={setCategoryPopoverOpen}>
                       <PopoverTrigger asChild>
                         <Button
@@ -839,7 +839,7 @@ export default function Machines() {
                           <div className="relative">
                             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
-                              placeholder={t('machines_search_categories')}
+                              placeholder={t('common:machines_search_categories')}
                               className="pl-10"
                               value={categorySearch}
                               onChange={(e) => setCategorySearch(e.target.value)}
@@ -859,7 +859,7 @@ export default function Machines() {
                               <span className="text-gray-600 text-sm">-</span>
                             </div>
                             <div className="flex-1">
-                              <p className="font-medium">{t('machines_no_category')}</p>
+                              <p className="font-medium">{t('common:machines_no_category')}</p>
                             </div>
                           </div>
                           {/* Existing categories */}
@@ -901,12 +901,12 @@ export default function Machines() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-description">{t('machines_description')}</Label>
+                  <Label htmlFor="edit-description">{t('common:machines_description')}</Label>
                   <Textarea
                     id="edit-description"
                     value={editingModel.description || ''}
                     onChange={(e) => setEditingModel({ ...editingModel, description: e.target.value })}
-                    placeholder={t('machines_enter_machine_model_description')}
+                    placeholder={t('common:machines_enter_machine_model_description')}
                     rows={3}
                     className="resize-none"
                   />
@@ -915,10 +915,10 @@ export default function Machines() {
             )}
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-                {t('machines_cancel')}
+                {t('common:machines_cancel')}
               </Button>
               <Button onClick={handleSaveEdit} disabled={!editingModel?.name || !editingModel?.manufacturer}>
-                {t('machines_save_changes')}
+                {t('common:machines_save_changes')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -928,21 +928,21 @@ export default function Machines() {
         <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{t('machines_delete_machine_model')}</DialogTitle>
+              <DialogTitle>{t('common:machines_delete_machine_model')}</DialogTitle>
               <DialogDescription>
                 <div className="space-y-2">
-                  <p>{t('machines_delete_confirmation')}</p>
+                  <p>{t('common:machines_delete_confirmation')}</p>
                   <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                     <p className="text-sm text-yellow-800">
-<strong>{t('machines_warning')}</strong> {t('machines_delete_warning')}
+<strong>{t('common:machines_warning')}</strong> {t('common:machines_delete_warning')}
                     </p>
                   </div>
                   {modelToDelete && (
                     <div className="mt-4 space-y-1">
-                      <p><strong>{t('machines_model')}</strong> {modelToDelete.name}</p>
-                      <p><strong>{t('machines_manufacturer')}:</strong> {modelToDelete.manufacturer}</p>
-                      <p><strong>{t('machines_total_serials')}</strong> {modelToDelete.total_serials}</p>
-                      <p><strong>{t('machines_assigned')}</strong> {modelToDelete.total_assigned}</p>
+                      <p><strong>{t('common:machines_model')}</strong> {modelToDelete.name}</p>
+                      <p><strong>{t('common:machines_manufacturer')}:</strong> {modelToDelete.manufacturer}</p>
+                      <p><strong>{t('common:machines_total_serials')}</strong> {modelToDelete.total_serials}</p>
+                      <p><strong>{t('common:machines_assigned')}</strong> {modelToDelete.total_assigned}</p>
                     </div>
                   )}
                 </div>
@@ -950,7 +950,7 @@ export default function Machines() {
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDeleteDialog(false)} disabled={isDeleting}>
-                {t('machines_cancel')}
+                {t('common:machines_cancel')}
               </Button>
               <Button variant="destructive" onClick={handleDeleteConfirm} disabled={isDeleting}>
                 {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
