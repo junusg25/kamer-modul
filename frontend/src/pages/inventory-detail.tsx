@@ -642,15 +642,15 @@ export default function InventoryDetail() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Work Order</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Priority</TableHead>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Machine</TableHead>
-                        <TableHead>Technician</TableHead>
-                        <TableHead>Quantity Used</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t('pages.inventory_detail.work_order')}</TableHead>
+                        <TableHead>{t('pages.inventory_detail.status')}</TableHead>
+                        <TableHead>{t('pages.inventory_detail.priority')}</TableHead>
+                        <TableHead>{t('pages.inventory_detail.customer')}</TableHead>
+                        <TableHead>{t('pages.inventory_detail.machine')}</TableHead>
+                        <TableHead>{t('pages.inventory_detail.technician')}</TableHead>
+                        <TableHead>{t('pages.inventory_detail.quantity_used')}</TableHead>
+                        <TableHead>{t('pages.inventory_detail.created')}</TableHead>
+                        <TableHead className="text-right">{t('pages.inventory_detail.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -737,15 +737,15 @@ export default function InventoryDetail() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Work Order</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Priority</TableHead>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Machine</TableHead>
-                        <TableHead>Technician</TableHead>
-                        <TableHead>Quantity Used</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t('pages.inventory_detail.work_order')}</TableHead>
+                        <TableHead>{t('pages.inventory_detail.status')}</TableHead>
+                        <TableHead>{t('pages.inventory_detail.priority')}</TableHead>
+                        <TableHead>{t('pages.inventory_detail.customer')}</TableHead>
+                        <TableHead>{t('pages.inventory_detail.machine')}</TableHead>
+                        <TableHead>{t('pages.inventory_detail.technician')}</TableHead>
+                        <TableHead>{t('pages.inventory_detail.quantity_used')}</TableHead>
+                        <TableHead>{t('pages.inventory_detail.created')}</TableHead>
+                        <TableHead className="text-right">{t('pages.inventory_detail.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -791,15 +791,15 @@ export default function InventoryDetail() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuLabel>{t('pages.inventory_detail.actions')}</DropdownMenuLabel>
                                 <DropdownMenuItem onClick={() => navigate(`/warranty-work-orders/${workOrder.id}`)}>
-                                  <Eye className="mr-2 h-4 w-4" /> View Work Order
+                                  <Eye className="mr-2 h-4 w-4" /> {t('pages.inventory_detail.view_work_order')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => navigate(`/customers/${workOrder.customer_id}`)}>
-                                  <User className="mr-2 h-4 w-4" /> View Customer
+                                  <User className="mr-2 h-4 w-4" /> {t('pages.inventory_detail.view_customer')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => navigate(`/machines/${workOrder.machine_id}`)}>
-                                  <Wrench className="mr-2 h-4 w-4" /> View Machine
+                                  <Wrench className="mr-2 h-4 w-4" /> {t('pages.inventory_detail.view_machine')}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
