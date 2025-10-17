@@ -22,8 +22,8 @@ i18n
       caches: [],
     },
     backend: {
-      // Load translation files from the server
-      loadPath: '/api/translations/{{lng}}/{{ns}}.json',
+      // Load translation files from the public folder
+      loadPath: '/locales/{{lng}}/{{ns}}.json',
     }
   })
 
