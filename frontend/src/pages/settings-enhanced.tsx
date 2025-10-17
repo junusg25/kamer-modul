@@ -426,7 +426,7 @@ export default function Settings() {
             extractKeys(value, fullKey)
           } else if (typeof value === 'string') {
             // This is a translation string
-            const translationKey = `common.${fullKey}`
+            const translationKey = fullKey
             
             // Find existing translation or create new one
             let existingTranslation = allTranslations.find(t => t.key === translationKey)
@@ -458,7 +458,7 @@ export default function Settings() {
           if (typeof value === 'object' && value !== null) {
             addBosnianKeys(value, fullKey)
           } else if (typeof value === 'string') {
-            const translationKey = `common.${fullKey}`
+            const translationKey = fullKey
             const existingTranslation = allTranslations.find(t => t.key === translationKey)
             if (existingTranslation) {
               existingTranslation.bosnian = value
