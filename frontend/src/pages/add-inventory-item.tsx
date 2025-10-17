@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { MainLayout } from '../components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
@@ -52,6 +53,7 @@ const defaultFormData: InventoryFormData = {
 }
 
 export default function AddInventoryItem() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [formData, setFormData] = useState<InventoryFormData>(defaultFormData)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -91,7 +93,7 @@ export default function AddInventoryItem() {
       setCategories(categoryNames)
     } catch (error) {
       console.error('Error fetching categories:', error)
-      toast.error('Failed to load categories')
+      toast.error(t('add_inventory_item_failed_load_categories'))
       // Fallback to default categories
       setCategories(['Parts', 'Tools', 'Supplies', 'Equipment', 'Consumables', 'Electronics', 'Mechanical', 'Electrical', 'Hydraulic', 'Pneumatic', 'Safety', 'Cleaning', 'Lubricants', 'Filters', 'Belts', 'Other'])
     } finally {
@@ -107,7 +109,7 @@ export default function AddInventoryItem() {
       setSuppliers(supplierNames)
     } catch (error) {
       console.error('Error fetching suppliers:', error)
-      toast.error('Failed to load suppliers')
+      toast.error(t('add_inventory_item_failed_load_suppliers'))
       // Fallback to default suppliers
       setSuppliers(['Local Supplier', 'Online Store', 'Manufacturer Direct', 'Distributor', 'Other'])
     } finally {
@@ -126,7 +128,7 @@ export default function AddInventoryItem() {
   const createNewCategory = async () => {
     const categoryName = categorySearch.trim()
     if (!categoryName) {
-      toast.error('Please enter a category name')
+      toast.error(t('add_inventory_item_enter_category_name'))
       return
     }
 
@@ -139,7 +141,7 @@ export default function AddInventoryItem() {
       setFormData(prev => ({ ...prev, category: existingCategory }))
       setCategorySearch('')
       setCategoryPopoverOpen(false)
-      toast.info(`Category "${existingCategory}" already exists and has been selected`)
+      toast.info(t('add_inventory_item_category_exists', { name: existingCategory }))
       return
     }
 
@@ -155,10 +157,10 @@ export default function AddInventoryItem() {
       setFormData(prev => ({ ...prev, category: newCategory.name }))
       setCategorySearch('')
       setCategoryPopoverOpen(false)
-      toast.success(`Category "${newCategory.name}" created successfully`)
+      toast.success(t('add_inventory_item_category_created', { name: newCategory.name }))
     } catch (error: any) {
       console.error('Error creating category:', error)
-      toast.error(error.message || 'Failed to create category')
+      toast.error(error.message || t('add_inventory_item_category_creation_failed'))
     } finally {
       setIsCreatingCategory(false)
     }
@@ -176,22 +178,22 @@ export default function AddInventoryItem() {
     const newErrors: Partial<InventoryFormData> = {}
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required'
+      newErrors.name = t('add_inventory_item_name_required')
     }
 
     const quantity = parseInt(formData.quantity)
     if (isNaN(quantity) || quantity < 0) {
-      newErrors.quantity = 'Quantity must be a valid positive number'
+      newErrors.quantity = t('add_inventory_item_quantity_invalid')
     }
 
     const unitPrice = parseFloat(formData.unit_price)
     if (isNaN(unitPrice) || unitPrice < 0) {
-      newErrors.unit_price = 'Unit price must be a valid positive number'
+      newErrors.unit_price = t('add_inventory_item_unit_price_invalid')
     }
 
     const minStockLevel = parseInt(formData.min_stock_level)
     if (formData.min_stock_level && (isNaN(minStockLevel) || minStockLevel < 0)) {
-      newErrors.min_stock_level = 'Minimum stock level must be a valid positive number'
+      newErrors.min_stock_level = t('add_inventory_item_min_stock_invalid')
     }
 
     setErrors(newErrors)
@@ -202,7 +204,7 @@ export default function AddInventoryItem() {
     e.preventDefault()
     
     if (!validateForm()) {
-      toast.error('Please fix the errors before submitting')
+      toast.error(t('add_inventory_item_fix_errors'))
       return
     }
 
@@ -223,11 +225,11 @@ export default function AddInventoryItem() {
 
       await apiService.createInventoryItem(payload)
       
-      toast.success('Inventory item created successfully!')
+      toast.success(t('add_inventory_item_created_success'))
       navigate('/inventory')
     } catch (error: any) {
       console.error('Error creating inventory item:', error)
-      toast.error(error.message || 'Failed to create inventory item')
+      toast.error(error.message || t('add_inventory_item_creation_failed'))
     } finally {
       setIsSubmitting(false)
     }
@@ -246,9 +248,9 @@ export default function AddInventoryItem() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Add Inventory Item</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('add_inventory_item_title')}</h1>
             <p className="text-muted-foreground">
-              Create a new inventory item with all necessary details
+              {t('add_inventory_item_subtitle')}
             </p>
           </div>
         </div>
@@ -259,44 +261,44 @@ export default function AddInventoryItem() {
             {/* Basic Information */}
             <Card>
               <CardHeader>
-                <CardTitle>Basic Information</CardTitle>
+                <CardTitle>{t('add_inventory_item_basic_information')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Item Name *</Label>
+                  <Label htmlFor="name">{t('add_inventory_item_name')} *</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="Enter item name"
+                    placeholder={t('add_inventory_item_name_placeholder')}
                     className={errors.name ? 'border-red-500' : ''}
                   />
                   {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">{t('add_inventory_item_description')}</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="Enter item description"
+                    placeholder={t('add_inventory_item_description_placeholder')}
                     rows={3}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="sku">SKU</Label>
+                  <Label htmlFor="sku">{t('add_inventory_item_sku')}</Label>
                   <Input
                     id="sku"
                     value={formData.sku}
                     onChange={(e) => handleInputChange('sku', e.target.value)}
-                    placeholder="Enter SKU or part number"
+                    placeholder={t('add_inventory_item_sku_placeholder')}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
+                  <Label htmlFor="category">{t('add_inventory_item_category')}</Label>
                   <Popover open={categoryPopoverOpen} onOpenChange={setCategoryPopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -305,7 +307,7 @@ export default function AddInventoryItem() {
                         aria-expanded={categoryPopoverOpen}
                         className="w-full justify-between h-11"
                       >
-                        {formData.category || "Select category..."}
+                        {formData.category || t('add_inventory_item_select_category')}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -314,7 +316,7 @@ export default function AddInventoryItem() {
                         <div className="relative">
                           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                           <Input
-                            placeholder="Search or type new category..."
+                            placeholder={t('add_inventory_item_search_category')}
                             className="pl-10"
                             value={categorySearch}
                             onChange={(e) => setCategorySearch(e.target.value)}
@@ -336,8 +338,8 @@ export default function AddInventoryItem() {
                                 )}
                               </div>
                               <div className="flex-1">
-                                <p className="font-medium">Add "{categorySearch}"</p>
-                                <p className="text-xs text-muted-foreground">Create new category</p>
+                                <p className="font-medium">{t('add_inventory_item_add_category', { name: categorySearch })}</p>
+                                <p className="text-xs text-muted-foreground">{t('add_inventory_item_create_category')}</p>
                               </div>
                             </div>
                           </div>
@@ -397,7 +399,7 @@ export default function AddInventoryItem() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="unit_price">Unit Price (KM) *</Label>
+                  <Label htmlFor="unit_price">{t('add_inventory_item_unit_price')} *</Label>
                   <Input
                     id="unit_price"
                     type="number"
@@ -412,7 +414,7 @@ export default function AddInventoryItem() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="min_stock_level">Minimum Stock Level</Label>
+                  <Label htmlFor="min_stock_level">{t('add_inventory_item_min_stock_level')}</Label>
                   <Input
                     id="min_stock_level"
                     type="number"
@@ -424,7 +426,7 @@ export default function AddInventoryItem() {
                   />
                   {errors.min_stock_level && <p className="text-sm text-red-500">{errors.min_stock_level}</p>}
                   <p className="text-xs text-muted-foreground">
-                    Alert will be triggered when stock falls below this level
+                    {t('add_inventory_item_min_stock_help')}
                   </p>
                 </div>
               </CardContent>
@@ -433,11 +435,11 @@ export default function AddInventoryItem() {
             {/* Supplier & Location */}
             <Card>
               <CardHeader>
-                <CardTitle>Supplier & Location</CardTitle>
+                <CardTitle>{t('add_inventory_item_supplier_location')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="supplier">Supplier</Label>
+                  <Label htmlFor="supplier">{t('add_inventory_item_supplier')}</Label>
                   <Popover open={supplierPopoverOpen} onOpenChange={setSupplierPopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -446,7 +448,7 @@ export default function AddInventoryItem() {
                         aria-expanded={supplierPopoverOpen}
                         className="w-full justify-between h-11"
                       >
-                        {formData.supplier || "Select supplier..."}
+                        {formData.supplier || t('add_inventory_item_select_supplier')}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -455,7 +457,7 @@ export default function AddInventoryItem() {
                         <div className="relative">
                           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                           <Input
-                            placeholder="Search or type new supplier..."
+                            placeholder={t('add_inventory_item_search_supplier')}
                             className="pl-10"
                             value={supplierSearch}
                             onChange={(e) => setSupplierSearch(e.target.value)}
@@ -476,8 +478,8 @@ export default function AddInventoryItem() {
                                 <span className="text-orange-600 text-sm font-bold">+</span>
                               </div>
                               <div className="flex-1">
-                                <p className="font-medium">Use "{supplierSearch}"</p>
-                                <p className="text-xs text-muted-foreground">Add as new supplier</p>
+                                <p className="font-medium">{t('add_inventory_item_use_supplier', { name: supplierSearch })}</p>
+                                <p className="text-xs text-muted-foreground">{t('add_inventory_item_add_supplier')}</p>
                               </div>
                             </div>
                           </div>
@@ -515,12 +517,12 @@ export default function AddInventoryItem() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="location">Storage Location</Label>
+                  <Label htmlFor="location">{t('add_inventory_item_location')}</Label>
                   <Input
                     id="location"
                     value={formData.location}
                     onChange={(e) => handleInputChange('location', e.target.value)}
-                    placeholder="e.g., Warehouse A, Shelf B3"
+                    placeholder={t('add_inventory_item_location_placeholder')}
                   />
                 </div>
               </CardContent>
@@ -529,30 +531,30 @@ export default function AddInventoryItem() {
             {/* Summary Card */}
             <Card>
               <CardHeader>
-                <CardTitle>Summary</CardTitle>
+                <CardTitle>{t('add_inventory_item_summary')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Item:</span>
-                  <span className="text-sm font-medium">{formData.name || 'Not specified'}</span>
+                  <span className="text-sm text-muted-foreground">{t('add_inventory_item_summary_item')}:</span>
+                  <span className="text-sm font-medium">{formData.name || t('add_inventory_item_not_specified')}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Quantity:</span>
+                  <span className="text-sm text-muted-foreground">{t('add_inventory_item_summary_quantity')}:</span>
                   <span className="text-sm font-medium">{formData.quantity}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Unit Price:</span>
+                  <span className="text-sm text-muted-foreground">{t('add_inventory_item_summary_unit_price')}:</span>
                   <span className="text-sm font-medium">{formData.unit_price} KM</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Total Value:</span>
+                  <span className="text-sm text-muted-foreground">{t('add_inventory_item_summary_total_value')}:</span>
                   <span className="text-sm font-medium">
                     {(parseFloat(formData.quantity) * parseFloat(formData.unit_price)).toFixed(2)} KM
                   </span>
                 </div>
                 {formData.category && (
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Category:</span>
+                    <span className="text-sm text-muted-foreground">{t('add_inventory_item_summary_category')}:</span>
                     <span className="text-sm font-medium">{formData.category}</span>
                   </div>
                 )}
@@ -563,18 +565,18 @@ export default function AddInventoryItem() {
           {/* Form Actions */}
           <div className="flex justify-end space-x-4">
             <Button type="button" variant="outline" onClick={handleCancel}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  {t('add_inventory_item_creating')}
                 </>
               ) : (
                 <>
                   <Save className="mr-2 h-4 w-4" />
-                  Create Item
+                  {t('add_inventory_item_create_item')}
                 </>
               )}
             </Button>
