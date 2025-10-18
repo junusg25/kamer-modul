@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -115,6 +116,7 @@ interface InventoryAlert {
 }
 
 export default function ManagerDashboard() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('team')
   const [lastRefresh, setLastRefresh] = useState(new Date())
@@ -306,21 +308,21 @@ export default function ManagerDashboard() {
                 }}
               >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select period" />
+                  <SelectValue placeholder={t('manager_dashboard_select_period')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="week">This Week</SelectItem>
-                  <SelectItem value="month">This Month</SelectItem>
-                  <SelectItem value="quarter">This Quarter</SelectItem>
-                  <SelectItem value="year">This Year</SelectItem>
-                  <SelectItem value="custom">Custom Range</SelectItem>
+                  <SelectItem value="week">{t('manager_dashboard_this_week')}</SelectItem>
+                  <SelectItem value="month">{t('manager_dashboard_this_month')}</SelectItem>
+                  <SelectItem value="quarter">{t('manager_dashboard_this_quarter')}</SelectItem>
+                  <SelectItem value="year">{t('manager_dashboard_this_year')}</SelectItem>
+                  <SelectItem value="custom">{t('manager_dashboard_custom_range')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <Button onClick={handleRefresh} variant="outline" size="sm">
               <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
+              {t('manager_dashboard_refresh')}
             </Button>
           </div>
         </div>
@@ -331,13 +333,13 @@ export default function ManagerDashboard() {
             <DatePicker
               value={customDateRange.from}
               onChange={(value) => setCustomDateRange(prev => ({ ...prev, from: value }))}
-              placeholder="From date"
+              placeholder={t('manager_dashboard_from_date')}
             />
-            <span className="text-sm text-muted-foreground">to</span>
+            <span className="text-sm text-muted-foreground">{t('manager_dashboard_to')}</span>
             <DatePicker
               value={customDateRange.to}
               onChange={(value) => setCustomDateRange(prev => ({ ...prev, to: value }))}
-              placeholder="To date"
+              placeholder={t('manager_dashboard_to_date')}
             />
             <Button
               variant="outline"
@@ -358,11 +360,11 @@ export default function ManagerDashboard() {
         <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
           <TabsTrigger value="team" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Team Overview
+            {t('manager_dashboard_team_overview')}
           </TabsTrigger>
           <TabsTrigger value="sales" className="flex items-center gap-2">
             <Briefcase className="h-4 w-4" />
-            Sales & Revenue
+            {t('manager_dashboard_sales_revenue')}
           </TabsTrigger>
         </TabsList>
 
@@ -372,7 +374,7 @@ export default function ManagerDashboard() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Work Orders</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('manager_dashboard_active_work_orders')}</CardTitle>
                 <Wrench className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -385,7 +387,7 @@ export default function ManagerDashboard() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending Tickets</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('manager_dashboard_pending_tickets')}</CardTitle>
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -398,7 +400,7 @@ export default function ManagerDashboard() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Completed {getPeriodLabel()}</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('manager_dashboard_completed', { period: getPeriodLabel() })}</CardTitle>
                 <CheckCircle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -411,7 +413,7 @@ export default function ManagerDashboard() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Team Utilization</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('manager_dashboard_team_utilization')}</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -433,12 +435,12 @@ export default function ManagerDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Technician</TableHead>
-                    <TableHead className="text-center">Active</TableHead>
-                    <TableHead className="text-center">Pending</TableHead>
-                    <TableHead className="text-center">Completed ({timePeriod === 'week' ? 'Week' : timePeriod === 'quarter' ? 'Quarter' : timePeriod === 'year' ? 'Year' : useCustomRange ? 'Period' : 'Month'})</TableHead>
-                    <TableHead className="text-right">Avg Time</TableHead>
-                    <TableHead className="text-center">Workload</TableHead>
+                    <TableHead>{t('manager_dashboard_technician')}</TableHead>
+                    <TableHead className="text-center">{t('manager_dashboard_active')}</TableHead>
+                    <TableHead className="text-center">{t('manager_dashboard_pending')}</TableHead>
+                    <TableHead className="text-center">{t('manager_dashboard_completed_period', { period: timePeriod === 'week' ? t('manager_dashboard_week') : timePeriod === 'quarter' ? t('manager_dashboard_quarter') : timePeriod === 'year' ? t('manager_dashboard_year') : useCustomRange ? t('manager_dashboard_period') : t('manager_dashboard_month') })}</TableHead>
+                    <TableHead className="text-right">{t('manager_dashboard_avg_time')}</TableHead>
+                    <TableHead className="text-center">{t('manager_dashboard_workload')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -578,7 +580,7 @@ export default function ManagerDashboard() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Revenue ({getPeriodLabel()})</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('manager_dashboard_revenue_period', { period: getPeriodLabel() })}</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -591,7 +593,7 @@ export default function ManagerDashboard() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Leads</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('manager_dashboard_active_leads')}</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -604,7 +606,7 @@ export default function ManagerDashboard() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('manager_dashboard_conversion_rate')}</CardTitle>
                 <Target className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -617,7 +619,7 @@ export default function ManagerDashboard() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending Quotes</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('manager_dashboard_pending_quotes')}</CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -639,14 +641,14 @@ export default function ManagerDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Sales Person</TableHead>
-                    <TableHead className="text-center">Leads</TableHead>
-                    <TableHead className="text-center">Quotes</TableHead>
-                    <TableHead className="text-center">Deals</TableHead>
-                    <TableHead className="text-right">Revenue</TableHead>
-                    <TableHead className="text-right">Target</TableHead>
-                    <TableHead>Progress</TableHead>
-                    <TableHead className="text-center">Conv. Rate</TableHead>
+                    <TableHead>{t('manager_dashboard_sales_person')}</TableHead>
+                    <TableHead className="text-center">{t('manager_dashboard_leads')}</TableHead>
+                    <TableHead className="text-center">{t('manager_dashboard_quotes')}</TableHead>
+                    <TableHead className="text-center">{t('manager_dashboard_deals')}</TableHead>
+                    <TableHead className="text-right">{t('manager_dashboard_revenue')}</TableHead>
+                    <TableHead className="text-right">{t('manager_dashboard_target')}</TableHead>
+                    <TableHead>{t('manager_dashboard_progress')}</TableHead>
+                    <TableHead className="text-center">{t('manager_dashboard_conv_rate')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
