@@ -428,8 +428,8 @@ export default function ManagerDashboard() {
           {/* Team Workload Distribution */}
           <Card>
             <CardHeader>
-              <CardTitle>Team Workload Distribution</CardTitle>
-              <CardDescription>Current workload and performance for each technician</CardDescription>
+              <CardTitle>{t('manager_dashboard_team_workload_distribution')}</CardTitle>
+              <CardDescription>{t('manager_dashboard_team_workload_description')}</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -469,7 +469,7 @@ export default function ManagerDashboard() {
                         <TableCell className="text-right">{tech.avg_completion_hours}h</TableCell>
                         <TableCell className="text-center">
                           <Badge className={getWorkloadColor(tech.workload_status)}>
-                            {tech.workload_status}
+                            {t(`manager_dashboard_workload_${tech.workload_status}`)}
                           </Badge>
                         </TableCell>
                       </TableRow>
@@ -486,9 +486,9 @@ export default function ManagerDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-orange-500" />
-                  Priority Work Orders
+                  {t('manager_dashboard_priority_work_orders')}
                 </CardTitle>
-                <CardDescription>High priority items requiring attention</CardDescription>
+                <CardDescription>{t('manager_dashboard_priority_work_orders_description')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -533,15 +533,15 @@ export default function ManagerDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-5 w-5 text-blue-500" />
-                  Recent Activity
+                  {t('manager_dashboard_recent_activity')}
                 </CardTitle>
-                <CardDescription>Latest updates across the system</CardDescription>
+                <CardDescription>{t('manager_dashboard_recent_activity_description')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {recentActivity.length === 0 ? (
                     <div className="text-center text-muted-foreground py-8">
-                      No recent activity
+                      {t('manager_dashboard_no_recent_activity')}
                     </div>
                   ) : (
                     recentActivity.slice(0, 5).map((activity, index) => (
@@ -565,7 +565,7 @@ export default function ManagerDashboard() {
                     className="w-full"
                     onClick={() => navigate('/admin/action-logs')}
                   >
-                    View All Activity
+                    {t('manager_dashboard_view_all_activity')}
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </div>
@@ -634,8 +634,8 @@ export default function ManagerDashboard() {
           {/* Sales Team Performance */}
           <Card>
             <CardHeader>
-              <CardTitle>Sales Team Performance</CardTitle>
-              <CardDescription>Individual performance and target progress</CardDescription>
+              <CardTitle>{t('manager_dashboard_sales_team_performance')}</CardTitle>
+              <CardDescription>{t('manager_dashboard_sales_team_performance_description')}</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -692,15 +692,15 @@ export default function ManagerDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5 text-orange-500" />
-                Inventory Alerts
+                {t('manager_dashboard_inventory_alerts')}
               </CardTitle>
-              <CardDescription>Items requiring immediate attention</CardDescription>
+              <CardDescription>{t('manager_dashboard_inventory_alerts_description')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {inventoryAlerts.length === 0 ? (
                   <div className="text-center text-muted-foreground py-8">
-                    No inventory alerts
+                    {t('manager_dashboard_no_inventory_alerts')}
                   </div>
                 ) : (
                   inventoryAlerts.map((alert) => (
@@ -725,7 +725,7 @@ export default function ManagerDashboard() {
                   className="w-full"
                   onClick={() => navigate('/inventory?stock_status=low')}
                 >
-                  View All Inventory Alerts
+                  {t('manager_dashboard_view_all_inventory_alerts')}
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </div>
