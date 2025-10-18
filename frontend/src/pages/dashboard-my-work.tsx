@@ -552,7 +552,7 @@ const DashboardMyWork = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Target className="h-5 w-5" />
-                    My {t('my_work_active_leads')}
+                    {t('my_work_my_active_leads')}
                   </CardTitle>
                   <CardDescription>{t('my_work_sales_opportunities_description')}</CardDescription>
                 </CardHeader>

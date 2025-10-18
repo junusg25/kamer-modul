@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/auth-context'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -30,66 +31,66 @@ interface QuickAction {
   permission?: string
 }
 
-const quickActions: QuickAction[] = [
+const getQuickActions = (t: any): QuickAction[] => [
   {
-    title: 'New Customer',
-    description: 'Add a new customer to the system',
+    title: t('quick_create_new_customer'),
+    description: t('quick_create_new_customer_description'),
     icon: User,
     href: '/add-customer',
     color: 'text-orange-600',
     permission: 'customers:write'
   },
   {
-    title: 'Create Repair Ticket',
-    description: 'Create a new repair ticket',
+    title: t('quick_create_repair_ticket'),
+    description: t('quick_create_repair_ticket_description'),
     icon: FileText,
     href: '/create-repair-ticket',
     color: 'text-green-600',
     permission: 'repair_tickets:write'
   },
   {
-    title: 'Create Warranty Ticket',
-    description: 'Create a new warranty repair ticket',
+    title: t('quick_create_warranty_ticket'),
+    description: t('quick_create_warranty_ticket_description'),
     icon: ClipboardList,
     href: '/create-warranty-repair-ticket',
     color: 'text-purple-600',
     permission: 'repair_tickets:write'
   },
   {
-    title: 'Add Inventory Item',
-    description: 'Add new inventory items',
+    title: t('quick_create_add_inventory'),
+    description: t('quick_create_add_inventory_description'),
     icon: Package,
     href: '/add-inventory-item',
     color: 'text-indigo-600',
     permission: 'inventory:write'
   },
   {
-    title: 'View Quotes',
-    description: 'View and manage quotes',
+    title: t('quick_create_view_quotes'),
+    description: t('quick_create_view_quotes_description'),
     icon: MessageSquare,
     href: '/quote-management',
     color: 'text-pink-600',
     permission: 'quotes:read'
   },
   {
-    title: 'Add Machine Model',
-    description: 'Add a new machine model',
+    title: t('quick_create_add_machine_model'),
+    description: t('quick_create_add_machine_model_description'),
     icon: Calendar,
     href: '/add-machine-model',
     color: 'text-orange-600',
     permission: 'machines:write'
   },
   {
-    title: 'Assign Machine',
-    description: 'Assign a machine to a customer',
+    title: t('quick_create_assign_machine'),
+    description: t('quick_create_assign_machine_description'),
     icon: Wrench,
     href: '/machines',
     color: 'text-blue-600',
     permission: 'machines:assign'
   },
   {
-    title: 'Create Lead',
-    description: 'Create a new sales lead',
+    title: t('quick_create_create_lead'),
+    description: t('quick_create_create_lead_description'),
     icon: TrendingUp,
     href: '/pipeline-leads',
     color: 'text-green-600',
@@ -98,6 +99,7 @@ const quickActions: QuickAction[] = [
 ]
 
 export function QuickCreateButton() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { hasPermission } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
@@ -108,6 +110,7 @@ export function QuickCreateButton() {
   }
 
   // Filter actions based on user permissions
+  const quickActions = getQuickActions(t)
   const availableActions = quickActions.filter(action => 
     !action.permission || hasPermission(action.permission)
   )
@@ -117,13 +120,13 @@ export function QuickCreateButton() {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="w-full justify-start">
           <Plus className="h-4 w-4" />
-          <span className="ml-2">Click to create</span>
+          <span className="ml-2">{t('quick_create_button')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         {availableActions.length === 0 ? (
           <div className="p-3 text-center text-sm text-muted-foreground">
-            No actions available for your role
+            {t('quick_create_no_actions')}
           </div>
         ) : (
           availableActions.map((action, index) => {
