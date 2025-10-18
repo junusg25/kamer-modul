@@ -102,9 +102,9 @@ const DashboardMyWork = () => {
   })
 
   // Fetch my performance for sales users (uses dedicated endpoint without permissions)
-  const { data: my{t('my_work_performance')}Data, isLoading: my{t('my_work_performance')}Loading, error: my{t('my_work_performance')}Error } = useQuery({
+  const { data: myPerformanceData, isLoading: myPerformanceLoading, error: myPerformanceError } = useQuery({
     queryKey: ['my-performance', user?.id],
-    queryFn: () => apiService.getMy{t('my_work_performance')}(),
+    queryFn: () => apiService.getMyPerformance(),
     enabled: !!user?.id && user?.role === 'sales',
     retry: false, // Don't retry on failure
     refetchOnWindowFocus: false, // Don't refetch on window focus
@@ -164,7 +164,7 @@ const DashboardMyWork = () => {
   const myLeads = Array.isArray((myLeadsData as any)?.data) ? (myLeadsData as any).data : []
   const mySalesTrends = Array.isArray((mySalesTrendsData as any)?.data) ? (mySalesTrendsData as any).data : []
   const performance = (performanceData as any)?.data || {}
-  const my{t('my_work_performance')} = (my{t('my_work_performance')}Data as any)?.data || {}
+  const myPerformance = (myPerformanceData as any)?.data || {}
   
   // Combine regular and warranty repair tickets
   const allMyRepairTickets = [...myRepairs, ...myWarrantyRepairs]
@@ -232,7 +232,7 @@ const DashboardMyWork = () => {
 
   // Calculate sales target achievement
   // Get target achievement from the new my-performance endpoint
-  const targetAchievement = my{t('my_work_performance')}.achievement_percentage || 0
+  const targetAchievement = myPerformance.achievement_percentage || 0
 
   // Helper functions for chart (formatCurrency is now imported from lib/currency)
 
@@ -720,7 +720,7 @@ const DashboardMyWork = () => {
           )}
         </div>
 
-        {/* Sales {t('my_work_performance')} Chart */}
+        {/* Sales Performance Chart */}
         {(isSales || isManagerOrAdmin) && (
           <Card>
             <CardHeader>
@@ -730,7 +730,7 @@ const DashboardMyWork = () => {
                     <TrendingUp className="h-5 w-5" />
                     {t('my_work_my_sales')} {t('my_work_performance')}
                   </CardTitle>
-                  <CardDescription>Your sales trends and performance over time</CardDescription>
+                  <CardDescription>{t('my_work_sales_trends_description')}</CardDescription>
                 </div>
                 <Select value={timeFilter} onValueChange={setTimeFilter}>
                   <SelectTrigger className="w-32">
@@ -758,15 +758,15 @@ const DashboardMyWork = () => {
                   <ChartContainer
                     config={{
                       revenue: {
-                        label: "Revenue",
+                        label: t('my_work_revenue'),
                         color: "hsl(var(--chart-1))",
                       },
                       sales: {
-                        label: "Sales",
+                        label: t('my_work_sales'),
                         color: "hsl(var(--chart-2))",
                       },
                       customers: {
-                        label: "Customers",
+                        label: t('my_work_customers'),
                         color: "hsl(var(--chart-3))",
                       },
                     }}
