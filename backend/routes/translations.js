@@ -18,7 +18,7 @@ router.get('/:language/:namespace.json', async (req, res) => {
     }
 
     // Validate namespace
-    if (!['common', 'settings'].includes(namespace)) {
+    if (!['common', 'settings', 'navigation'].includes(namespace)) {
       return res.status(400).json({
         success: false,
         error: 'Invalid namespace'
@@ -123,7 +123,7 @@ router.put('/:language/:namespace/:key', authenticateToken, authorizeRoles('admi
     }
 
     // Validate namespace
-    if (!['common', 'settings'].includes(namespace)) {
+    if (!['common', 'settings', 'navigation'].includes(namespace)) {
       console.log('Invalid namespace:', namespace)
       return res.status(400).json({
         success: false,
