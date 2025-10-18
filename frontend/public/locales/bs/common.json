@@ -315,6 +315,8 @@
   "manager_dashboard_workload_low": "Nisko",
   "manager_dashboard_workload_medium": "Srednje",
   "manager_dashboard_workload_high": "Visoko",
+  "my_work": "Moj Pregled",
+  "dashboard": "Nadzorna ploča",
   "no": "Ne",
   "ok": "OK",
   "close": "Zatvori",

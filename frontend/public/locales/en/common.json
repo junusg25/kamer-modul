@@ -315,6 +315,8 @@
   "manager_dashboard_workload_low": "Low",
   "manager_dashboard_workload_medium": "Medium",
   "manager_dashboard_workload_high": "High",
+  "my_work": "My Work",
+  "dashboard": "Dashboard",
   "no": "No",
   "ok": "OK",
   "close": "Close",
