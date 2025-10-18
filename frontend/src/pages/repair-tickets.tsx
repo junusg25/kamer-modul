@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -118,6 +119,7 @@ const getPriorityBadge = (priority?: string) => {
 }
 
 export default function RepairTickets() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { user, hasPermission } = useAuth()
   
@@ -463,15 +465,15 @@ export default function RepairTickets() {
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Repair Tickets</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('repair_tickets_title')}</h1>
             <p className="text-muted-foreground">
-              Track and manage repair requests and service tickets
+              {t('repair_tickets_subtitle')}
             </p>
           </div>
           {hasPermission('repair_tickets:write') && (
             <Button onClick={() => navigate('/create-repair-ticket')}>
               <Plus className="mr-2 h-4 w-4" />
-              Create Ticket
+              {t('repair_tickets_create_ticket')}
             </Button>
           )}
         </div>
@@ -480,42 +482,42 @@ export default function RepairTickets() {
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Open Tickets</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('repair_tickets_open_tickets')}</CardTitle>
               <AlertCircle className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{openTickets.length}</div>
-              <p className="text-xs text-muted-foreground">Not converted</p>
+              <p className="text-xs text-muted-foreground">{t('repair_tickets_not_converted')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Converted Tickets</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('repair_tickets_converted_tickets')}</CardTitle>
               <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{convertedTickets.length}</div>
-              <p className="text-xs text-muted-foreground">To work orders</p>
+              <p className="text-xs text-muted-foreground">{t('repair_tickets_to_work_orders')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">High Priority</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('repair_tickets_high_priority')}</CardTitle>
               <Wrench className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{highPriorityTickets.length}</div>
-              <p className="text-xs text-muted-foreground">Urgent tickets</p>
+              <p className="text-xs text-muted-foreground">{t('repair_tickets_urgent_tickets')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Tickets</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('repair_tickets_total_tickets')}</CardTitle>
               <FileText className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalTickets}</div>
-              <p className="text-xs text-muted-foreground">All repair tickets</p>
+              <p className="text-xs text-muted-foreground">{t('repair_tickets_all_repair_tickets')}</p>
             </CardContent>
           </Card>
         </div>
@@ -526,7 +528,7 @@ export default function RepairTickets() {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
         <SmartSearch
-          placeholder="Search tickets..."
+          placeholder={t('repair_tickets_search_placeholder')}
           value={appliedSearchTerm}
           onSearch={(term) => {
             setAppliedSearchTerm(term)
@@ -570,47 +572,47 @@ export default function RepairTickets() {
                     
                     {/* Status Filter */}
                     <div className="p-2">
-                      <Label className="text-sm font-medium mb-2 block">Status</Label>
+                      <Label className="text-sm font-medium mb-2 block">{t('repair_tickets_status')}</Label>
                       <Select value={filters.status || "all"} onValueChange={(value) => handleFilterChange('status', value === "all" ? "" : value)}>
                         <SelectTrigger>
-                          <SelectValue placeholder="All statuses" />
+                          <SelectValue placeholder={t('repair_tickets_all_statuses')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All statuses</SelectItem>
-                          <SelectItem value="intake">Intake</SelectItem>
-                          <SelectItem value="converted">Converted</SelectItem>
-                          <SelectItem value="converted - warranty">Converted - Warranty</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                          <SelectItem value="all">{t('repair_tickets_all_statuses')}</SelectItem>
+                          <SelectItem value="intake">{t('repair_tickets_intake')}</SelectItem>
+                          <SelectItem value="converted">{t('repair_tickets_converted')}</SelectItem>
+                          <SelectItem value="converted - warranty">{t('repair_tickets_converted_warranty')}</SelectItem>
+                          <SelectItem value="cancelled">{t('repair_tickets_cancelled')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     {/* Priority Filter */}
                     <div className="p-2">
-                      <Label className="text-sm font-medium mb-2 block">Priority</Label>
+                      <Label className="text-sm font-medium mb-2 block">{t('repair_tickets_priority')}</Label>
                       <Select value={filters.priority || "all"} onValueChange={(value) => handleFilterChange('priority', value === "all" ? "" : value)}>
                         <SelectTrigger>
-                          <SelectValue placeholder="All priorities" />
+                          <SelectValue placeholder={t('repair_tickets_all_priorities')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All priorities</SelectItem>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="all">{t('repair_tickets_all_priorities')}</SelectItem>
+                          <SelectItem value="low">{t('repair_tickets_low')}</SelectItem>
+                          <SelectItem value="medium">{t('repair_tickets_medium')}</SelectItem>
+                          <SelectItem value="high">{t('repair_tickets_high')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     {/* Technician Filter */}
                     <div className="p-2">
-                      <Label className="text-sm font-medium mb-2 block">Technician</Label>
+                      <Label className="text-sm font-medium mb-2 block">{t('repair_tickets_technician')}</Label>
                       <Select value={filters.technician || "all"} onValueChange={(value) => handleFilterChange('technician', value === "all" ? "" : value)}>
                         <SelectTrigger>
-                          <SelectValue placeholder="All technicians" />
+                          <SelectValue placeholder={t('repair_tickets_all_technicians')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All technicians</SelectItem>
-                          <SelectItem value="unassigned">Unassigned</SelectItem>
+                          <SelectItem value="all">{t('repair_tickets_all_technicians')}</SelectItem>
+                          <SelectItem value="unassigned">{t('repair_tickets_unassigned')}</SelectItem>
                           {getUniqueTechnicians().map((tech) => (
                             <SelectItem key={tech.id} value={tech.id}>
                               {tech.name}
@@ -654,15 +656,15 @@ export default function RepairTickets() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  {isColumnVisible('ticket_number') && <TableHead>Ticket #</TableHead>}
-                  {isColumnVisible('customer') && <TableHead>Customer</TableHead>}
-                  {isColumnVisible('machine') && <TableHead>Machine</TableHead>}
-                  {isColumnVisible('problem') && <TableHead>Problem</TableHead>}
-                  {isColumnVisible('status') && <TableHead>Status</TableHead>}
-                  {isColumnVisible('priority') && <TableHead>Priority</TableHead>}
-                  {isColumnVisible('submitted_by') && <TableHead>Technician</TableHead>}
-                  {isColumnVisible('created_at') && <TableHead>Created</TableHead>}
-                  <TableHead className="text-right">Actions</TableHead>
+                  {isColumnVisible('ticket_number') && <TableHead>{t('repair_tickets_ticket_number')}</TableHead>}
+                  {isColumnVisible('customer') && <TableHead>{t('repair_tickets_customer')}</TableHead>}
+                  {isColumnVisible('machine') && <TableHead>{t('repair_tickets_machine')}</TableHead>}
+                  {isColumnVisible('problem') && <TableHead>{t('repair_tickets_problem')}</TableHead>}
+                  {isColumnVisible('status') && <TableHead>{t('repair_tickets_status')}</TableHead>}
+                  {isColumnVisible('priority') && <TableHead>{t('repair_tickets_priority')}</TableHead>}
+                  {isColumnVisible('submitted_by') && <TableHead>{t('repair_tickets_technician')}</TableHead>}
+                  {isColumnVisible('created_at') && <TableHead>{t('repair_tickets_created')}</TableHead>}
+                  <TableHead className="text-right">{t('repair_tickets_actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -727,21 +729,21 @@ export default function RepairTickets() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuLabel>{t('repair_tickets_actions')}</DropdownMenuLabel>
                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewTicket(ticket.id); }}>
                             <Eye className="mr-2 h-4 w-4" />
-                            View Details
+                            {t('repair_tickets_view_details')}
                           </DropdownMenuItem>
                           {hasPermission('repair_tickets:write') && (
                             <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
                               <Edit className="mr-2 h-4 w-4" />
-                              Edit Ticket
+                              {t('repair_tickets_edit_ticket')}
                             </DropdownMenuItem>
                           )}
                           {hasPermission('repair_tickets:write') && (
                             <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
                               <User className="mr-2 h-4 w-4" />
-                              Assign Technician
+                              {t('repair_tickets_assign_technician')}
                             </DropdownMenuItem>
                           )}
                           {hasPermission('repair_tickets:write') && (
@@ -750,16 +752,16 @@ export default function RepairTickets() {
                               disabled={ticket.status === 'converted' || ticket.status === 'cancelled'}
                             >
                               <Wrench className="mr-2 h-4 w-4" />
-                              Convert to Work Order
+                              {t('repair_tickets_convert_to_work_order')}
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePrintTicket(ticket); }}>
                             <Printer className="mr-2 h-4 w-4" />
-                            Print
+                            {t('repair_tickets_print')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDownloadTicket(ticket); }}>
                             <FileText className="mr-2 h-4 w-4" />
-                            Download PDF
+                            {t('repair_tickets_download_pdf')}
                           </DropdownMenuItem>
                           {hasPermission('repair_tickets:delete') && (
                             <>
@@ -772,7 +774,7 @@ export default function RepairTickets() {
                                 }}
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
+                                {t('repair_tickets_delete')}
                               </DropdownMenuItem>
                             </>
                           )}
@@ -838,21 +840,21 @@ export default function RepairTickets() {
       <Dialog open={convertModalOpen} onOpenChange={setConvertModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Convert to Work Order</DialogTitle>
+            <DialogTitle>{t('repair_tickets_convert_to_work_order')}</DialogTitle>
             <DialogDescription>
-              Please select a technician to assign to this work order or leave unassigned.
+              {t('repair_tickets_select_technician_description')}
             </DialogDescription>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="technician">Technician</Label>
+              <Label htmlFor="technician">{t('repair_tickets_technician')}</Label>
               <Select value={selectedTechnician} onValueChange={setSelectedTechnician}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select technician (optional)" />
+                  <SelectValue placeholder={t('repair_tickets_select_technician_optional')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="unassigned">No technician assigned</SelectItem>
+                  <SelectItem value="unassigned">{t('repair_tickets_no_technician_assigned')}</SelectItem>
                   {users.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.name} ({user.role})
@@ -865,16 +867,16 @@ export default function RepairTickets() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setConvertModalOpen(false)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button onClick={handleConvertSubmit} disabled={isConverting}>
               {isConverting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Converting...
+                  {t('repair_tickets_converting')}
                 </>
               ) : (
-                'Convert to Work Order'
+                t('repair_tickets_convert_to_work_order')
               )}
             </Button>
           </DialogFooter>
@@ -886,9 +888,9 @@ export default function RepairTickets() {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={confirmDeleteTicket}
-        title="Delete Repair Ticket"
+        title={t('repair_tickets_delete_repair_ticket')}
         itemName={ticketToDelete?.formatted_number || ticketToDelete?.ticket_number || `#${ticketToDelete?.id}`}
-        itemType="repair ticket"
+        itemType={t('repair_tickets_repair_ticket')}
       />
 
       {/* Converted Ticket Alert Dialog */}
@@ -896,9 +898,9 @@ export default function RepairTickets() {
         open={convertedAlertOpen}
         onOpenChange={setConvertedAlertOpen}
         itemName={convertedTicket?.formatted_number || convertedTicket?.ticket_number || `#${convertedTicket?.id}`}
-        itemType="repair ticket"
-        title="Cannot Delete Converted Repair Ticket"
-        description="This repair ticket has been converted to a work order and cannot be deleted. Please contact your administrator if you need to remove this ticket."
+        itemType={t('repair_tickets_repair_ticket')}
+        title={t('repair_tickets_cannot_delete_converted')}
+        description={t('repair_tickets_cannot_delete_converted_description')}
       />
     </MainLayout>
   )
