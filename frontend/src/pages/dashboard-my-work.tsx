@@ -41,7 +41,7 @@ import { useAuth } from '../contexts/auth-context'
 import { useState } from 'react'
 import { formatCurrency } from '../lib/currency'
 import { formatDate, formatDateTime, formatDateMedium } from '../lib/dateTime'
-import { formatStatus, getStatusBadgeVariant, getStatusBadgeColor } from '../lib/status'
+import { formatStatusWithTranslation, getStatusBadgeVariant, getStatusBadgeColor } from '../lib/status'
 
 const DashboardMyWork = () => {
   const { t } = useTranslation()
@@ -221,7 +221,7 @@ const DashboardMyWork = () => {
         variant={getStatusBadgeVariant(status)} 
         className={getStatusBadgeVariant(status) === 'outline' ? getStatusBadgeColor(status) : ''}
       >
-        {formatStatus(status)}
+        {formatStatusWithTranslation(status, t)}
       </Badge>
     )
   }
@@ -737,10 +737,10 @@ const DashboardMyWork = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="week">Last 7 days</SelectItem>
-                    <SelectItem value="month">Last 30 days</SelectItem>
-                    <SelectItem value="quarter">Last 90 days</SelectItem>
-                    <SelectItem value="year">Last year</SelectItem>
+                    <SelectItem value="week">{t('my_work_last_7_days')}</SelectItem>
+                    <SelectItem value="month">{t('my_work_last_30_days')}</SelectItem>
+                    <SelectItem value="quarter">{t('my_work_last_90_days')}</SelectItem>
+                    <SelectItem value="year">{t('my_work_last_year')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -871,19 +871,19 @@ const DashboardMyWork = () => {
                       <div className="text-2xl font-bold text-green-600">
                         {mySalesTrends.reduce((sum, t) => sum + (t.sales || 0), 0)}
                       </div>
-                      <div className="text-sm text-muted-foreground">Total Sales</div>
+                      <div className="text-sm text-muted-foreground">{t('my_work_total_sales')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">
                         {mySalesTrends.reduce((sum, t) => sum + (t.customers || 0), 0)}
                       </div>
-                      <div className="text-sm text-muted-foreground">Total Customers</div>
+                      <div className="text-sm text-muted-foreground">{t('my_work_total_customers')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-orange-600">
                         {mySalesTrends.reduce((sum, t) => sum + (t.sales || 0), 0) > 0 ? formatCurrency(mySalesTrends.reduce((sum, t) => sum + (t.revenue || 0), 0) / mySalesTrends.reduce((sum, t) => sum + (t.sales || 0), 0)) : '0.00 KM'}
                       </div>
-                      <div className="text-sm text-muted-foreground">Avg Sale Value</div>
+                      <div className="text-sm text-muted-foreground">{t('my_work_avg_sale_value')}</div>
                     </div>
                   </div>
                 </>
