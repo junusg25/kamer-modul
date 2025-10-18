@@ -11,7 +11,7 @@ i18n
   .init({
     lng: 'bs', // default language
     fallbackLng: 'bs',
-    ns: ['common', 'settings'],
+    ns: ['common', 'settings', 'navigation'],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false // React already does escaping
