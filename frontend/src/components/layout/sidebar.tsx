@@ -59,35 +59,35 @@ interface NavigationItem {
 const getNavigationItems = (t: any, counts: SidebarCounts | null, userRole?: string, unreadFeedbackCount: number = 0): NavigationItem[] => {
   const baseItems: NavigationItem[] = [
   // General Section
-  { name: t('common:navigation.general'), href: '#', icon: null, badge: null, type: 'label' },
+  { name: t('navigation.general'), href: '#', icon: null, badge: null, type: 'label' },
       { 
-        name: userRole === 'admin' ? t('common:navigation.admin_dashboard') : userRole === 'manager' ? t('common:dashboard') : t('common:my_work'), 
+        name: userRole === 'admin' ? t('navigation.admin_dashboard') : userRole === 'manager' ? t('dashboard') : t('my_work'), 
         href: userRole === 'admin' ? '/dashboard/admin' : userRole === 'manager' ? '/dashboard/manager' : '/dashboard/my-work', 
         icon: Home, 
         badge: null, 
         type: 'single' 
       },
-  { name: t('common:navigation.overview'), href: '/dashboard/overview', icon: BarChart3, badge: null, type: 'single' },
-  { name: t('common:navigation.customers'), href: '/customers', icon: Users, badge: null, type: 'single' },
-  { name: t('common:navigation.machines'), href: '/machines', icon: Wrench, badge: null, type: 'single' },
-  { name: t('common:navigation.inventory'), href: '/inventory', icon: Package, badge: null, type: 'single' },
+  { name: t('navigation.overview'), href: '/dashboard/overview', icon: BarChart3, badge: null, type: 'single' },
+  { name: t('navigation.customers'), href: '/customers', icon: Users, badge: null, type: 'single' },
+  { name: t('navigation.machines'), href: '/machines', icon: Wrench, badge: null, type: 'single' },
+  { name: t('navigation.inventory'), href: '/inventory', icon: Package, badge: null, type: 'single' },
   
   // Repairs Management Section
-  { name: t('common:navigation.repairs_management'), href: '#', icon: null, badge: null, type: 'label' },
+  { name: t('navigation.repairs_management'), href: '#', icon: null, badge: null, type: 'label' },
   { 
-    name: t('common:navigation.non_warranty'), 
+    name: t('navigation.non_warranty'), 
     icon: AlertTriangle, 
     badge: counts?.non_warranty_total ? counts.non_warranty_total.toString() : null, 
     type: 'dropdown',
     children: [
       { 
-        name: t('common:repair_tickets'), 
+        name: t('repair_tickets'), 
         href: '/repair-tickets', 
         icon: FileText, 
         badge: counts?.repair_tickets ? counts.repair_tickets.toString() : null 
       },
       { 
-        name: t('common:work_orders'), 
+        name: t('work_orders'), 
         href: '/work-orders', 
         icon: ClipboardList, 
         badge: null 
@@ -95,19 +95,19 @@ const getNavigationItems = (t: any, counts: SidebarCounts | null, userRole?: str
     ]
   },
   { 
-    name: t('common:navigation.warranty'), 
+    name: t('navigation.warranty'), 
     icon: Award, 
     badge: counts?.warranty_total ? counts.warranty_total.toString() : null, 
     type: 'dropdown',
     children: [
       { 
-        name: t('common:warranty_repair_tickets'), 
+        name: t('warranty_repair_tickets'), 
         href: '/warranty-repair-tickets', 
         icon: FileText, 
         badge: counts?.warranty_repair_tickets ? counts.warranty_repair_tickets.toString() : null 
       },
       { 
-        name: t('common:warranty_work_orders'), 
+        name: t('warranty_work_orders'), 
         href: '/warranty-work-orders', 
         icon: ClipboardList, 
         badge: null 
@@ -116,30 +116,30 @@ const getNavigationItems = (t: any, counts: SidebarCounts | null, userRole?: str
   },
   
   // Sales Management Section
-  { name: t('common:navigation.sales_management'), href: '#', icon: null, badge: null, type: 'label' },
+  { name: t('navigation.sales_management'), href: '#', icon: null, badge: null, type: 'label' },
   { 
-    name: t('common:navigation.pipeline_leads'), 
+    name: t('navigation.pipeline_leads'), 
     href: '/pipeline-leads', 
     icon: TrendingUp, 
     badge: null, 
     type: 'single' 
   },
   { 
-    name: t('common:navigation.quote_management'), 
+    name: t('navigation.quote_management'), 
     href: '/quote-management', 
     icon: FileText, 
     badge: null, 
     type: 'single' 
   },
   { 
-    name: t('common:navigation.sales_reports'), 
+    name: t('navigation.sales_reports'), 
     href: '/sales-reports', 
     icon: BarChart3, 
     badge: null, 
     type: 'single' 
   },
   { 
-    name: t('common:navigation.sales_targets'), 
+    name: t('navigation.sales_targets'), 
     href: '/sales-targets', 
     icon: Target, 
     badge: null, 
@@ -147,30 +147,30 @@ const getNavigationItems = (t: any, counts: SidebarCounts | null, userRole?: str
   },
   
   // Rental Management Section
-  { name: t('common:navigation.rental_management'), href: '#', icon: null, badge: null, type: 'label' },
+  { name: t('navigation.rental_management'), href: '#', icon: null, badge: null, type: 'label' },
   { 
-    name: t('common:navigation.rental_fleet'), 
+    name: t('navigation.rental_fleet'), 
     href: '/rental-machines', 
     icon: Truck, 
     badge: null, 
     type: 'single' 
   },
   { 
-    name: t('common:navigation.active_rentals'), 
+    name: t('navigation.active_rentals'), 
     href: '/machine-rentals', 
     icon: Calendar, 
     badge: null, 
     type: 'single' 
   },
   { 
-    name: t('common:navigation.rental_analytics'), 
+    name: t('navigation.rental_analytics'), 
     href: '/rental-analytics', 
     icon: BarChart3, 
     badge: null, 
     type: 'single' 
   },
   { 
-    name: t('common:navigation.dynamic_pricing'), 
+    name: t('navigation.dynamic_pricing'), 
     href: '/dynamic-pricing', 
     icon: DollarSign, 
     badge: null, 
@@ -179,9 +179,9 @@ const getNavigationItems = (t: any, counts: SidebarCounts | null, userRole?: str
   
   // Admin Section
   ...(userRole === 'admin' ? [
-    { name: t('common:navigation.admin'), href: '#', icon: null, badge: null, type: 'label' },
+    { name: t('navigation.admin'), href: '#', icon: null, badge: null, type: 'label' },
     { 
-      name: t('common:navigation.user_feedback'), 
+      name: t('navigation.user_feedback'), 
       href: '/admin-feedback', 
       icon: MessageSquare, 
       badge: unreadFeedbackCount > 0 ? unreadFeedbackCount.toString() : null, 
@@ -306,7 +306,7 @@ export function Sidebar({ className }: SidebarProps) {
           getNavigationItems(t, sidebarCounts, user?.role, unreadFeedbackCount)
             .filter((item) => {
               // Filter Sales Targets based on permission
-              if (item.name === t('common:navigation.sales_targets')) {
+              if (item.name === t('navigation.sales_targets')) {
                 const canAccess = hasPermission('sales_targets:read')
                 
                 return canAccess
