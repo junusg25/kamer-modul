@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { MainLayout } from '../components/layout/main-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
@@ -43,6 +44,7 @@ import { formatDate, formatDateTime, formatDateMedium } from '../lib/dateTime'
 import { formatStatus, getStatusBadgeVariant, getStatusBadgeColor } from '../lib/status'
 
 const DashboardMyWork = () => {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [timeFilter, setTimeFilter] = useState('month')
@@ -100,9 +102,9 @@ const DashboardMyWork = () => {
   })
 
   // Fetch my performance for sales users (uses dedicated endpoint without permissions)
-  const { data: myPerformanceData, isLoading: myPerformanceLoading, error: myPerformanceError } = useQuery({
+  const { data: my{t('my_work_performance')}Data, isLoading: my{t('my_work_performance')}Loading, error: my{t('my_work_performance')}Error } = useQuery({
     queryKey: ['my-performance', user?.id],
-    queryFn: () => apiService.getMyPerformance(),
+    queryFn: () => apiService.getMy{t('my_work_performance')}(),
     enabled: !!user?.id && user?.role === 'sales',
     retry: false, // Don't retry on failure
     refetchOnWindowFocus: false, // Don't refetch on window focus
@@ -162,7 +164,7 @@ const DashboardMyWork = () => {
   const myLeads = Array.isArray((myLeadsData as any)?.data) ? (myLeadsData as any).data : []
   const mySalesTrends = Array.isArray((mySalesTrendsData as any)?.data) ? (mySalesTrendsData as any).data : []
   const performance = (performanceData as any)?.data || {}
-  const myPerformance = (myPerformanceData as any)?.data || {}
+  const my{t('my_work_performance')} = (my{t('my_work_performance')}Data as any)?.data || {}
   
   // Combine regular and warranty repair tickets
   const allMyRepairTickets = [...myRepairs, ...myWarrantyRepairs]
@@ -230,7 +232,7 @@ const DashboardMyWork = () => {
 
   // Calculate sales target achievement
   // Get target achievement from the new my-performance endpoint
-  const targetAchievement = myPerformance.achievement_percentage || 0
+  const targetAchievement = my{t('my_work_performance')}.achievement_percentage || 0
 
   // Helper functions for chart (formatCurrency is now imported from lib/currency)
 
@@ -247,9 +249,9 @@ const DashboardMyWork = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">My Work</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('my_work_title')}</h1>
             <p className="text-muted-foreground">
-              Welcome back, {user?.name}! Here's your personal dashboard.
+              {t('my_work_welcome', { name: user?.name })}
             </p>
           </div>
           <div className="flex gap-2">
@@ -264,46 +266,46 @@ const DashboardMyWork = () => {
             <>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">My Regular Repairs</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('my_work_regular_repairs')}</CardTitle>
                   <Wrench className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{totalWorkOrders}</div>
                   <p className="text-xs text-muted-foreground">
-                    Regular work orders assigned to you
+                    {t('my_work_regular_repairs_description')}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">My Warranty Repairs</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('my_work_warranty_repairs')}</CardTitle>
                   <Clock className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{totalWarrantyWorkOrders}</div>
                   <p className="text-xs text-muted-foreground">
-                    Warranty work orders assigned to you
+                    {t('my_work_warranty_repairs_description')}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('my_work_total_revenue')}</CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{formatCurrency(workOrdersRevenue)}</div>
                   <p className="text-xs text-muted-foreground">
-                    From completed work orders
+                    {t('my_work_from_completed_orders')}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Performance</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('my_work_performance')}</CardTitle>
                   <User className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -311,7 +313,7 @@ const DashboardMyWork = () => {
                     {performance.my_work_order_completion_rate || 0}%
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Completion rate
+                    {t('my_work_completion_rate')}
                   </p>
                 </CardContent>
               </Card>
@@ -323,52 +325,52 @@ const DashboardMyWork = () => {
             <>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">My Sales</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('my_work_my_sales')}</CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
                   <p className="text-xs text-muted-foreground">
-                    {totalSales} sales this period
+                    {totalSales} {t('my_work_sales_this_period')}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Leads</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('my_work_active_leads')}</CardTitle>
                   <Target className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{activeLeads}</div>
                   <p className="text-xs text-muted-foreground">
-                    Sales opportunities
+                    {t('my_work_sales_opportunities')}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Quotes Sent</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('my_work_quotes_sent')}</CardTitle>
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">0</div>
                   <p className="text-xs text-muted-foreground">
-                    This month
+                    {t('my_work_this_month')}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Performance</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('my_work_performance')}</CardTitle>
                   <User className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{targetAchievement}%</div>
                   <p className="text-xs text-muted-foreground">
-                    Target achievement
+                    {t('my_work_target_achievement')}
                   </p>
                 </CardContent>
               </Card>
@@ -386,46 +388,46 @@ const DashboardMyWork = () => {
                 <CardContent>
                   <div className="text-2xl font-bold">{totalWorkOrders}</div>
                   <p className="text-xs text-muted-foreground">
-                    Regular work orders assigned to you
+                    {t('my_work_regular_repairs_description')}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">My Warranty Repairs</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('my_work_warranty_repairs')}</CardTitle>
                   <Clock className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{totalWarrantyWorkOrders}</div>
                   <p className="text-xs text-muted-foreground">
-                    Warranty work orders assigned to you
+                    {t('my_work_warranty_repairs_description')}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">My Sales</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('my_work_my_sales')}</CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
                   <p className="text-xs text-muted-foreground">
-                    {totalSales} sales this period
+                    {totalSales} {t('my_work_sales_this_period')}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">My Leads</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('my_work_my_leads')}</CardTitle>
                   <Target className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{activeLeads}</div>
                   <p className="text-xs text-muted-foreground">
-                    Active opportunities
+                    {t('my_work_active_opportunities')}
                   </p>
                 </CardContent>
               </Card>
@@ -442,9 +444,9 @@ const DashboardMyWork = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Wrench className="h-5 w-5" />
-                    My Open Work
+                    {t('my_work_my_open_work')}
                   </CardTitle>
-                  <CardDescription>Your pending and in progress repairs</CardDescription>
+                  <CardDescription>{t('my_work_pending_repairs_description')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Regular Work Orders */}
@@ -477,7 +479,7 @@ const DashboardMyWork = () => {
                       <div className="flex-1">
                         <p className="text-sm font-medium">
                           #{order.formatted_number || order.work_order_number} 
-                          <span className="text-blue-600 ml-1">(Warranty)</span>
+                          <span className="text-blue-600 ml-1">{t('my_work_warranty')}</span>
                         </p>
                         <p className="text-xs text-muted-foreground ">
                           {order.customer_name} - {order.machine_name}
@@ -492,7 +494,7 @@ const DashboardMyWork = () => {
                   
                   {activeWorkOrders.length === 0 && activeWarrantyWorkOrders.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-4">
-                      No active work orders assigned to you
+                      {t('my_work_no_active_orders')}
                     </p>
                   )}
                 </CardContent>
@@ -502,9 +504,9 @@ const DashboardMyWork = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Clock className="h-5 w-5" />
-                    My Repair Tickets
+                    {t('my_work_my_repair_tickets')}
                   </CardTitle>
-                  <CardDescription>Your assigned repair tickets</CardDescription>
+                  <CardDescription>{t('my_work_assigned_repair_tickets')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {allMyRepairTickets.slice(0, 5).map((repair: any) => {
@@ -520,7 +522,7 @@ const DashboardMyWork = () => {
                         <div className="flex-1">
                           <p className="text-sm font-medium">
                             #{repair.formatted_number || repair.ticket_number}
-                            {isWarrantyTicket && <span className="text-blue-600 ml-1">(Warranty)</span>}
+                            {isWarrantyTicket && <span className="text-blue-600 ml-1">{t('my_work_warranty')}</span>}
                           </p>
                           <p className="text-xs text-muted-foreground ">
                             {repair.customer_name} - {repair.model_name}
@@ -535,7 +537,7 @@ const DashboardMyWork = () => {
                   })}
                   {allMyRepairTickets.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-4">
-                      No repair tickets assigned to you
+                      {t('my_work_no_repair_tickets')}
                     </p>
                   )}
                 </CardContent>
@@ -550,9 +552,9 @@ const DashboardMyWork = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Target className="h-5 w-5" />
-                    My Active Leads
+                    My {t('my_work_active_leads')}
                   </CardTitle>
-                  <CardDescription>Your sales opportunities</CardDescription>
+                  <CardDescription>{t('my_work_sales_opportunities_description')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {myLeads.slice(0, 5).map((lead: any) => (
@@ -580,7 +582,7 @@ const DashboardMyWork = () => {
                   ))}
                   {myLeads.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-4">
-                      No active leads assigned to you
+                      {t('my_work_no_active_leads')}
                     </p>
                   )}
                 </CardContent>
@@ -590,9 +592,9 @@ const DashboardMyWork = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
-                    Follow-ups Due
+                    {t('my_work_follow_ups_due')}
                   </CardTitle>
-                  <CardDescription>Leads requiring follow-up</CardDescription>
+                  <CardDescription>{t('my_work_leads_requiring_followup')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {myLeads.filter((lead: any) => lead.next_follow_up && new Date(lead.next_follow_up) <= new Date()).slice(0, 5).map((lead: any) => (
@@ -604,17 +606,17 @@ const DashboardMyWork = () => {
                       <div className="flex-1">
                         <p className="text-sm font-medium">{lead.customer_name}</p>
                         <p className="text-xs text-muted-foreground ">
-                          Due: {new Date(lead.next_follow_up).toLocaleDateString()}
+                          {t('my_work_due')}: {new Date(lead.next_follow_up).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant="destructive">Overdue</Badge>
+                        <Badge variant="destructive">{t('my_work_overdue')}</Badge>
                       </div>
                     </div>
                   ))}
                   {myLeads.filter((lead: any) => lead.next_follow_up && new Date(lead.next_follow_up) <= new Date()).length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-4">
-                      No follow-ups due
+                      {t('my_work_no_follow_ups_due')}
                     </p>
                   )}
                 </CardContent>
@@ -629,9 +631,9 @@ const DashboardMyWork = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Wrench className="h-5 w-5" />
-                    My Open Work
+                    {t('my_work_my_open_work')}
                   </CardTitle>
-                  <CardDescription>Your pending and in progress repairs</CardDescription>
+                  <CardDescription>{t('my_work_pending_repairs_description')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Regular Work Orders */}
@@ -664,7 +666,7 @@ const DashboardMyWork = () => {
                       <div className="flex-1">
                         <p className="text-sm font-medium">
                           #{order.formatted_number || order.work_order_number} 
-                          <span className="text-blue-600 ml-1">(Warranty)</span>
+                          <span className="text-blue-600 ml-1">{t('my_work_warranty')}</span>
                         </p>
                         <p className="text-xs text-muted-foreground ">
                           {order.customer_name} - {order.machine_name}
@@ -679,7 +681,7 @@ const DashboardMyWork = () => {
                   
                   {activeWorkOrders.length === 0 && activeWarrantyWorkOrders.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-4">
-                      No active work orders assigned to you
+                      {t('my_work_no_active_orders')}
                     </p>
                   )}
                 </CardContent>
@@ -689,7 +691,7 @@ const DashboardMyWork = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <DollarSign className="h-5 w-5" />
-                    My Sales
+                    {t('my_work_my_sales')}
                   </CardTitle>
                   <CardDescription>Your recent sales</CardDescription>
                 </CardHeader>
@@ -718,7 +720,7 @@ const DashboardMyWork = () => {
           )}
         </div>
 
-        {/* Sales Performance Chart */}
+        {/* Sales {t('my_work_performance')} Chart */}
         {(isSales || isManagerOrAdmin) && (
           <Card>
             <CardHeader>
@@ -726,7 +728,7 @@ const DashboardMyWork = () => {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="h-5 w-5" />
-                    My Sales Performance
+                    {t('my_work_my_sales')} {t('my_work_performance')}
                   </CardTitle>
                   <CardDescription>Your sales trends and performance over time</CardDescription>
                 </div>
@@ -863,7 +865,7 @@ const DashboardMyWork = () => {
                       <div className="text-2xl font-bold text-blue-600">
                         {formatCurrency(mySalesTrends.reduce((sum, t) => sum + (t.revenue || 0), 0))}
                       </div>
-                      <div className="text-sm text-muted-foreground">Total Revenue</div>
+                      <div className="text-sm text-muted-foreground">{t('my_work_total_revenue')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">
