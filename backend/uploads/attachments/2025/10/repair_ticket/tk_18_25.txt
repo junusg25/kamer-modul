@@ -1,0 +1,96 @@
+Izjave
+
+Sigurnost plaćanja kreditnim karticama 
+
+
+Tajnost Vaših podataka je zaštićena i osigurana uporabom SSL enkripcije. Stranice za naplatu putem interneta osigurane su korištenjem Secure Socket Layer (SSL) protokola sa 128-bitnom enkripcijom podataka. SSL enkripcija je postupak šifriranja podataka radi sprječavanja neovlaštenog pristupa prilikom njihovog prijenosa.
+
+Time je omogućen siguran prijenos informacija te onemogućen nedozvoljen pristup podacima prilikom komunikacije između korisnikovog računala i WebPay servisa, te obratno.
+
+WebPay servis i financijske ustanove razmjenjuju podatke uporabom virtualne privatne mreže (VPN), koja je zaštićena od neautoriziranog pristupa.
+
+Monri Payment Gateway je certificiran prema PCI DSS Level 1 sigurnosnom standardu propisanom Visa i MasterCard pravilima.
+
+Trgovac ne pohranjuje brojeve kreditnih kartica i brojevi nisu dostupni neovlaštenim osobama.
+
+Creditcard purchase security statement
+
+Confidentiality of your information is protected and secured by using SSL encryption. Pages for web payment are secured by using Secure Socket Layer (SSL) protocol with 128-bit data encryption. SSL encryption is a data coding procedure for prevention of unauthorized access during data transfer. This enables a secure data transfer and prevents unauthorized data access during communication between user and Monri WebPay Payment Gateway and vice versa. Monri WebPay Payment Gateway and financial institutions exchange data by using their virtual private network (VPN) which is also protected from unauthorized access. Monri Payments is PCI DSS Level 1 certified payment service provider. Credit card numbers are not stored by Merchant and are not available to unauthorized personnel.
+
+Izjava o zaštiti i prikupljanju osobnih podataka
+
+Obavezujemo se pružati zaštitu osobnim podacima kupaca, na način da prikupljamo samo nužne, osnovne podatke o kupcima / korisnicima koji su nužni za ispunjenje naših obveza; informiramo kupce o načinu korištenja prikupljenih podataka, redovito dajemo kupcima mogućnost izbora o upotrebi njihovih podataka, uključujući mogućnost odluke žele li ili ne da se njihovo ime ukloni s lista koje se koriste za marketinške kampanje.
+
+Svi se podaci o korisnicima strogo čuvaju i dostupni su samo djelatnicima kojima su ti podaci nužni za obavljanje posla. Svi naši djelatnici i poslovni partneri odgovorni su za poštivanje načela zaštite privatnosti.
+
+Personal data gathering and protection statement
+
+We are committed to provide service of protection of our customer's personal data in a way that we collect only essential basic information about our buyers that are necessary for fulfilling our obligations. We also inform our customers about the way we collect information and regularly give customers an option about how their information will be used, including the possibility to decide whether their name should be included or omitted from the lists used for marketing campaigns. All user information are strictly guarded and are available only to the employees who need those information for completing the job. All our employees and business partners are responsible to follow the principles of confidentiality protection.
+
+Uslovi kupovine
+
+Ovim se uslovima utvrđuje postupak naručivanja, plaćanja, isporuke te reklamacija proizvoda koji su ponuđeni na ovim stranicama. Kamer.ba Internet stranice mogu se koristiti za Vašu privatnu upotrebu bez ikakvih naknada za korištenje, a prema sljedećim uvjetima i pravilima. Prodavatelj je Kamer Commerce d.o.o., a kupac je posjetitelj ovih stranica koji popuni elektronsku narudžbu, pošalje je prodavatelju te izvrši plaćanje putem kreditnih kartica ili pouzećem.
+
+    NARUČIVANJE
+
+Kupac naručuje proizvod ili proizvode putem elektronskog obrasca narudžbe.
+
+Kupcem se smatra svaka osoba koja elektronski naruči barem jedan proizvod, popuni tražene podatke i pošalje narudžbu.
+
+Sve cijene izražene su u Konvertibilnim markama, s PDV- om.
+
+Roba se naručuje elektronskim oblikom, pritiskom na određeni proizvod te spremanjem istog u košaricu. Roba se smatra naručenom u trenutku kada kupac odabere te potvrdi način plaćanja.
+
+    PLAĆANJE
+
+Naručeni proizvodi ili usluge plaćaju se online jednom od kreditnih kartica: MasterCard, Maestro ili Visa.
+
+    ISPORUKA
+
+Naručeni proizvodi pakiraju se na način da tokom uobičajene manipulacije ne budu oštećeni. Prilikom preuzimanja kupac je dužan provjeriti stanje pošiljke te u slučaju oštećenja odmah reklamirati proizvod dostavljaču (uposleniku kompanije koja vrši dostavu). Prodavac se odriče svake odgovornosti u vezi oštećenja koja mogu nastati prilikom dostave.
+
+Ako kupac ne primi robu, ili obavijest o isporuci, nakon što je poslana, u očekivanom vremenu, kupac ima pravo o tome obavijestiti prodavca kako bi se poduzele radnje pronalaska pošiljke ili kako bi se poslala zamjenska pošiljka.
+
+Ako kupac odbije primiti robu koju je naručio prodavac ima pravo tražiti od kupca nadoknadu svih troškova koji su vezani za isporuku.
+
+Prodavac se obvezuje poslati pošiljku kupcu onoga trenutka kada zaprimi potvrdu kojom se odobrava online transakcija.Nakon zaprimanja te potvrde prodavatelj se obvezuje poslati pošiljku u roku do 5 (pet) radnih dana.
+
+Nakon što dostavljač (kompanija koja vrši dostavu) zaprimi pošiljku od strane prodavača, prodavač više nije odgovoran za daljnji tok isporuke i eventualna kašnjenja te probleme koji mogu nastati u vezi daljnje manipulacije i isporuke robe.
+
+Ako kupac umjesto dostave izabere opciju downloada proizvoda, prodavac se obvezuje poslati obavijest isključivo u obliku elektronske pošte kupcu na kojoj će se nalaziti linkovi za download i upute. Nakon primitka elektronske pošte (obavijesti o downloadu) kupac može odmah pristupiti downloadu proizvoda.
+
+    REKLAMACIJE
+
+Prodavatelj se obvezuje isporučiti proizvod koji je tehnički ispravan te odgovara opisu proizvoda navedenom na www.kamer.ba. Slika koja ilustrira proizvod na Internet stranici ne mora odgovarati stvarnom izgledu proizvoda te kupac ne može reklamirati ovaj segment.
+
+Reklamacija i povrat robe je moguće ako:
+
+    Prilikom prijema pošiljke - ukoliko je pošiljka iz nekog razloga otvorena ili fizički oštećena, kupac treba odbiti prijem pošiljke.
+    2 sata nakon prijema pošiljke – Ukoliko kupac utvrdi da je došlo do oštećenja pošiljke, potrebno je da u roku 2 sata od prijema pošalje slike oštećenja na mail info@kamer.ba
+    Prije prvog puštanja u rad kupac je dužan da pročita korisničko uputstvo.
+    Prilikom prvog puštanja u rad - ako je uređaj neispravan obavjestiti ovlašteni servis naznačen u garantnom listu.
+    Ako proizvod ne odgovara karakteristikama, količini, boji ili oblikom onoga koji ste naručili - obavijestiti prodavca
+    Ukoliko proizvod ima grešku ili oštećenje koje nije nastalo tokom transporta - obavijestiti prodavca.
+    Reklamacije u garantnom roku - ovlašteni servis uređaja ili davalac garancije je dužan obezbjediti servis uređaja ili obezbjediti kupcu isti novi proizvod ukoliko ga nije moguće popraviti.
+    Za svaki kupljeni proizvod moguće je izvršiti povrat ukoliko proizvod nije korišten. Proizvod je moguće vratiti ako kupac posjeduje račun, odgovarajući garantni list i originalno upakovan proizvod (za robu sa garancijom). Prodavatelj  prima samo originalno zapakovan proizvod i to bez bilo kakvih fizičkih oštećenja ili kvarova nastalih od strane kupca.
+    U slučaju da kupac traži povrat sredstava za pošiljku koju je platio/la po uzeću isti je moguće izvršiti isključivo na transakcijski račun u banci.
+
+Za povrat proizvoda kao i sva dodatna pitanja možete kontaktirati na broj: 033 424 097
+
+Napomena: U slučaju povrata robe kupac snosi troškove transporta.
+
+
+    OPĆENITO 
+
+Kamer Commerce d.o.o. zadržava pravo na izmjenu ovih uvjeta i pravila. Sve promjene primijenit će se na korištenje kamer.ba stranica. Kupac snosi odgovornost za tačnost i potpunost unesenih podataka prilikom kupovine.
+
+Usluge koje Vam pruža kamer.ba Internet prodavnica ne uključuje troškove koje snosite koristeći računalnu opremu i usluge za pristup našim stranicama. Kamer Commerce d.o.o. nije odgovorna za troškove telefona, Internet prometa ili bilo koje druge troškove do kojih može doći.
+
+Iako Vam Kamer Commerce d.o.o. nastoji dati najbolju moguću ponudu usluga, Kamer Commerce d.o.o. ne može garantirati da će usluge na kamer.ba odgovarati Vašim potrebama. Kamer Commerce d.o.o. također ne može garantirati da će usluga biti bez pogrešaka. Ukoliko dođe do pogreške, molimo Vas da je prijavite našem Kontakt centru 033 424 097 ili na e-mail info@kamer.ba kako bismo je otklonili na najbrži mogući način.
+
+Kamer Commerce d.o.o. 
+P.J. Karcher Centar Kamer Commerce
+71320 Vogošća
+ID broj: 4200086440001
+033 424 097
+info@kamer.ba
